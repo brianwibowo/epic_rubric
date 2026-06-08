@@ -5,8 +5,9 @@ CREATE INDEX IF NOT EXISTS idx_assessments_class_project
 CREATE INDEX IF NOT EXISTS idx_assessments_student 
   ON public.assessments(student_id, status);
 
--- Create a view for class-level performance statistics
-CREATE OR REPLACE VIEW public.class_performance_summary AS
+-- Create a view for class-level performance statistics with RLS enforcement
+CREATE OR REPLACE VIEW public.class_performance_summary 
+WITH (security_invoker = true) AS
 SELECT 
   class_id,
   project_name,
