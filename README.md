@@ -39,6 +39,7 @@ Jalankan query di dalam **SQL Editor** Supabase sesuai urutan penomoran file ber
 | **5** | [005_create_analytics.sql](file:///Users/mymac/Documents/Codes/epic_rubric/supabase/migrations/005_create_analytics.sql) | Menambahkan database indexing untuk mempercepat muat grafik analitik dan membuat View ringkasan kelas `class_performance_summary`. |
 | **6** | [006_create_audit_logs.sql](file:///Users/mymac/Documents/Codes/epic_rubric/supabase/migrations/006_create_audit_logs.sql) | Membuat tabel `audit_logs` untuk mencatat setiap pergantian status penilaian guna menjamin integritas data (keamanan audit internal). |
 | **7** | [007_rls_policies.sql](file:///Users/mymac/Documents/Codes/epic_rubric/supabase/migrations/007_rls_policies.sql) | **[Row Level Security]** Mengaktifkan dan mengatur kebijakan granular database PostgreSQL untuk membatasi hak baca/tulis berdasarkan peran login user yang terverifikasi (Auth JWT token). |
+| **8** | [008_seed_data.sql](file:///Users/mymac/Documents/Codes/epic_rubric/supabase/migrations/008_seed_data.sql) | **[Seed Data]** Menambahkan data awal (akun Admin, Guru, Siswa, Kelas, dan Pendaftaran) dengan password default `Brianscottkennedy120404$`. |
 
 ---
 
