@@ -1,0 +1,47 @@
+.appShell {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+.contentWrapper {
+  flex-grow: 1;
+  padding-left: var(--sidebar-width);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: padding-left var(--transition-normal);
+}
+
+.main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* --- Toast Container (Top Right Overlay) --- */
+.toastContainer {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none; /* Allows clicking items underneath unless clicking a toast button */
+}
+
+/* --- Responsive Breakpoint 768px --- */
+@media (max-width: 768px) {
+  .contentWrapper {
+    padding-left: 0; /* Sidebar collapses to drawer, main content expands full screen */
+  }
+
+  .toastContainer {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    top: auto; /* Toasts appear at bottom on mobile */
+  }
+}

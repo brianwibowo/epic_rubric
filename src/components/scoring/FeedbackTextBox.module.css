@@ -1,0 +1,73 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-family: var(--font-sans);
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.badge {
+  text-transform: none !important;
+  font-weight: 700 !important;
+}
+
+.badgeContent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.textareaWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.textarea {
+  width: 100%;
+  background-color: rgba(13, 18, 30, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 14px 28px 14px; /* bottom padding accommodates char counter */
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  transition: all var(--transition-normal);
+}
+
+.textarea:focus:not(:disabled) {
+  border-color: var(--color-primary);
+  background-color: rgba(13, 18, 30, 0.6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.disabledTextarea {
+  background-color: rgba(255, 255, 255, 0.01);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  border-color: var(--border-color);
+}
+
+.charCounter {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}

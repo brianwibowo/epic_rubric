@@ -1,0 +1,129 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Warnings layout */
+.warningCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background-color: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-left: 4px solid var(--color-error);
+}
+
+.warningIcon {
+  color: var(--color-error);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.warningInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.warningTitle {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.warningText {
+  font-family: var(--font-sans);
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Table container styling */
+.tableCard {
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface-solid);
+}
+
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.tableTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.historyIcon {
+  color: var(--color-primary);
+}
+
+.tableTitle {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.select {
+  background-color: rgba(13, 18, 30, 0.6);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Row cells typography */
+.monoText {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.userCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.userEmail {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+}
+
+/* --- Responsive Breakpoint 768px --- */
+@media (max-width: 768px) {
+  .tableHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -1,0 +1,101 @@
+.panelCard {
+  width: 100%;
+  border-left: 4px solid var(--dim-color);
+  background: linear-gradient(180deg, rgba(13, 18, 30, 0.8) 0%, rgba(20, 27, 45, 0.4) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 14px;
+  gap: 16px;
+}
+
+.titleArea {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.codeBadge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.titleTexts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.name {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.desc {
+  font-family: var(--font-sans);
+  font-size: 0.80rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.weightBadgeWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.weightLabel {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 4fr 5fr;
+  gap: 28px;
+}
+
+.selectorSection, .feedbackSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.sectionLabel {
+  font-family: var(--font-sans);
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* --- Responsive Breakpoint 960px --- */
+@media (max-width: 960px) {
+  .content {
+    grid-template-columns: 1fr; /* Stack into single column on tablet */
+    gap: 20px;
+  }
+}

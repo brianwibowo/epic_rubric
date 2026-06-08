@@ -1,0 +1,99 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  border-radius: 9999px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* --- Sizes --- */
+.sm {
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+.md {
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+/* --- Variants --- */
+.primary {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--color-warning);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.info {
+  background-color: rgba(14, 165, 233, 0.1);
+  color: var(--color-info);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.epic {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(20, 184, 166, 0.15) 100%);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
+}
+
+/* --- EPIC Dimensions --- */
+.e {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--color-epic-e);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.p {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--color-epic-p);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.i {
+  background-color: rgba(249, 115, 22, 0.1);
+  color: var(--color-epic-i);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+}
+
+.c {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--color-epic-c);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.pe {
+  background-color: rgba(20, 184, 166, 0.1);
+  color: var(--color-epic-pe);
+  border: 1px solid rgba(20, 184, 166, 0.2);
+}
+
+/* --- Glow Status --- */
+.glow.primary { box-shadow: 0 0 12px rgba(59, 130, 246, 0.3); }
+.glow.success { box-shadow: 0 0 12px rgba(16, 185, 129, 0.3); }
+.glow.warning { box-shadow: 0 0 12px rgba(245, 158, 11, 0.3); }
+.glow.error { box-shadow: 0 0 12px rgba(239, 68, 68, 0.3); }
+.glow.info { box-shadow: 0 0 12px rgba(14, 165, 233, 0.3); }

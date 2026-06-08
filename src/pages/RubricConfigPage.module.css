@@ -1,0 +1,83 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.tableWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Meta Warning Box */
+.metaCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background-color: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  border-radius: var(--radius-md);
+}
+
+.metaIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.metaText {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Custom Table Cells */
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tableName {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.masterBadge {
+  font-weight: 800 !important;
+}
+
+.weightsRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.weightSlash {
+  color: var(--text-muted);
+}
+
+.deleteBtn {
+  color: var(--color-error) !important;
+  font-weight: 700 !important;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}

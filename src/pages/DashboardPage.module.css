@@ -1,0 +1,330 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* --- Welcome Card --- */
+.welcomeCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(13, 18, 30, 0.8) 0%, rgba(59, 130, 246, 0.05) 100%);
+  border-left: 4px solid var(--color-primary);
+}
+
+.welcomeLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.greeting {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.userName {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: var(--text-primary);
+}
+
+.userMeta {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* --- Stats Cards Grid --- */
+.gridSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.statCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.statIcon {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-glow-blue);
+}
+
+.statContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statTitle {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.statValue {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.statDesc {
+  font-family: var(--font-sans);
+  font-size: 0.775rem;
+  color: var(--text-muted);
+}
+
+/* --- Action Cards Grid --- */
+.actionsGrid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 20px;
+}
+
+.actionCard {
+  background: linear-gradient(135deg, rgba(20, 27, 45, 0.8) 0%, rgba(20, 184, 166, 0.03) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.actionTitle {
+  font-family: var(--font-sans);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.actionText {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.actionBtns {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.announcementCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.statusIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-success);
+  box-shadow: 0 0 10px var(--color-success);
+}
+
+/* --- Student Personal View --- */
+.studentGrid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 20px;
+}
+
+.scoreOverviewCard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.scoreHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+}
+
+.scoreSub {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.scoreProject {
+  font-family: var(--font-sans);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+
+.scoreDisplay {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 12px 0;
+}
+
+.scoreCircle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(8, 11, 20, 0.2) 100%);
+  border: 4px solid var(--color-primary);
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.scoreVal {
+  font-family: var(--font-mono);
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.scoreLabel {
+  font-family: var(--font-sans);
+  font-size: 0.725rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.scoreMetrics {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metricRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.studentSideCol {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.focusCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(13, 18, 30, 0.7) 0%, rgba(245, 158, 11, 0.03) 100%);
+}
+
+.focusIconWrapper {
+  background: rgba(245, 158, 11, 0.08);
+  padding: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  margin-bottom: 12px;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
+}
+
+.focusTitle {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.focusDimension {
+  margin-bottom: 12px;
+}
+
+.focusText {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.quickActionCard {
+  background: linear-gradient(135deg, rgba(20, 27, 45, 0.8) 0%, rgba(59, 130, 246, 0.03) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+}
+
+/* --- Responsive Layout Breakpoint 1024px --- */
+@media (max-width: 1024px) {
+  .actionsGrid, .studentGrid {
+    grid-template-columns: 1fr; /* Stack into single column */
+  }
+}
+
+/* --- Responsive Layout Breakpoint 768px --- */
+@media (max-width: 768px) {
+  .welcomeCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .scoreDisplay {
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+}

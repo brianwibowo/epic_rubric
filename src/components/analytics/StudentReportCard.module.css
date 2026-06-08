@@ -1,0 +1,287 @@
+.reportCard {
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface-solid);
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mainTitle {
+  font-family: var(--font-sans);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.subTitle {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Student Metadata */
+.studentMeta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  background-color: rgba(255, 255, 255, 0.01);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.metaCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.metaLabel {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.metaVal {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* Outcome Results Row */
+.outcomeRow {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 0 4px;
+}
+
+.finalScoreCircle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 5px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.scoreNum {
+  font-family: var(--font-mono);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.scoreMax {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.outcomeMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gradeDisplay {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.gradeLetter {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.gradeLabelDesc {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.dateLabel {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin-bottom: 24px;
+}
+
+/* Detail EPIC Aspeks */
+.dimensionsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.dimensionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dimRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 18px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--dim-color);
+  border-radius: var(--radius-md);
+}
+
+.dimHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dimBadgeTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dimBadge {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 0.775rem;
+}
+
+.dimName {
+  font-family: var(--font-sans);
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.dimWeight {
+  font-family: var(--font-sans);
+  font-size: 0.775rem;
+  color: var(--text-muted);
+}
+
+.dimFeedback {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.noFeedback {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Rekomendasi Box */
+.focusContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(245, 158, 11, 0.03);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-left: 4px solid var(--dim-color);
+  border-radius: var(--radius-md);
+}
+
+.focusHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-warning);
+}
+
+.focusHeader h4 {
+  font-family: var(--font-sans);
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.focusIcon {
+  color: var(--color-warning);
+}
+
+.focusDesc {
+  font-family: var(--font-sans);
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* --- Responsive Breakpoint 768px --- */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .studentMeta {
+    grid-template-columns: 1fr; /* Stack columns on mobile */
+    gap: 12px;
+  }
+}

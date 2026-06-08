@@ -1,0 +1,140 @@
+.tableWrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.responsiveContainer {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  backdrop-filter: blur(12px);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.theadRow {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.th {
+  padding: 14px 16px;
+  font-family: var(--font-sans);
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.sortableTh {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sortableTh:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.thContent {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sortIcon {
+  display: inline-flex;
+  color: var(--color-primary);
+}
+
+.tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.tr:last-child {
+  border-bottom: none;
+}
+
+.clickableTr {
+  cursor: pointer;
+}
+
+.clickableTr:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.td {
+  padding: 16px;
+  font-family: var(--font-sans);
+  font-size: 0.925rem;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.emptyTd {
+  padding: 32px;
+  text-align: center;
+}
+
+.defaultEmpty {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+}
+
+/* --- Skeleton Loading --- */
+.skeletonCell {
+  height: 20px;
+  border-radius: 4px;
+  width: 80%;
+}
+
+/* --- Pagination --- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 0 4px;
+}
+
+.pageBtn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-color-hover);
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}

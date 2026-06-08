@@ -1,0 +1,107 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.chipsContainer {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.chip {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  color: var(--text-secondary);
+  outline: none;
+}
+
+.chip:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-color-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.chip:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Selected state styling */
+.selected {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--dim-color) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), 0 0 10px rgba(255, 255, 255, 0.02);
+  transform: translateY(-1px);
+}
+
+.selected .scoreNumber {
+  transform: scale(1.1);
+  color: #FFF;
+}
+
+/* Individual Score Badging for selection borders */
+.selected.score-1 { border-color: #EF4444 !important; box-shadow: 0 0 12px rgba(239, 68, 68, 0.15); }
+.selected.score-2 { border-color: #F59E0B !important; box-shadow: 0 0 12px rgba(245, 158, 11, 0.15); }
+.selected.score-3 { border-color: #3B82F6 !important; box-shadow: 0 0 12px rgba(59, 130, 246, 0.15); }
+.selected.score-4 { border-color: #10B981 !important; box-shadow: 0 0 12px rgba(16, 185, 129, 0.15); }
+
+.scoreNumber {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 800;
+  transition: all var(--transition-fast);
+}
+
+/* Color codes for numbers */
+.score-1 .scoreNumber { color: #EF4444; }
+.score-2 .scoreNumber { color: #F59E0B; }
+.score-3 .scoreNumber { color: #3B82F6; }
+.score-4 .scoreNumber { color: #10B981; }
+
+.scoreTitle {
+  font-family: var(--font-sans);
+  font-size: 0.775rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Descriptions box */
+.descriptionBox {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+}
+
+.descriptionText {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* --- Responsive Breakpoint 580px --- */
+@media (max-width: 580px) {
+  .chipsContainer {
+    grid-template-columns: repeat(2, 1fr); /* 2x2 grid on small mobile */
+  }
+}

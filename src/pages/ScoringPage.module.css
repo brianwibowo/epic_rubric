@@ -1,0 +1,175 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.spinnerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - var(--header-height));
+  gap: 16px;
+  background-color: var(--bg-app);
+}
+
+.loadingText {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* --- Student Meta Card --- */
+.studentMetaCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--bg-surface-solid);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.metaLeft, .metaRight {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.metaIcon {
+  color: var(--color-primary);
+}
+
+.subMeta {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+/* --- Scoring Cockpit Layout --- */
+.scoringGrid {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.panelsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sidebarCol {
+  position: sticky;
+  top: calc(var(--header-height) + 20px);
+  z-index: 10;
+}
+
+.stickySidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: calc(100vh - var(--header-height) - 60px);
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+}
+
+/* --- Action Panel --- */
+.actionBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebarBtn {
+  width: 100%;
+}
+
+.sentBox {
+  background-color: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  padding: 12px;
+  border-radius: var(--radius-md);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sentLabel {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--color-success);
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* --- Modal Layouts --- */
+.modalText {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.modalBtns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* --- Responsive Breakpoint 1120px --- */
+@media (max-width: 1120px) {
+  .scoringGrid {
+    grid-template-columns: 1fr; /* Stack sidebar below panels list */
+  }
+  
+  .sidebarCol {
+    position: static;
+  }
+  
+  .stickySidebar {
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+/* --- Responsive Breakpoint 768px --- */
+@media (max-width: 768px) {
+  .studentMetaCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .metaLeft, .metaRight {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
