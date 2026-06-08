@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import { ChevronRight, Users, Calendar, ArrowRight } from 'lucide-react';
 import styles from './ClassListPage.module.css';
 
