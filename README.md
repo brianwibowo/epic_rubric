@@ -18,7 +18,7 @@ EPIC e-Rubric didesain khusus untuk SMK Vokasi Akuntansi, menggantikan penilaian
 ### Fitur Kunci:
 1.  **Dual Mode (Lokal / Live Supabase):** Aplikasi mendeteksi variabel lingkungan secara dinamis. Jika credentials Supabase tidak diatur, aplikasi berjalan secara offline menggunakan penyimpanan browser (`localStorage`) sehingga demo tetap dapat diuji. Jika credentials aktif, aplikasi langsung terhubung ke database cloud Supabase.
 2.  **Scoring & Tie-Breaker Engine:** Kalkulasi nilai akhir terstandarisasi dengan model pembulatan presisi. Jika terdapat nilai dimensi terendah yang sama, sistem melakukan *tie-break* otomatis dengan memilih dimensi yang berbobot konfigurasi paling tinggi untuk dijadikan fokus perbaikan utama siswa.
-3.  **Export & Import Client-Side:** Proses pembuatan dokumen PDF Rapor (jsPDF + html2canvas) dan laporan nilai Excel (SheetJS) berjalan 100% di browser pengguna tanpa membebani server (hemat biaya).
+3.  **Export & Import Client-Side:** Proses pembuatan dokumen PDF Rapor (jsPDF + html2canvas) dan laporan nilai Excel (SheetJS) berjalan 100% di browser pengguna tanpa membebani server (hemat biaya)..
 
 ---
 
