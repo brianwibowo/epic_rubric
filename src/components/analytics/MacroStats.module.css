@@ -7,7 +7,7 @@
 
 .statCard {
   border: 1px solid var(--border-color);
-  background: linear-gradient(135deg, rgba(13, 18, 30, 0.7) 0%, rgba(255, 255, 255, 0.01) 100%);
+  background: var(--bg-surface);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -32,7 +32,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-surface-hover);
   border: 1px solid var(--border-color);
   display: flex;
   align-items: center;

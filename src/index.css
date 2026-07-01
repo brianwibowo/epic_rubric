@@ -8,60 +8,60 @@
   --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  /* Theme: Premium Dark Obsidian Slate */
-  --bg-app: #080B14;
-  --bg-surface: rgba(13, 18, 30, 0.7);
-  --bg-surface-solid: #0d121e;
-  --bg-surface-hover: rgba(22, 30, 49, 0.8);
-  --bg-panel: rgba(20, 27, 45, 0.4);
+  /* Theme: Clean Premium Light Slate & Emerald */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-solid: #ffffff;
+  --bg-surface-hover: #f1f5f9;
+  --bg-panel: #f8fafc;
   
   /* Borders */
-  --border-color: rgba(255, 255, 255, 0.07);
-  --border-color-hover: rgba(255, 255, 255, 0.15);
-  --border-glow: rgba(59, 130, 246, 0.25);
+  --border-color: #e2e8f0;
+  --border-color-hover: #cbd5e1;
+  --border-glow: rgba(16, 185, 129, 0.15);
   
   /* Text Colors */
-  --text-primary: #F9FAFB;
-  --text-secondary: #9CA3AF;
-  --text-muted: #6B7280;
-  --text-inverse: #0B0F19;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-inverse: #ffffff;
   
-  /* Brand Accents */
-  --color-primary: #3B82F6;
-  --color-primary-hover: #2563EB;
-  --color-secondary: #0EA5E9;
+  /* Brand Accents (Emerald Green) */
+  --color-primary: #059669;
+  --color-primary-hover: #047857;
+  --color-secondary: #10b981;
   
-  /* EPIC Dimensions Custom Colors (PRD Sec 4.2.1) */
-  --color-epic-e: #3B82F6;  /* Evaluative - Biru */
-  --color-epic-p: #F59E0B;  /* Predictive - Kuning */
-  --color-epic-i: #F97316;  /* Intelligent - Orange */
-  --color-epic-c: #10B981;  /* Critical - Hijau */
-  --color-epic-pe: #14B8A6; /* Professional - Tosca */
+  /* EPIC Dimensions Custom Colors - Refined for Light Background */
+  --color-epic-e: #2563eb;  /* Evaluative - Rich Blue */
+  --color-epic-p: #d97706;  /* Predictive - Amber */
+  --color-epic-i: #ea580c;  /* Intelligent - Orange */
+  --color-epic-c: #059669;  /* Critical - Emerald */
+  --color-epic-pe: #0d9488; /* Professional - Teal */
 
   /* UI Status Colors */
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-error: #EF4444;
-  --color-info: #3B82F6;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #2563eb;
   
   /* Layout Spacing */
   --sidebar-width: 260px;
   --header-height: 70px;
   
   /* Utilities */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
   
-  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Glassmorphism Shadow */
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-  --shadow-glow-blue: 0 0 20px rgba(59, 130, 246, 0.15);
-  --shadow-glow-teal: 0 0 20px rgba(20, 184, 166, 0.15);
+  /* Modern Flat Shadows */
+  --shadow-glass: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --shadow-glow-blue: 0 4px 12px rgba(16, 185, 129, 0.08);
+  --shadow-glow-teal: 0 4px 12px rgba(13, 148, 136, 0.08);
 }
 
 /* ==========================================
@@ -88,7 +88,7 @@ body {
   position: relative;
 }
 
-/* Premium Gradient Ambient Backgrounds */
+/* Premium Soft Ambient Gradients */
 body::before {
   content: "";
   position: absolute;
@@ -96,7 +96,7 @@ body::before {
   left: -10%;
   width: 50%;
   height: 60%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.03) 0%, rgba(0, 0, 0, 0) 70%);
   z-index: -1;
   pointer-events: none;
 }
@@ -108,7 +108,7 @@ body::after {
   right: -10%;
   width: 50%;
   height: 60%;
-  background: radial-gradient(circle, rgba(20, 184, 166, 0.06) 0%, rgba(0, 0, 0, 0) 70%);
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.02) 0%, rgba(0, 0, 0, 0) 70%);
   z-index: -1;
   pointer-events: none;
 }
@@ -120,16 +120,16 @@ body::after {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(8, 11, 20, 0.5);
+  background: rgba(241, 245, 249, 0.5);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(148, 163, 184, 0.5);
 }
 
 /* ==========================================
@@ -137,16 +137,12 @@ body::after {
    ========================================== */
 .glass {
   background: var(--bg-surface);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-glass);
 }
 
 .glass-interactive {
   background: var(--bg-surface);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-glass);
   transition: all var(--transition-normal);
@@ -155,22 +151,22 @@ body::after {
 .glass-interactive:hover {
   border-color: var(--border-color-hover);
   background: var(--bg-surface-hover);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5), var(--shadow-glow-blue);
-  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
 }
 
 .glow-text-blue {
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
 }
 
 .gradient-text-primary {
-  background: linear-gradient(135deg, #FFF 0%, #3B82F6 100%);
+  background: linear-gradient(135deg, #09090b 0%, #059669 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gradient-text-accent {
-  background: linear-gradient(135deg, #3B82F6 0%, #14B8A6 100%);
+  background: linear-gradient(135deg, #059669 0%, #14b8a6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -179,6 +175,7 @@ body::after {
 input, select, textarea {
   font-family: var(--font-sans);
 }
+
 
 button {
   font-family: var(--font-sans);

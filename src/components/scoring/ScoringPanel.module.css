@@ -1,7 +1,7 @@
 .panelCard {
   width: 100%;
   border-left: 4px solid var(--dim-color);
-  background: linear-gradient(180deg, rgba(13, 18, 30, 0.8) 0%, rgba(20, 27, 45, 0.4) 100%);
+  background: var(--bg-surface);
   display: flex;
   flex-direction: column;
   gap: 20px;

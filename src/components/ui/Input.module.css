@@ -24,9 +24,9 @@
 
 .input {
   width: 100%;
-  background-color: rgba(13, 18, 30, 0.5);
+  background-color: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 10px 14px;
   color: var(--text-primary);
   font-size: 0.95rem;
@@ -37,8 +37,8 @@
 
 .input:focus {
   border-color: var(--color-primary);
-  background-color: rgba(13, 18, 30, 0.8);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), var(--shadow-glow-blue);
+  background-color: var(--bg-surface);
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
 }
 
 .inputError {
@@ -46,7 +46,7 @@
 }
 
 .inputError:focus {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
 }
 
 .textarea {
@@ -61,7 +61,7 @@
 }
 
 .option {
-  background-color: var(--bg-surface-solid);
+  background-color: var(--bg-surface);
   color: var(--text-primary);
 }
 
