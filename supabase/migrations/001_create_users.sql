@@ -18,6 +18,7 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Create Policies
 -- 1. Profiles are readable by authenticated users
+DROP POLICY IF EXISTS "Allow public read access to profiles" ON public.profiles;
 CREATE POLICY "Allow public read access to profiles" 
   ON public.profiles 
   FOR SELECT 
@@ -25,6 +26,7 @@ CREATE POLICY "Allow public read access to profiles"
   USING (true);
 
 -- 2. Users can update their own profile details
+DROP POLICY IF EXISTS "Allow users to update own profile" ON public.profiles;
 CREATE POLICY "Allow users to update own profile" 
   ON public.profiles 
   FOR UPDATE 
@@ -32,6 +34,7 @@ CREATE POLICY "Allow users to update own profile"
   USING (auth.uid() = id);
 
 -- 3. Only admins can insert/delete profiles directly
+DROP POLICY IF EXISTS "Allow admin full CRUD profiles" ON public.profiles;
 CREATE POLICY "Allow admin full CRUD profiles" 
   ON public.profiles 
   FOR ALL 

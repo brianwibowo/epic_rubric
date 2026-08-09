@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Policies (Immutable logs: only readable by admins, insertions allowed by anyone authenticated)
+DROP POLICY IF EXISTS "Only admins can view audit logs" ON public.audit_logs;
 CREATE POLICY "Only admins can view audit logs"
   ON public.audit_logs FOR SELECT TO authenticated
   USING (
@@ -22,6 +23,7 @@ CREATE POLICY "Only admins can view audit logs"
     )
   );
 
+DROP POLICY IF EXISTS "Allow authenticated users to write audit logs" ON public.audit_logs;
 CREATE POLICY "Allow authenticated users to write audit logs"
   ON public.audit_logs FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);

@@ -1,7 +1,7 @@
 -- ============================================================
--- EPIC e-Rubric Platform — Consolidated Production Setup SQL
+-- EPIC e-Rubric Platform — Consolidated Production Setup SQL (Idempotent)
 -- Target: Supabase Postgres Database
--- Generated: 2026-08-09T13:43:33.134Z
+-- Generated: 2026-08-09T13:46:30.549Z
 -- ============================================================
 
 -- ------------------------------------------------------------
@@ -28,6 +28,7 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Create Policies
 -- 1. Profiles are readable by authenticated users
+DROP POLICY IF EXISTS "Allow public read access to profiles" ON public.profiles;
 CREATE POLICY "Allow public read access to profiles" 
   ON public.profiles 
   FOR SELECT 
@@ -35,6 +36,7 @@ CREATE POLICY "Allow public read access to profiles"
   USING (true);
 
 -- 2. Users can update their own profile details
+DROP POLICY IF EXISTS "Allow users to update own profile" ON public.profiles;
 CREATE POLICY "Allow users to update own profile" 
   ON public.profiles 
   FOR UPDATE 
@@ -42,6 +44,7 @@ CREATE POLICY "Allow users to update own profile"
   USING (auth.uid() = id);
 
 -- 3. Only admins can insert/delete profiles directly
+DROP POLICY IF EXISTS "Allow admin full CRUD profiles" ON public.profiles;
 CREATE POLICY "Allow admin full CRUD profiles" 
   ON public.profiles 
   FOR ALL 
@@ -103,9 +106,11 @@ ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.class_enrollments ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+DROP POLICY IF EXISTS "Allow public read access to classes" ON public.classes;
 CREATE POLICY "Allow public read access to classes"
   ON public.classes FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow admin to write classes" ON public.classes;
 CREATE POLICY "Allow admin to write classes"
   ON public.classes FOR ALL TO authenticated
   USING (
@@ -115,9 +120,11 @@ CREATE POLICY "Allow admin to write classes"
     )
   );
 
+DROP POLICY IF EXISTS "Allow public read access to enrollments" ON public.class_enrollments;
 CREATE POLICY "Allow public read access to enrollments"
   ON public.class_enrollments FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow admin to write enrollments" ON public.class_enrollments;
 CREATE POLICY "Allow admin to write enrollments"
   ON public.class_enrollments FOR ALL TO authenticated
   USING (
@@ -165,9 +172,11 @@ ALTER TABLE public.rubric_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedback_templates ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+DROP POLICY IF EXISTS "Allow public read access to rubric templates" ON public.rubric_templates;
 CREATE POLICY "Allow public read access to rubric templates"
   ON public.rubric_templates FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow teachers and admins to create/update rubric templates" ON public.rubric_templates;
 CREATE POLICY "Allow teachers and admins to create/update rubric templates"
   ON public.rubric_templates FOR ALL TO authenticated
   USING (
@@ -177,9 +186,11 @@ CREATE POLICY "Allow teachers and admins to create/update rubric templates"
     )
   );
 
+DROP POLICY IF EXISTS "Allow public read access to feedback templates" ON public.feedback_templates;
 CREATE POLICY "Allow public read access to feedback templates"
   ON public.feedback_templates FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow admins to CRUD feedback templates" ON public.feedback_templates;
 CREATE POLICY "Allow admins to CRUD feedback templates"
   ON public.feedback_templates FOR ALL TO authenticated
   USING (
@@ -272,6 +283,7 @@ CREATE OR REPLACE TRIGGER update_assessments_updated_at
 
 -- Policies
 -- 1. Students can only read finalized and sent assessments belonging to themselves
+DROP POLICY IF EXISTS "Allow students to view own sent assessments" ON public.assessments;
 CREATE POLICY "Allow students to view own sent assessments"
   ON public.assessments FOR SELECT TO authenticated
   USING (
@@ -280,6 +292,7 @@ CREATE POLICY "Allow students to view own sent assessments"
   );
 
 -- 2. Teachers can view/insert/update assessments
+DROP POLICY IF EXISTS "Allow teachers full access to assessments" ON public.assessments;
 CREATE POLICY "Allow teachers full access to assessments"
   ON public.assessments FOR ALL TO authenticated
   USING (
@@ -342,6 +355,7 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Policies (Immutable logs: only readable by admins, insertions allowed by anyone authenticated)
+DROP POLICY IF EXISTS "Only admins can view audit logs" ON public.audit_logs;
 CREATE POLICY "Only admins can view audit logs"
   ON public.audit_logs FOR SELECT TO authenticated
   USING (
@@ -351,6 +365,7 @@ CREATE POLICY "Only admins can view audit logs"
     )
   );
 
+DROP POLICY IF EXISTS "Allow authenticated users to write audit logs" ON public.audit_logs;
 CREATE POLICY "Allow authenticated users to write audit logs"
   ON public.audit_logs FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);
@@ -373,6 +388,7 @@ DROP POLICY IF EXISTS "Allow teachers full access to assessments" ON public.asse
 -- Guru only read/write assessments in classes they teach (where c.guru_id = auth.uid()).
 -- Admin has full read/write access to all records.
 
+DROP POLICY IF EXISTS "Assessments SELECT Policy" ON public.assessments;
 CREATE POLICY "Assessments SELECT Policy" ON public.assessments
   FOR SELECT TO authenticated
   USING (
@@ -386,6 +402,7 @@ CREATE POLICY "Assessments SELECT Policy" ON public.assessments
     (student_id = auth.uid() AND status = 'SENT_TO_ANALYTICS')
   );
 
+DROP POLICY IF EXISTS "Assessments INSERT Policy" ON public.assessments;
 CREATE POLICY "Assessments INSERT Policy" ON public.assessments
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -399,6 +416,7 @@ CREATE POLICY "Assessments INSERT Policy" ON public.assessments
     )
   );
 
+DROP POLICY IF EXISTS "Assessments UPDATE Policy" ON public.assessments;
 CREATE POLICY "Assessments UPDATE Policy" ON public.assessments
   FOR UPDATE TO authenticated
   USING (
@@ -423,6 +441,7 @@ CREATE POLICY "Assessments UPDATE Policy" ON public.assessments
     )
   );
 
+DROP POLICY IF EXISTS "Assessments DELETE Policy" ON public.assessments;
 CREATE POLICY "Assessments DELETE Policy" ON public.assessments
   FOR DELETE TO authenticated
   USING (
@@ -446,9 +465,11 @@ DROP POLICY IF EXISTS "Allow admin to write enrollments" ON public.class_enrollm
 -- Classes:
 -- - Read: Any authenticated user.
 -- - Write (CRUD): Admin or teaching Guru.
+DROP POLICY IF EXISTS "Classes SELECT Policy" ON public.classes;
 CREATE POLICY "Classes SELECT Policy" ON public.classes
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Classes Write Policy" ON public.classes;
 CREATE POLICY "Classes Write Policy" ON public.classes
   FOR ALL TO authenticated
   USING (
@@ -460,9 +481,11 @@ CREATE POLICY "Classes Write Policy" ON public.classes
 -- Enrollments:
 -- - Read: Any authenticated user.
 -- - Write (CRUD): Admin or class-teacher Guru.
+DROP POLICY IF EXISTS "Enrollments SELECT Policy" ON public.class_enrollments;
 CREATE POLICY "Enrollments SELECT Policy" ON public.class_enrollments
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Enrollments Write Policy" ON public.class_enrollments;
 CREATE POLICY "Enrollments Write Policy" ON public.class_enrollments
   FOR ALL TO authenticated
   USING (
@@ -481,10 +504,12 @@ DROP POLICY IF EXISTS "Allow authenticated users to write audit logs" ON public.
 
 -- Read: Admin only.
 -- Write: Any authenticated user (insert actions they perform).
+DROP POLICY IF EXISTS "Audit Logs SELECT Policy" ON public.audit_logs;
 CREATE POLICY "Audit Logs SELECT Policy" ON public.audit_logs
   FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
 
+DROP POLICY IF EXISTS "Audit Logs INSERT Policy" ON public.audit_logs;
 CREATE POLICY "Audit Logs INSERT Policy" ON public.audit_logs
   FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);
@@ -684,9 +709,11 @@ ALTER TABLE public.mata_kuliah ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mk_enrollments ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for mata_kuliah
+DROP POLICY IF EXISTS "mk_select_authenticated" ON public.mata_kuliah;
 CREATE POLICY "mk_select_authenticated" ON public.mata_kuliah
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "mk_insert_dosen_admin" ON public.mata_kuliah;
 CREATE POLICY "mk_insert_dosen_admin" ON public.mata_kuliah
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -696,6 +723,7 @@ CREATE POLICY "mk_insert_dosen_admin" ON public.mata_kuliah
     )
   );
 
+DROP POLICY IF EXISTS "mk_update_owner_admin" ON public.mata_kuliah;
 CREATE POLICY "mk_update_owner_admin" ON public.mata_kuliah
   FOR UPDATE TO authenticated
   USING (
@@ -706,6 +734,7 @@ CREATE POLICY "mk_update_owner_admin" ON public.mata_kuliah
     )
   );
 
+DROP POLICY IF EXISTS "mk_delete_owner_admin" ON public.mata_kuliah;
 CREATE POLICY "mk_delete_owner_admin" ON public.mata_kuliah
   FOR DELETE TO authenticated
   USING (
@@ -717,9 +746,11 @@ CREATE POLICY "mk_delete_owner_admin" ON public.mata_kuliah
   );
 
 -- RLS Policies for mk_enrollments
+DROP POLICY IF EXISTS "enrollment_select_authenticated" ON public.mk_enrollments;
 CREATE POLICY "enrollment_select_authenticated" ON public.mk_enrollments
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "enrollment_insert_dosen_admin" ON public.mk_enrollments;
 CREATE POLICY "enrollment_insert_dosen_admin" ON public.mk_enrollments
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -733,6 +764,7 @@ CREATE POLICY "enrollment_insert_dosen_admin" ON public.mk_enrollments
     student_id = auth.uid()
   );
 
+DROP POLICY IF EXISTS "enrollment_delete_dosen_admin" ON public.mk_enrollments;
 CREATE POLICY "enrollment_delete_dosen_admin" ON public.mk_enrollments
   FOR DELETE TO authenticated
   USING (
@@ -832,9 +864,11 @@ CREATE OR REPLACE TRIGGER check_mk_activation_on_komponen_update
 ALTER TABLE public.komponen_penilaian ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "komponen_select_authenticated" ON public.komponen_penilaian;
 CREATE POLICY "komponen_select_authenticated" ON public.komponen_penilaian
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "komponen_write_dosen_admin" ON public.komponen_penilaian;
 CREATE POLICY "komponen_write_dosen_admin" ON public.komponen_penilaian
   FOR ALL TO authenticated
   USING (
@@ -890,9 +924,11 @@ CREATE TABLE IF NOT EXISTS public.rubric_dimensions (
 ALTER TABLE public.rubric_dimensions ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "dimensions_select_authenticated" ON public.rubric_dimensions;
 CREATE POLICY "dimensions_select_authenticated" ON public.rubric_dimensions
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "dimensions_write_dosen_admin" ON public.rubric_dimensions;
 CREATE POLICY "dimensions_write_dosen_admin" ON public.rubric_dimensions
   FOR ALL TO authenticated
   USING (
@@ -953,6 +989,7 @@ CREATE OR REPLACE TRIGGER update_scores_updated_at
 ALTER TABLE public.scores ENABLE ROW LEVEL SECURITY;
 
 -- RLS: Students can only see PUBLISHED scores for themselves
+DROP POLICY IF EXISTS "scores_select_student_published" ON public.scores;
 CREATE POLICY "scores_select_student_published" ON public.scores
   FOR SELECT TO authenticated
   USING (
@@ -965,6 +1002,7 @@ CREATE POLICY "scores_select_student_published" ON public.scores
   );
 
 -- RLS: Only dosen/admin can write scores
+DROP POLICY IF EXISTS "scores_write_dosen_admin" ON public.scores;
 CREATE POLICY "scores_write_dosen_admin" ON public.scores
   FOR ALL TO authenticated
   USING (
@@ -1003,6 +1041,7 @@ CREATE OR REPLACE TRIGGER update_comments_updated_at
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
 -- RLS: Users can see comments in MKs they belong to
+DROP POLICY IF EXISTS "comments_select" ON public.comments;
 CREATE POLICY "comments_select" ON public.comments
   FOR SELECT TO authenticated
   USING (
@@ -1021,6 +1060,7 @@ CREATE POLICY "comments_select" ON public.comments
   );
 
 -- RLS: Authenticated users can create comments in MKs they're part of
+DROP POLICY IF EXISTS "comments_insert" ON public.comments;
 CREATE POLICY "comments_insert" ON public.comments
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -1044,11 +1084,13 @@ CREATE POLICY "comments_insert" ON public.comments
   );
 
 -- RLS: Users can update their own comments
+DROP POLICY IF EXISTS "comments_update_own" ON public.comments;
 CREATE POLICY "comments_update_own" ON public.comments
   FOR UPDATE TO authenticated
   USING (author_id = auth.uid());
 
 -- RLS: Users can delete their own comments; admin can delete any
+DROP POLICY IF EXISTS "comments_delete" ON public.comments;
 CREATE POLICY "comments_delete" ON public.comments
   FOR DELETE TO authenticated
   USING (
@@ -1094,21 +1136,25 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- RLS: Users can only see their own notifications
+DROP POLICY IF EXISTS "notifications_select_own" ON public.notifications;
 CREATE POLICY "notifications_select_own" ON public.notifications
   FOR SELECT TO authenticated
   USING (user_id = auth.uid());
 
 -- RLS: System/admin/dosen can create notifications for anyone
+DROP POLICY IF EXISTS "notifications_insert" ON public.notifications;
 CREATE POLICY "notifications_insert" ON public.notifications
   FOR INSERT TO authenticated
   WITH CHECK (true);  -- Notification creation is controlled at application level
 
 -- RLS: Users can update (mark read) their own notifications
+DROP POLICY IF EXISTS "notifications_update_own" ON public.notifications;
 CREATE POLICY "notifications_update_own" ON public.notifications
   FOR UPDATE TO authenticated
   USING (user_id = auth.uid());
 
 -- RLS: Users can delete their own notifications
+DROP POLICY IF EXISTS "notifications_delete_own" ON public.notifications;
 CREATE POLICY "notifications_delete_own" ON public.notifications
   FOR DELETE TO authenticated
   USING (user_id = auth.uid());

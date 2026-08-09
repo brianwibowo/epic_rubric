@@ -23,6 +23,7 @@ CREATE OR REPLACE TRIGGER update_comments_updated_at
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
 -- RLS: Users can see comments in MKs they belong to
+DROP POLICY IF EXISTS "comments_select" ON public.comments;
 CREATE POLICY "comments_select" ON public.comments
   FOR SELECT TO authenticated
   USING (
@@ -41,6 +42,7 @@ CREATE POLICY "comments_select" ON public.comments
   );
 
 -- RLS: Authenticated users can create comments in MKs they're part of
+DROP POLICY IF EXISTS "comments_insert" ON public.comments;
 CREATE POLICY "comments_insert" ON public.comments
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -64,11 +66,13 @@ CREATE POLICY "comments_insert" ON public.comments
   );
 
 -- RLS: Users can update their own comments
+DROP POLICY IF EXISTS "comments_update_own" ON public.comments;
 CREATE POLICY "comments_update_own" ON public.comments
   FOR UPDATE TO authenticated
   USING (author_id = auth.uid());
 
 -- RLS: Users can delete their own comments; admin can delete any
+DROP POLICY IF EXISTS "comments_delete" ON public.comments;
 CREATE POLICY "comments_delete" ON public.comments
   FOR DELETE TO authenticated
   USING (

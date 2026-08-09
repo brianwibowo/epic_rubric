@@ -34,9 +34,11 @@ CREATE TABLE IF NOT EXISTS public.rubric_dimensions (
 ALTER TABLE public.rubric_dimensions ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "dimensions_select_authenticated" ON public.rubric_dimensions;
 CREATE POLICY "dimensions_select_authenticated" ON public.rubric_dimensions
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "dimensions_write_dosen_admin" ON public.rubric_dimensions;
 CREATE POLICY "dimensions_write_dosen_admin" ON public.rubric_dimensions
   FOR ALL TO authenticated
   USING (

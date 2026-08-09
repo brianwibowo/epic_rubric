@@ -84,9 +84,11 @@ CREATE OR REPLACE TRIGGER check_mk_activation_on_komponen_update
 ALTER TABLE public.komponen_penilaian ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "komponen_select_authenticated" ON public.komponen_penilaian;
 CREATE POLICY "komponen_select_authenticated" ON public.komponen_penilaian
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "komponen_write_dosen_admin" ON public.komponen_penilaian;
 CREATE POLICY "komponen_write_dosen_admin" ON public.komponen_penilaian
   FOR ALL TO authenticated
   USING (

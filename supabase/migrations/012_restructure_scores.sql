@@ -39,6 +39,7 @@ CREATE OR REPLACE TRIGGER update_scores_updated_at
 ALTER TABLE public.scores ENABLE ROW LEVEL SECURITY;
 
 -- RLS: Students can only see PUBLISHED scores for themselves
+DROP POLICY IF EXISTS "scores_select_student_published" ON public.scores;
 CREATE POLICY "scores_select_student_published" ON public.scores
   FOR SELECT TO authenticated
   USING (
@@ -51,6 +52,7 @@ CREATE POLICY "scores_select_student_published" ON public.scores
   );
 
 -- RLS: Only dosen/admin can write scores
+DROP POLICY IF EXISTS "scores_write_dosen_admin" ON public.scores;
 CREATE POLICY "scores_write_dosen_admin" ON public.scores
   FOR ALL TO authenticated
   USING (

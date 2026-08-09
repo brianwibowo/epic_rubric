@@ -29,21 +29,25 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- RLS: Users can only see their own notifications
+DROP POLICY IF EXISTS "notifications_select_own" ON public.notifications;
 CREATE POLICY "notifications_select_own" ON public.notifications
   FOR SELECT TO authenticated
   USING (user_id = auth.uid());
 
 -- RLS: System/admin/dosen can create notifications for anyone
+DROP POLICY IF EXISTS "notifications_insert" ON public.notifications;
 CREATE POLICY "notifications_insert" ON public.notifications
   FOR INSERT TO authenticated
   WITH CHECK (true);  -- Notification creation is controlled at application level
 
 -- RLS: Users can update (mark read) their own notifications
+DROP POLICY IF EXISTS "notifications_update_own" ON public.notifications;
 CREATE POLICY "notifications_update_own" ON public.notifications
   FOR UPDATE TO authenticated
   USING (user_id = auth.uid());
 
 -- RLS: Users can delete their own notifications
+DROP POLICY IF EXISTS "notifications_delete_own" ON public.notifications;
 CREATE POLICY "notifications_delete_own" ON public.notifications
   FOR DELETE TO authenticated
   USING (user_id = auth.uid());

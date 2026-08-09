@@ -22,9 +22,11 @@ ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.class_enrollments ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+DROP POLICY IF EXISTS "Allow public read access to classes" ON public.classes;
 CREATE POLICY "Allow public read access to classes"
   ON public.classes FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow admin to write classes" ON public.classes;
 CREATE POLICY "Allow admin to write classes"
   ON public.classes FOR ALL TO authenticated
   USING (
@@ -34,9 +36,11 @@ CREATE POLICY "Allow admin to write classes"
     )
   );
 
+DROP POLICY IF EXISTS "Allow public read access to enrollments" ON public.class_enrollments;
 CREATE POLICY "Allow public read access to enrollments"
   ON public.class_enrollments FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow admin to write enrollments" ON public.class_enrollments;
 CREATE POLICY "Allow admin to write enrollments"
   ON public.class_enrollments FOR ALL TO authenticated
   USING (

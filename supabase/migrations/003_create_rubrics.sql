@@ -32,9 +32,11 @@ ALTER TABLE public.rubric_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedback_templates ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+DROP POLICY IF EXISTS "Allow public read access to rubric templates" ON public.rubric_templates;
 CREATE POLICY "Allow public read access to rubric templates"
   ON public.rubric_templates FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow teachers and admins to create/update rubric templates" ON public.rubric_templates;
 CREATE POLICY "Allow teachers and admins to create/update rubric templates"
   ON public.rubric_templates FOR ALL TO authenticated
   USING (
@@ -44,9 +46,11 @@ CREATE POLICY "Allow teachers and admins to create/update rubric templates"
     )
   );
 
+DROP POLICY IF EXISTS "Allow public read access to feedback templates" ON public.feedback_templates;
 CREATE POLICY "Allow public read access to feedback templates"
   ON public.feedback_templates FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow admins to CRUD feedback templates" ON public.feedback_templates;
 CREATE POLICY "Allow admins to CRUD feedback templates"
   ON public.feedback_templates FOR ALL TO authenticated
   USING (

@@ -53,6 +53,7 @@ CREATE OR REPLACE TRIGGER update_assessments_updated_at
 
 -- Policies
 -- 1. Students can only read finalized and sent assessments belonging to themselves
+DROP POLICY IF EXISTS "Allow students to view own sent assessments" ON public.assessments;
 CREATE POLICY "Allow students to view own sent assessments"
   ON public.assessments FOR SELECT TO authenticated
   USING (
@@ -61,6 +62,7 @@ CREATE POLICY "Allow students to view own sent assessments"
   );
 
 -- 2. Teachers can view/insert/update assessments
+DROP POLICY IF EXISTS "Allow teachers full access to assessments" ON public.assessments;
 CREATE POLICY "Allow teachers full access to assessments"
   ON public.assessments FOR ALL TO authenticated
   USING (

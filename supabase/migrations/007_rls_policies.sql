@@ -12,6 +12,7 @@ DROP POLICY IF EXISTS "Allow teachers full access to assessments" ON public.asse
 -- Guru only read/write assessments in classes they teach (where c.guru_id = auth.uid()).
 -- Admin has full read/write access to all records.
 
+DROP POLICY IF EXISTS "Assessments SELECT Policy" ON public.assessments;
 CREATE POLICY "Assessments SELECT Policy" ON public.assessments
   FOR SELECT TO authenticated
   USING (
@@ -25,6 +26,7 @@ CREATE POLICY "Assessments SELECT Policy" ON public.assessments
     (student_id = auth.uid() AND status = 'SENT_TO_ANALYTICS')
   );
 
+DROP POLICY IF EXISTS "Assessments INSERT Policy" ON public.assessments;
 CREATE POLICY "Assessments INSERT Policy" ON public.assessments
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -38,6 +40,7 @@ CREATE POLICY "Assessments INSERT Policy" ON public.assessments
     )
   );
 
+DROP POLICY IF EXISTS "Assessments UPDATE Policy" ON public.assessments;
 CREATE POLICY "Assessments UPDATE Policy" ON public.assessments
   FOR UPDATE TO authenticated
   USING (
@@ -62,6 +65,7 @@ CREATE POLICY "Assessments UPDATE Policy" ON public.assessments
     )
   );
 
+DROP POLICY IF EXISTS "Assessments DELETE Policy" ON public.assessments;
 CREATE POLICY "Assessments DELETE Policy" ON public.assessments
   FOR DELETE TO authenticated
   USING (
@@ -85,9 +89,11 @@ DROP POLICY IF EXISTS "Allow admin to write enrollments" ON public.class_enrollm
 -- Classes:
 -- - Read: Any authenticated user.
 -- - Write (CRUD): Admin or teaching Guru.
+DROP POLICY IF EXISTS "Classes SELECT Policy" ON public.classes;
 CREATE POLICY "Classes SELECT Policy" ON public.classes
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Classes Write Policy" ON public.classes;
 CREATE POLICY "Classes Write Policy" ON public.classes
   FOR ALL TO authenticated
   USING (
@@ -99,9 +105,11 @@ CREATE POLICY "Classes Write Policy" ON public.classes
 -- Enrollments:
 -- - Read: Any authenticated user.
 -- - Write (CRUD): Admin or class-teacher Guru.
+DROP POLICY IF EXISTS "Enrollments SELECT Policy" ON public.class_enrollments;
 CREATE POLICY "Enrollments SELECT Policy" ON public.class_enrollments
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Enrollments Write Policy" ON public.class_enrollments;
 CREATE POLICY "Enrollments Write Policy" ON public.class_enrollments
   FOR ALL TO authenticated
   USING (
@@ -120,10 +128,12 @@ DROP POLICY IF EXISTS "Allow authenticated users to write audit logs" ON public.
 
 -- Read: Admin only.
 -- Write: Any authenticated user (insert actions they perform).
+DROP POLICY IF EXISTS "Audit Logs SELECT Policy" ON public.audit_logs;
 CREATE POLICY "Audit Logs SELECT Policy" ON public.audit_logs
   FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
 
+DROP POLICY IF EXISTS "Audit Logs INSERT Policy" ON public.audit_logs;
 CREATE POLICY "Audit Logs INSERT Policy" ON public.audit_logs
   FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);

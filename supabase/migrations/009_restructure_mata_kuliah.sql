@@ -70,9 +70,11 @@ ALTER TABLE public.mata_kuliah ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mk_enrollments ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for mata_kuliah
+DROP POLICY IF EXISTS "mk_select_authenticated" ON public.mata_kuliah;
 CREATE POLICY "mk_select_authenticated" ON public.mata_kuliah
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "mk_insert_dosen_admin" ON public.mata_kuliah;
 CREATE POLICY "mk_insert_dosen_admin" ON public.mata_kuliah
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -82,6 +84,7 @@ CREATE POLICY "mk_insert_dosen_admin" ON public.mata_kuliah
     )
   );
 
+DROP POLICY IF EXISTS "mk_update_owner_admin" ON public.mata_kuliah;
 CREATE POLICY "mk_update_owner_admin" ON public.mata_kuliah
   FOR UPDATE TO authenticated
   USING (
@@ -92,6 +95,7 @@ CREATE POLICY "mk_update_owner_admin" ON public.mata_kuliah
     )
   );
 
+DROP POLICY IF EXISTS "mk_delete_owner_admin" ON public.mata_kuliah;
 CREATE POLICY "mk_delete_owner_admin" ON public.mata_kuliah
   FOR DELETE TO authenticated
   USING (
@@ -103,9 +107,11 @@ CREATE POLICY "mk_delete_owner_admin" ON public.mata_kuliah
   );
 
 -- RLS Policies for mk_enrollments
+DROP POLICY IF EXISTS "enrollment_select_authenticated" ON public.mk_enrollments;
 CREATE POLICY "enrollment_select_authenticated" ON public.mk_enrollments
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "enrollment_insert_dosen_admin" ON public.mk_enrollments;
 CREATE POLICY "enrollment_insert_dosen_admin" ON public.mk_enrollments
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -119,6 +125,7 @@ CREATE POLICY "enrollment_insert_dosen_admin" ON public.mk_enrollments
     student_id = auth.uid()
   );
 
+DROP POLICY IF EXISTS "enrollment_delete_dosen_admin" ON public.mk_enrollments;
 CREATE POLICY "enrollment_delete_dosen_admin" ON public.mk_enrollments
   FOR DELETE TO authenticated
   USING (
