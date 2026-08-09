@@ -1,3 +1,7 @@
+/* ============================================================
+   EPIC e-Rubric v2.0 — Premium Modern Button System
+   ============================================================ */
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -13,67 +17,85 @@
   text-decoration: none;
   gap: 8px;
   outline: none;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .btn:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(0.98) translateY(0);
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none !important;
 }
 
 /* --- Sizes --- */
 .sm {
-  padding: 6px 12px;
-  font-size: 0.875rem;
+  padding: 8px 14px;
+  font-size: var(--text-sm);
+  min-height: 36px;
+  border-radius: var(--radius-sm);
+  gap: 6px;
 }
 
 .md {
-  padding: 10px 20px;
-  font-size: 0.95rem;
+  padding: 10px 18px;
+  font-size: var(--text-base);
+  min-height: 42px;
+  border-radius: var(--radius-md);
+  gap: 8px;
 }
 
 .lg {
-  padding: 14px 28px;
-  font-size: 1.05rem;
+  padding: 12px 24px;
+  font-size: var(--text-lg);
+  min-height: 48px;
   border-radius: var(--radius-lg);
+  gap: 10px;
 }
 
 /* --- Variants --- */
 .primary {
-  background-color: var(--color-primary);
-  color: var(--text-inverse);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(4, 120, 87, 0.4);
 }
 
 .primary:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
 }
 
 .secondary {
   background-color: var(--bg-surface);
-  border-color: var(--border-color);
+  border: 1px solid var(--border-color);
   color: var(--text-primary);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
 .secondary:hover:not(:disabled) {
   background-color: var(--bg-surface-hover);
   border-color: var(--border-color-hover);
+  color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
 .outline {
   background-color: transparent;
-  border-color: var(--border-color);
+  border: 1px solid var(--border-color);
   color: var(--text-primary);
 }
 
 .outline:hover:not(:disabled) {
-  background-color: var(--bg-surface-hover);
-  border-color: var(--border-color-hover);
+  background-color: rgba(5, 150, 105, 0.06);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
 .ghost {
@@ -87,35 +109,52 @@
 }
 
 .danger {
-  background-color: var(--color-error);
-  color: var(--text-inverse);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(185, 28, 28, 0.4);
 }
 
 .danger:hover:not(:disabled) {
-  background-color: #b91c1c;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-.epic {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-epic-pe) 100%);
-  color: var(--text-inverse);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-}
-
-.epic:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--color-primary-hover) 0%, #0d9488 100%);
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
   transform: translateY(-1px);
 }
 
-.epic:active:not(:disabled) {
-  transform: translateY(0) scale(0.97);
+.epic {
+  background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(13, 148, 136, 0.4);
 }
 
-/* --- Loading / Icon State --- */
-.loading {
-  color: transparent !important;
+.epic:hover:not(:disabled) {
+  background: linear-gradient(135deg, #047857 0%, #0f766e 100%);
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.35);
+  transform: translateY(-1px);
+}
+
+/* --- Content & Icon Alignment Fix --- */
+.content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1.2;
+}
+
+.content svg {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconLeft, .iconRight {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .spinnerWrapper {
@@ -128,13 +167,9 @@
   justify-content: center;
 }
 
-.iconLeft, .iconRight {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.loading {
+  color: transparent !important;
 }
-
-.content {
-  display: inline-block;
+.loading * {
+  visibility: hidden;
 }

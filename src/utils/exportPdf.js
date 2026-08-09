@@ -2,30 +2,28 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 /**
- * Cetak lembar hasil penilaian individu (Rapor Praktikum) ke dalam format .pdf resmi
+ * Cetak lembar hasil penilaian individu (Rapor MK Mahasiswa) ke dalam format .pdf resmi
  * Menggunakan html2canvas untuk menjepret DOM layout premium dan jsPDF untuk merender A4.
- * Sesuai spesifikasi PRD FR-LA-006.
+ * Sesuai spesifikasi PRD v2.0 FR-LA-006.
  * 
  * @param {string} elementId - ID dari elemen DOM kontainer Rapor (misalnya 'report-card-print')
- * @param {string} studentName - Nama lengkap siswa untuk penamaan file
- * @param {string} projectName - Nama proyek praktikum
+ * @param {string} studentName - Nama lengkap mahasiswa untuk penamaan file
+ * @param {string} mkName - Nama Mata Kuliah
  */
-export async function exportReportCardToPdf(elementId, studentName, projectName) {
+export async function exportReportCardToPdf(elementId, studentName, mkName) {
   const element = document.getElementById(elementId);
   if (!element) {
     console.error(`Element with ID ${elementId} not found.`);
     alert('Elemen rapor tidak ditemukan untuk dicetak.');
-    return;
+    return false;
   }
 
   try {
-    // Show spinner in page or button if needed by parent
-    
     // Configure canvas rendering settings for high resolution prints
     const canvas = await html2canvas(element, {
       scale: 2, // 2x resolution
       useCORS: true,
-      backgroundColor: '#080B14', // Maintain dark premium theme style
+      backgroundColor: '#f8fafc', // Light clean premium background for print
       logging: false
     });
 
@@ -52,9 +50,9 @@ export async function exportReportCardToPdf(elementId, studentName, projectName)
       heightLeft -= pageHeight;
     }
 
-    const cleanName = studentName.replace(/[^a-zA-Z0-9]/g, '_');
-    const cleanProject = projectName.replace(/[^a-zA-Z0-9]/g, '_');
-    const fileName = `Rapor_EPIC_${cleanName}_${cleanProject}.pdf`;
+    const cleanName = (studentName || 'Mahasiswa').replace(/[^a-zA-Z0-9]/g, '_');
+    const cleanMK = (mkName || 'MK').replace(/[^a-zA-Z0-9]/g, '_');
+    const fileName = `Rapor_EPIC_${cleanName}_${cleanMK}.pdf`;
     
     pdf.save(fileName);
     return true;

@@ -68,7 +68,7 @@ const LoginPage = () => {
       
       <div className={styles.contentWrapper}>
         <div className={styles.logoHeader}>
-          <div className={styles.logoIcon}>E</div>
+          <img src="/logo.png" alt="EPIC e-Rubric Logo" className={styles.loginLogoImg} />
           <h1 className={styles.logoText}>
             EPIC <span className={styles.subLogo}>e-Rubric</span>
           </h1>
@@ -91,7 +91,7 @@ const LoginPage = () => {
             <Input
               label="Surel / Username"
               type="text"
-              placeholder="nama@sekolah.sch.id atau 'guru'"
+              placeholder="nama@kampus.ac.id atau 'dosen'"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               iconLeft={<Mail size={18} />}
@@ -139,22 +139,22 @@ const LoginPage = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => handleQuickLogin('guru')}
+                onClick={() => handleQuickLogin('dosen')}
                 disabled={isLoading}
                 className={styles.quickBtn}
               >
                 <Sparkles size={14} style={{ color: 'var(--color-primary)' }} />
-                <span>Guru AKL</span>
+                <span>Dosen</span>
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => handleQuickLogin('siswa')}
+                onClick={() => handleQuickLogin('mahasiswa')}
                 disabled={isLoading}
                 className={styles.quickBtn}
               >
                 <Sparkles size={14} style={{ color: 'var(--color-success)' }} />
-                <span>Siswa SMK</span>
+                <span>Mahasiswa</span>
               </Button>
             </div>
           </div>

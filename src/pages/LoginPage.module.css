@@ -49,19 +49,12 @@
   text-align: center;
 }
 
-.logoIcon {
-  width: 54px;
-  height: 54px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-epic-pe) 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-sans);
-  font-weight: 800;
-  color: var(--text-inverse);
-  font-size: 1.8rem;
-  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.15);
+.logoIcon, .loginLogoImg {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.2);
   margin-bottom: 16px;
 }
 

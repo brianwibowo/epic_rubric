@@ -5,24 +5,23 @@ import { supabase } from '@/config/supabase';
 const MOCK_PROFILES = {
   admin: {
     id: 'mock-admin-uuid',
-    full_name: 'Budi Santoso, M.Pd.',
+    full_name: 'Dr. Budi Santoso, M.Pd.',
     role: 'admin',
-    nip: '198203112009021003',
+    nidn: '198203112009021003',
     avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=60'
   },
-  guru: {
-    id: 'mock-guru-uuid',
-    full_name: 'Dra. Sri Wahyuni',
-    role: 'guru',
-    nip: '197508242000032001',
+  dosen: {
+    id: 'mock-dosen-uuid',
+    full_name: 'Dra. Sri Wahyuni, M.Ak.',
+    role: 'dosen',
+    nidn: '197508242000032001',
     avatar_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=60'
   },
-  siswa: {
-    id: 'mock-siswa-uuid',
+  mahasiswa: {
+    id: 'mock-mahasiswa-uuid',
     full_name: 'Feri Irawan',
-    role: 'siswa',
-    nisn: '0087654321',
-    class_id: 'class-xii-akl-1',
+    role: 'mahasiswa',
+    nim: '2024081001',
     avatar_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=60'
   }
 };
@@ -37,10 +36,9 @@ export const useAuthStore = create((set, get) => ({
   profile: null,
   isAuthenticated: false,
   isLoading: true,
-  isMock: true, // Flag indicating whether we are in mockup/simulated mode
+  isMock: true,
 
   initializeAuth: async () => {
-    // Check if we have a saved mock session or real session
     const savedProfile = localStorage.getItem('epic_profile');
     const isMockStr = localStorage.getItem('epic_is_mock');
     
@@ -49,7 +47,6 @@ export const useAuthStore = create((set, get) => ({
       const isMockVal = isMockStr === 'true';
 
       if (!isMockVal && isSupabaseConfigured()) {
-        // Double check Supabase session validity
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           set({
@@ -61,14 +58,12 @@ export const useAuthStore = create((set, get) => ({
           });
           return;
         } else {
-          // Session expired
           localStorage.removeItem('epic_profile');
           localStorage.removeItem('epic_is_mock');
         }
       } else {
-        // Mock session
         set({
-          user: { email: parsed.role + '@epic.school.id', id: parsed.id },
+          user: { email: parsed.role + '@epic.ac.id', id: parsed.id },
           profile: parsed,
           isAuthenticated: true,
           isMock: true,
@@ -84,18 +79,17 @@ export const useAuthStore = create((set, get) => ({
   login: async (email, password) => {
     set({ isLoading: true });
     
-    // Simulating delay for premium loading micro-interactions
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     const cleanEmail = email.toLowerCase().trim();
     
-    // 1. Check if they used demo login credentials
+    // Demo login credentials
     if (cleanEmail === 'admin@epic.id' || cleanEmail === 'admin') {
       const prof = MOCK_PROFILES.admin;
       localStorage.setItem('epic_profile', JSON.stringify(prof));
       localStorage.setItem('epic_is_mock', 'true');
       set({
-        user: { email: 'admin@epic.id', id: prof.id },
+        user: { email: 'admin@epic.ac.id', id: prof.id },
         profile: prof,
         isAuthenticated: true,
         isMock: true,
@@ -104,12 +98,12 @@ export const useAuthStore = create((set, get) => ({
       return { success: true };
     }
     
-    if (cleanEmail === 'guru@epic.id' || cleanEmail === 'guru') {
-      const prof = MOCK_PROFILES.guru;
+    if (cleanEmail === 'dosen@epic.id' || cleanEmail === 'dosen' || cleanEmail === 'guru@epic.id' || cleanEmail === 'guru') {
+      const prof = MOCK_PROFILES.dosen;
       localStorage.setItem('epic_profile', JSON.stringify(prof));
       localStorage.setItem('epic_is_mock', 'true');
       set({
-        user: { email: 'guru@epic.id', id: prof.id },
+        user: { email: 'dosen@epic.ac.id', id: prof.id },
         profile: prof,
         isAuthenticated: true,
         isMock: true,
@@ -118,12 +112,12 @@ export const useAuthStore = create((set, get) => ({
       return { success: true };
     }
     
-    if (cleanEmail === 'siswa@epic.id' || cleanEmail === 'siswa') {
-      const prof = MOCK_PROFILES.siswa;
+    if (cleanEmail === 'mahasiswa@epic.id' || cleanEmail === 'mahasiswa' || cleanEmail === 'siswa@epic.id' || cleanEmail === 'siswa') {
+      const prof = MOCK_PROFILES.mahasiswa;
       localStorage.setItem('epic_profile', JSON.stringify(prof));
       localStorage.setItem('epic_is_mock', 'true');
       set({
-        user: { email: 'siswa@epic.id', id: prof.id },
+        user: { email: 'mahasiswa@epic.ac.id', id: prof.id },
         profile: prof,
         isAuthenticated: true,
         isMock: true,
@@ -132,17 +126,12 @@ export const useAuthStore = create((set, get) => ({
       return { success: true };
     }
 
-    // 2. Real Supabase Login
+    // Real Supabase Login
     if (isSupabaseConfigured()) {
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
-
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
-        // Fetch corresponding user profile from the database
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -171,9 +160,8 @@ export const useAuthStore = create((set, get) => ({
       }
     }
 
-    // Invalid credentials
     set({ isLoading: false });
-    throw new Error('Email atau password salah. Gunakan kredensial demo (admin/guru/siswa) atau set up koneksi Supabase Anda.');
+    throw new Error('Email atau password salah. Gunakan kredensial demo (admin/dosen/mahasiswa) atau set up koneksi Supabase Anda.');
   },
 
   logout: async () => {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styles from './DataTable.module.css';
-import { ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import Spinner from './Spinner';
+import { ArrowUp, ArrowDown } from 'lucide-react';
+import Pagination from './Pagination';
 
 const DataTable = ({
   columns = [], // [{key, label, sortable, render}]
@@ -14,6 +14,7 @@ const DataTable = ({
 }) => {
   const [sortConfig, setSortConfig] = useState(null); // {key, direction}
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(pageSize);
 
   const handleSort = (key, sortable) => {
     if (!sortable) return;
@@ -31,7 +32,6 @@ const DataTable = ({
       let aVal = a[sortConfig.key];
       let bVal = b[sortConfig.key];
       
-      // Fallback for sub-objects/render functions
       if (typeof aVal === 'object') aVal = '';
       if (typeof bVal === 'object') bVal = '';
 
@@ -43,12 +43,12 @@ const DataTable = ({
   }, [data, sortConfig]);
 
   // Pagination logic
-  const totalPages = Math.ceil(sortedData.length / pageSize);
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   const paginatedData = React.useMemo(() => {
     if (!pagination) return sortedData;
-    const start = (currentPage - 1) * pageSize;
-    return sortedData.slice(start, start + pageSize);
-  }, [sortedData, pagination, currentPage, pageSize]);
+    const start = (currentPage - 1) * itemsPerPage;
+    return sortedData.slice(start, start + itemsPerPage);
+  }, [sortedData, pagination, currentPage, itemsPerPage]);
 
   return (
     <div className={styles.tableWrapper}>
@@ -80,7 +80,7 @@ const DataTable = ({
           <tbody>
             {isLoading ? (
               // Skeleton Loading Rows
-              Array.from({ length: 4 }).map((_, i) => (
+              Array.from({ length: 5 }).map((_, i) => (
                 <tr key={`loader-${i}`} className={styles.tr}>
                   {columns.map((col) => (
                     <td key={`loader-cell-${col.key}`} className={styles.td}>
@@ -119,26 +119,18 @@ const DataTable = ({
         </table>
       </div>
 
-      {pagination && totalPages > 1 && (
-        <div className={styles.pagination}>
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className={styles.pageBtn}
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span className={styles.pageInfo}>
-            Halaman {currentPage} dari {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className={styles.pageBtn}
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
+      {pagination && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={sortedData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={(page) => setCurrentPage(page)}
+          onItemsPerPageChange={(newSize) => {
+            setItemsPerPage(newSize);
+            setCurrentPage(1);
+          }}
+        />
       )}
     </div>
   );

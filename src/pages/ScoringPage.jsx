@@ -1,411 +1,449 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useRubric } from '@/hooks/useRubric';
-import { useScoring } from '@/hooks/useScoring';
-import { useScoringStore } from '@/stores/scoringStore';
-import Header from '@/components/layout/Header';
-import Button from '@/components/ui/Button';
+import React, { useState, useMemo } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useMKStore } from '@/stores/mkStore';
+import { useRubricStore } from '@/stores/rubricStore';
+import { useUiStore } from '@/stores/uiStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import Modal from '@/components/ui/Modal';
-import Spinner from '@/components/ui/Spinner';
-import ScoringPanel from '@/components/scoring/ScoringPanel';
-import ScoreSummary from '@/components/scoring/ScoreSummary';
-import FinalScoreDisplay from '@/components/scoring/FinalScoreDisplay';
-import FokusPerbaikan from '@/components/scoring/FokusPerbaikan';
-import { calculateFinalScore, detectFocusArea } from '@/utils/scoringEngine';
-import { ArrowLeft, Save, Lock, Send, Unlock, Calendar, User, FileText } from 'lucide-react';
+import HelpButton from '@/components/ui/HelpButton';
+import { getDimensionColor, LIKERT_SCALE } from '@/utils/constants';
+import { calculateRawScore } from '@/utils/scoringEngine';
 import styles from './ScoringPage.module.css';
+import { 
+  ArrowLeft, Save, Send, ChevronLeft, ChevronRight, 
+  User, CheckCircle2, Star, MessageSquare
+} from 'lucide-react';
 
-// Mock student roster for local simulation
-const MOCK_STUDENTS = [
-  { id: 'siswa-1', full_name: 'Ahmad Rifai', nisn: '0081234567' },
-  { id: 'siswa-2', full_name: 'Citra Lestari', nisn: '0082345678' },
-  { id: 'siswa-3', full_name: 'Dewi Sartika', nisn: '0083456789' },
-  { id: 'mock-siswa-uuid', full_name: 'Feri Irawan', nisn: '0087654321' } // Feri, our logged in student
+const DEFAULT_DIMENSIONS = [
+  { code: 'E', name: 'Evaluative Understanding', weight: 0.30, feedback_1: 'Belum mampu mengevaluasi data akuntansi.', feedback_2: 'Dapat mengevaluasi data dasar namun analisis masih dangkal.', feedback_3: 'Mampu mengevaluasi dengan baik sesuai SAK.', feedback_4: 'Evaluasi sangat mendalam dan kritis.' },
+  { code: 'P', name: 'Predictive Reasoning', weight: 0.30, feedback_1: 'Tidak dapat memprediksi dampak transaksi.', feedback_2: 'Prediksi dasar namun belum konsisten.', feedback_3: 'Prediksi tepat dan logis.', feedback_4: 'Mampu memprediksi skenario kompleks.' },
+  { code: 'I', name: 'Intelligent Application', weight: 0.20, feedback_1: 'Penerapan belum sesuai konteks.', feedback_2: 'Penerapan dasar dengan beberapa error.', feedback_3: 'Penerapan baik dan terstruktur.', feedback_4: 'Penerapan kreatif dan efisien.' },
+  { code: 'C', name: 'Critical Reflection', weight: 0.20, feedback_1: 'Belum menunjukkan refleksi kritis.', feedback_2: 'Refleksi ada namun kurang mendalam.', feedback_3: 'Refleksi kritis dan relevan.', feedback_4: 'Refleksi sangat tajam dan membangun.' },
 ];
 
 const ScoringPage = () => {
-  const { classId, studentId } = useParams();
+  const { mkId, komponenId: paramKomponenId } = useParams();
+  const [searchParams] = useSearchParams();
+  const targetStudentId = searchParams.get('studentId');
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { getMKById, updateMK } = useMKStore();
+  const { rubrics } = useRubricStore();
+  const { addToast } = useUiStore();
+  const { addNotification } = useNotificationStore();
+
+  const mk = getMKById(mkId);
+  const students = mk?.students || [];
+  const komponenList = mk?.komponen?.length > 0 
+    ? mk.komponen 
+    : [
+        { id: 'k1', name: 'Proyek', bobot: 0.25, rubricId: 'r1' },
+        { id: 'k2', name: 'Partisipasi Kelas', bobot: 0.10, rubricId: 'r2' },
+        { id: 'k3', name: 'Quiz', bobot: 0.15, rubricId: 'r2' },
+        { id: 'k4', name: 'Tugas', bobot: 0.15, rubricId: 'r1' },
+        { id: 'k5', name: 'UTS', bobot: 0.15, rubricId: 'r3' },
+        { id: 'k6', name: 'UAS', bobot: 0.20, rubricId: 'r3' },
+      ];
+
+  const initialKompId = paramKomponenId || komponenList.find(k => k.rubricId)?.id || komponenList[0]?.id;
+  const [activeKomponenId, setActiveKomponenId] = useState(initialKompId);
+
+  const activeKomponen = komponenList.find(k => k.id === activeKomponenId) || komponenList[0];
   
-  const { templates, isLoading: isLoadingRubrics } = useRubric();
-  const { 
-    isLoading: isLoadingScoring, 
-    fetchAssessment, 
-    saveAssessmentDraft, 
-    finalizeAssessment, 
-    sendToAnalytics, 
-    reopenAssessment 
-  } = useScoring();
+  // Find rubric dimensions from rubricStore, fallback to defaults
+  const assignedRubric = rubrics.find(r => r.id === activeKomponen.rubricId);
+  const dimensions = assignedRubric?.dimensions?.length > 0 ? assignedRubric.dimensions : DEFAULT_DIMENSIONS;
 
-  const session = useScoringStore();
+  // Build student nav list
+  const studentNav = students.length > 0 
+    ? students.map(s => ({
+        id: s.id || s.student_id,
+        name: s.full_name || s.name || 'Mahasiswa',
+        scored: !!(mk?.scoringData?.[s.id || s.student_id]?.[activeKomponen.id])
+      }))
+    : [
+        { id: 's1', name: 'Feri Irawan', scored: false },
+        { id: 's2', name: 'Rina Permata Sari', scored: false },
+        { id: 's3', name: 'Andi Prasetyo', scored: false },
+      ];
 
-  const [activeStudent, setActiveStudent] = useState(null);
-  const [projectName] = useState('Praktikum Siklus Akuntansi AKL-1');
-  const [pageLoading, setPageLoading] = useState(true);
+  const initialIdx = targetStudentId 
+    ? Math.max(0, studentNav.findIndex(s => s.id === targetStudentId))
+    : 0;
 
-  // Modals for confirmation
-  const [finalizeModalOpen, setFinalizeModalOpen] = useState(false);
-  const [sendModalOpen, setSendModalOpen] = useState(false);
-  const [reopenModalOpen, setReopenModalOpen] = useState(false);
+  const [currentStudentIdx, setCurrentStudentIdx] = useState(initialIdx);
+  const currentStudent = studentNav[currentStudentIdx];
 
-  // Load student info and assessment data
-  useEffect(() => {
-    const loadData = async () => {
-      setPageLoading(true);
-      
-      // 1. Get student details
-      const studentObj = MOCK_STUDENTS.find(s => s.id === studentId) || { id: studentId, full_name: 'Siswa Akuntansi' };
-      setActiveStudent(studentObj);
+  // Load saved scores for current student + active komponen
+  const savedScores = mk?.scoringData?.[currentStudent?.id]?.[activeKomponen.id] || {};
+  const [scores, setScores] = useState(savedScores.scores || {});
+  const [feedback, setFeedback] = useState(savedScores.feedbacks || {});
+  const [status, setStatus] = useState(savedScores.status || 'DRAFT');
+  const [isSaving, setIsSaving] = useState(false);
 
-      // 2. Fetch assessment details if exists
-      const assessment = await fetchAssessment(studentId, projectName);
+  const [isDirty, setIsDirty] = useState(false);
 
-      // 3. Find Master Rubric Template or use default
-      let activeWeights = { E: 0.2, P: 0.2, I: 0.2, C: 0.2, PE: 0.2 };
-      let templateId = null;
-      
-      const masterTemplate = templates.find(t => t.is_master) || templates[0];
-      if (masterTemplate) {
-        templateId = masterTemplate.id;
-        activeWeights = {
-          E: Number(masterTemplate.weight_e),
-          P: Number(masterTemplate.weight_p),
-          I: Number(masterTemplate.weight_i),
-          C: Number(masterTemplate.weight_c),
-          PE: Number(masterTemplate.weight_pe)
-        };
+  // Synchronize state when student or active komponen changes
+  React.useEffect(() => {
+    const saved = mk?.scoringData?.[currentStudent?.id]?.[activeKomponen?.id] || {};
+    setScores(saved.scores || {});
+    setFeedback(saved.feedbacks || {});
+    setStatus(saved.status || 'DRAFT');
+    setIsDirty(false);
+  }, [currentStudentIdx, activeKomponenId, mk?.scoringData]);
+
+  const autoSaveIfDirty = () => {
+    if (isDirty && currentStudent?.id && activeKomponen?.id) {
+      const existingScoringData = mk?.scoringData || {};
+      const studentScoringData = existingScoringData[currentStudent.id] || {};
+      const updatedScoringData = {
+        ...existingScoringData,
+        [currentStudent.id]: {
+          ...studentScoringData,
+          [activeKomponen.id]: {
+            scores: { ...scores },
+            feedbacks: { ...feedback },
+            rawScore: calculateRawScore(scores, dimensions),
+            status: status || 'DRAFT',
+            updatedAt: new Date().toISOString()
+          }
+        }
+      };
+      updateMK(mkId, { scoringData: updatedScoringData });
+      setIsDirty(false);
+      addToast(`Draft nilai ${currentStudent.name} tersimpan otomatis.`, 'info');
+    }
+  };
+
+  const switchToStudent = (idx) => {
+    autoSaveIfDirty();
+    setCurrentStudentIdx(idx);
+  };
+
+  const switchToKomponen = (kompId) => {
+    autoSaveIfDirty();
+    setActiveKomponenId(kompId);
+  };
+
+  const setScore = (dimCode, value) => {
+    setScores(prev => ({ ...prev, [dimCode]: value }));
+    setIsDirty(true);
+    const dim = dimensions.find(d => d.code === dimCode);
+    if (dim) {
+      const templateKey = `feedback_${value}`;
+      const currentFb = feedback[dimCode] || '';
+      const allTemplates = [dim.feedback_1, dim.feedback_2, dim.feedback_3, dim.feedback_4].filter(Boolean);
+      if (!currentFb || allTemplates.includes(currentFb)) {
+        setFeedback(prev => ({ ...prev, [dimCode]: dim[templateKey] || '' }));
       }
+    }
+  };
 
-      // 4. Initialize Zustand Store Session
-      session.initSession(assessment, activeWeights, studentObj, classId, projectName);
-      
-      if (assessment && assessment.rubric_template_id) {
-        session.setState({ rubricTemplateId: assessment.rubric_template_id });
-      } else if (templateId) {
-        session.setState({ rubricTemplateId: templateId });
+  const setFeedbackText = (dimCode, text) => {
+    setFeedback(prev => ({ ...prev, [dimCode]: text }));
+    setIsDirty(true);
+  };
+
+  const rawScore = useMemo(() => 
+    calculateRawScore(scores, dimensions), 
+    [scores, dimensions]
+  );
+
+  const allScored = dimensions.every(d => scores[d.code] !== undefined);
+
+  const handleSave = async (newStatus = 'DRAFT') => {
+    if (newStatus === 'PUBLISHED' && !allScored) {
+      addToast('Harap lengkapi nilai seluruh 4 dimensi EPIC sebelum mempublikasikan!', 'warning');
+      return;
+    }
+
+    setIsSaving(true);
+    await new Promise(r => setTimeout(r, 400));
+
+    // Persist scoring data into mkStore
+    const existingScoringData = mk?.scoringData || {};
+    const studentScoringData = existingScoringData[currentStudent.id] || {};
+    
+    const updatedScoringData = {
+      ...existingScoringData,
+      [currentStudent.id]: {
+        ...studentScoringData,
+        [activeKomponen.id]: {
+          scores: { ...scores },
+          feedbacks: { ...feedback },
+          rawScore: rawScore,
+          status: newStatus,
+          updatedAt: new Date().toISOString()
+        }
       }
-
-      setPageLoading(false);
     };
 
-    if (studentId) {
-      loadData();
-    }
-  }, [studentId, classId, projectName, templates, fetchAssessment]);
-
-  const handleScoreChange = (dim, score) => {
-    session.setScore(dim, score);
-  };
-
-  const handleFeedbackChange = (dim, feedback) => {
-    session.setFeedback(dim, feedback);
-  };
-
-  const handleSaveDraft = async () => {
-    try {
-      const saved = await saveAssessmentDraft({
-        id: session.assessmentId,
-        studentId: session.student.id,
-        classId: session.classId,
-        projectName: session.projectName,
-        rubricTemplateId: session.rubricTemplateId,
-        scores: session.scores,
-        feedbacks: session.feedbacks,
-        weights: session.weights
+    updateMK(mkId, { scoringData: updatedScoringData });
+    setStatus(newStatus);
+    setIsDirty(false);
+    setIsSaving(false);
+    
+    if (newStatus === 'PUBLISHED') {
+      addNotification({
+        type: 'SCORE_PUBLISHED',
+        title: `Nilai ${activeKomponen.name} Dipublikasikan`,
+        message: `Dosen telah mempublikasikan nilai ${activeKomponen.name} untuk ${currentStudent.name}.`,
+        mkId: mkId,
+        mkName: mk?.name || 'Mata Kuliah'
       });
-      if (saved) {
-        session.setState({ assessmentId: saved.id, isDirty: false });
-      }
-    } catch (e) {
-      // toast is already thrown in hook
+      addToast(`Nilai ${currentStudent.name} berhasil dipublikasikan!`, 'success');
+    } else {
+      addToast(`Draft nilai ${currentStudent.name} tersimpan.`, 'info');
     }
   };
 
-  const handleFinalize = async () => {
-    setFinalizeModalOpen(false);
-    try {
-      const updated = await finalizeAssessment(
-        session.assessmentId,
-        session.scores,
-        session.feedbacks,
-        session.weights
-      );
-      if (updated) {
-        session.setState({ 
-          status: updated.status, 
-          isDirty: false 
-        });
-      }
-    } catch (e) {
-      // error is already logged
-    }
+  const goToPrevStudent = () => {
+    if (currentStudentIdx > 0) switchToStudent(currentStudentIdx - 1);
   };
 
-  const handleSendToAnalytics = async () => {
-    setSendModalOpen(false);
-    try {
-      const updated = await sendToAnalytics(session.assessmentId);
-      if (updated) {
-        session.setState({ status: updated.status });
-      }
-    } catch (e) {
-      // error logged
-    }
+  const goToNextStudent = () => {
+    if (currentStudentIdx < studentNav.length - 1) switchToStudent(currentStudentIdx + 1);
   };
 
-  const handleReopen = async () => {
-    setReopenModalOpen(false);
-    try {
-      const updated = await reopenAssessment(session.assessmentId);
-      if (updated) {
-        session.setState({
-          status: updated.status,
-          isDirty: false
-        });
-      }
-    } catch (e) {
-      // error logged
-    }
-  };
-
-  if (pageLoading || isLoadingRubrics) {
+  if (!currentStudent) {
     return (
-      <div className={styles.spinnerContainer}>
-        <Spinner size="lg" />
-        <p className={styles.loadingText}>Memuat lembar penilaian...</p>
+      <div className={styles.page}>
+        <Card variant="glass" padding="lg" style={{ textAlign: 'center', marginTop: '40px' }}>
+          <h2>Mahasiswa Tidak Ditemukan</h2>
+          <p style={{ margin: '12px 0 20px', color: 'var(--text-secondary)' }}>
+            Mahasiswa tidak ditemukan atau telah keluar dari mata kuliah ini.
+          </p>
+          <Button variant="primary" onClick={() => navigate(`/mk/${mkId}/students`)}>
+            Kembali ke Daftar Mahasiswa
+          </Button>
+        </Card>
       </div>
     );
   }
 
-  // Derived scoring calculations
-  const finalScore = calculateFinalScore(session.scores, session.weights);
-  const focusArea = detectFocusArea(session.scores, session.weights);
-  const isEditable = session.status === 'DRAFT';
-  const allScoresSelected = Object.values(session.scores).every(val => val !== null);
-
   return (
-    <div className={styles.container}>
-      {/* Header Bar */}
-      <Header
-        title="Lembar Penilaian Praktikum"
-        actions={
-          <Button variant="secondary" size="sm" onClick={() => navigate(`/students/${classId}`)} iconLeft={<ArrowLeft size={16} />}>
-            Kembali ke Roster
+    <div className={styles.page}>
+      {/* Top Bar */}
+      <div className={styles.topBar}>
+        <button className={styles.backBtn} onClick={() => navigate(`/mk/${mkId}/komponen`)}>
+          <ArrowLeft size={16} /> Kembali
+        </button>
+        <div className={styles.topBarCenter}>
+          <Badge variant="primary" size="sm">{activeKomponen.name}</Badge>
+          <span className={styles.topBarBobot}>Bobot: {((activeKomponen.bobot || 0) * 100).toFixed(0)}%</span>
+        </div>
+        <div className={styles.topBarActions}>
+          <HelpButton size={20} />
+          <Button variant="outline" size="sm" onClick={() => handleSave('DRAFT')} isLoading={isSaving && status === 'DRAFT'}>
+            <Save size={14} /> Simpan Draft
           </Button>
-        }
-      />
-
-      <div className={styles.content}>
-        {/* Student Meta Card */}
-        <Card variant="glass" padding="md" className={styles.studentMetaCard}>
-          <div className={styles.metaLeft}>
-            <div className={styles.metaItem}>
-              <User size={16} className={styles.metaIcon} />
-              <span>Siswa: <strong>{activeStudent?.full_name}</strong></span>
-              <span className={styles.subMeta}>({activeStudent?.nisn})</span>
-            </div>
-            <div className={styles.metaItem}>
-              <FileText size={16} className={styles.metaIcon} />
-              <span>Praktikum: <strong>{projectName}</strong></span>
-            </div>
-          </div>
-
-          <div className={styles.metaRight}>
-            <div className={styles.metaItem}>
-              <Calendar size={16} className={styles.metaIcon} />
-              <span>Kelas: <strong>{classId}</strong></span>
-            </div>
-            
-            {/* Status Badge */}
-            <Badge 
-              variant={
-                session.status === 'SENT_TO_ANALYTICS' 
-                  ? 'success' 
-                  : session.status === 'FINALIZED' 
-                    ? 'info' 
-                    : 'warning'
-              }
-              size="md"
-              glow
-            >
-              {session.status === 'SENT_TO_ANALYTICS' ? 'SENT TO ANALYTICS' : session.status}
-            </Badge>
-          </div>
-        </Card>
-
-        {/* Cockpit Grid */}
-        <div className={styles.scoringGrid}>
-          {/* Left: Scoring Panels list */}
-          <div className={styles.panelsCol}>
-            {Object.keys(session.scores).map((dimCode) => (
-              <ScoringPanel
-                key={dimCode}
-                dimensionCode={dimCode}
-                score={session.scores[dimCode]}
-                feedback={session.feedbacks[dimCode]}
-                weight={session.weights[dimCode]}
-                onScoreChange={(score) => handleScoreChange(dimCode, score)}
-                onFeedbackChange={(text) => handleFeedbackChange(dimCode, text)}
-                disabled={!isEditable || isLoadingScoring}
-              />
-            ))}
-          </div>
-
-          {/* Right: Summary & Control Sidebar */}
-          <div className={styles.sidebarCol}>
-            <Card variant="solid" padding="md" className={styles.stickySidebar}>
-              <FinalScoreDisplay score={finalScore} />
-              
-              <hr className={styles.divider} />
-              
-              <ScoreSummary scores={session.scores} />
-              
-              {allScoresSelected && (
-                <>
-                  <hr className={styles.divider} />
-                  <FokusPerbaikan focusAreaCode={focusArea} />
-                </>
-              )}
-
-              <hr className={styles.divider} />
-
-              {/* Actions Box */}
-              <div className={styles.actionBox}>
-                {isEditable ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={handleSaveDraft}
-                      isLoading={isLoadingScoring}
-                      disabled={!session.isDirty}
-                      iconLeft={<Save size={18} />}
-                      className={styles.sidebarBtn}
-                    >
-                      Simpan Draf
-                    </Button>
-                    <Button
-                      variant="primary"
-                      onClick={() => setFinalizeModalOpen(true)}
-                      disabled={!allScoresSelected || isLoadingScoring}
-                      iconLeft={<Lock size={18} />}
-                      className={styles.sidebarBtn}
-                    >
-                      Finalisasi Penilaian
-                    </Button>
-                  </>
-                ) : session.status === 'FINALIZED' ? (
-                  <>
-                    <Button
-                      variant="epic"
-                      onClick={() => setSendModalOpen(true)}
-                      isLoading={isLoadingScoring}
-                      iconLeft={<Send size={18} />}
-                      className={styles.sidebarBtn}
-                    >
-                      Kirim ke Siswa
-                    </Button>
-                    
-                    {/* Re-open Remedial Button (Only for Admin/Teacher) */}
-                    {profile?.role === 'admin' && (
-                      <Button
-                        variant="danger"
-                        onClick={() => setReopenModalOpen(true)}
-                        isLoading={isLoadingScoring}
-                        iconLeft={<Unlock size={18} />}
-                        className={styles.sidebarBtn}
-                      >
-                        Buka Kunci Nilai
-                      </Button>
-                    )}
-                  </>
-                ) : (
-                  // SENT_TO_ANALYTICS state
-                  <div className={styles.sentBox}>
-                    <p className={styles.sentLabel}>Nilai telah dikirim dan disebarkan ke dashboard siswa.</p>
-                    {profile?.role === 'admin' && (
-                      <Button
-                        variant="danger"
-                        onClick={() => setReopenModalOpen(true)}
-                        isLoading={isLoadingScoring}
-                        iconLeft={<Unlock size={18} />}
-                        className={styles.sidebarBtn}
-                      >
-                        Buka Kunci (Remedial)
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
+          <Button variant="primary" size="sm" onClick={() => handleSave('PUBLISHED')} disabled={!allScored} isLoading={isSaving && status === 'PUBLISHED'}>
+            <Send size={14} /> Publikasikan
+          </Button>
         </div>
       </div>
 
-      {/* --- CONFIRMATION MODALS --- */}
-      
-      {/* 1. Finalize Confirmation */}
-      <Modal
-        isOpen={finalizeModalOpen}
-        onClose={() => setFinalizeModalOpen(false)}
-        title="Finalisasi Penilaian?"
-        size="sm"
-      >
-        <p className={styles.modalText}>
-          Tindakan ini akan mengunci seluruh input skor dan umpan balik guru. Anda tidak akan dapat mengedit nilai ini kecuali admin menyetujui remedial.
-        </p>
-        <div className={styles.modalBtns}>
-          <Button variant="outline" size="sm" onClick={() => setFinalizeModalOpen(false)}>
-            Batal
-          </Button>
-          <Button variant="primary" size="sm" onClick={handleFinalize} isLoading={isLoadingScoring}>
-            Ya, Kunci Nilai
-          </Button>
+      <div className={styles.mainLayout}>
+        {/* Student Navigation Sidebar */}
+        <div className={styles.studentNav}>
+          <h4 className={styles.studentNavTitle}>Mahasiswa</h4>
+          <div className={styles.studentList}>
+            {studentNav.map((s, i) => (
+              <button
+                key={s.id}
+                className={`${styles.studentItem} ${i === currentStudentIdx ? styles.activeStu : ''}`}
+                onClick={() => switchToStudent(i)}
+              >
+                <div className={styles.studentItemAvatar}>{s.name.charAt(0)}</div>
+                <span className={styles.studentItemName}>{s.name}</span>
+                {s.scored && <CheckCircle2 size={14} className={styles.scoredIcon} />}
+              </button>
+            ))}
+          </div>
         </div>
-      </Modal>
 
-      {/* 2. Send to Analytics Confirmation */}
-      <Modal
-        isOpen={sendModalOpen}
-        onClose={() => setSendModalOpen(false)}
-        title="Kirim ke Learning Analytics?"
-        size="sm"
-      >
-        <p className={styles.modalText}>
-          Kirim nilai siswa ini ke dashboard analitik kelas dan dashboard rapor pribadi siswa? Siswa akan menerima notifikasi secara real-time.
-        </p>
-        <div className={styles.modalBtns}>
-          <Button variant="outline" size="sm" onClick={() => setSendModalOpen(false)}>
-            Batal
-          </Button>
-          <Button variant="epic" size="sm" onClick={handleSendToAnalytics} isLoading={isLoadingScoring}>
-            Kirim Nilai
-          </Button>
-        </div>
-      </Modal>
+        {/* Scoring Area */}
+        <div className={styles.scoringArea}>
+          {/* Komponen Switcher Tabs */}
+          <div className={styles.komponenTabsBar} style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', borderBottom: '1px solid var(--border-color)', marginBottom: '16px' }}>
+            {komponenList.map((k) => {
+              const isActive = k.id === activeKomponen.id;
+              const hasRubric = !!k.rubricId;
+              const kompScoring = mk?.scoringData?.[currentStudent?.id]?.[k.id];
+              const isScored = !!(kompScoring?.scores && Object.keys(kompScoring.scores).length > 0);
 
-      {/* 3. Re-open / Unlock Confirmation */}
-      <Modal
-        isOpen={reopenModalOpen}
-        onClose={() => setReopenModalOpen(false)}
-        title="Buka Kunci Nilai (Remedial)?"
-        size="sm"
-      >
-        <p className={styles.modalText}>
-          Membuka kembali lembar penilaian ini akan mengembalikan status ke **DRAFT** sehingga guru dapat merevisi skor siswa. Tindakan ini akan dicatat dalam log audit.
-        </p>
-        <div className={styles.modalBtns}>
-          <Button variant="outline" size="sm" onClick={() => setReopenModalOpen(false)}>
-            Batal
-          </Button>
-          <Button variant="danger" size="sm" onClick={handleReopen} isLoading={isLoadingScoring}>
-            Buka Kunci (+1 Revisi)
-          </Button>
+              let bg = 'var(--bg-card)';
+              let border = '1px solid var(--border-color)';
+              let color = 'var(--text-secondary)';
+              let fontWeight = 500;
+              let iconColor = '#059669';
+
+              if (isActive && isScored) {
+                bg = 'linear-gradient(135deg, #059669, #047857)';
+                border = '2px solid #065f46';
+                color = '#ffffff';
+                fontWeight = 700;
+                iconColor = '#ffffff';
+              } else if (isScored) {
+                bg = 'linear-gradient(135deg, #10b981, #059669)';
+                border = '1px solid #047857';
+                color = '#ffffff';
+                fontWeight = 600;
+                iconColor = '#ffffff';
+              } else if (isActive) {
+                bg = 'rgba(5, 150, 105, 0.12)';
+                border = '2.5px solid #059669';
+                color = '#047857';
+                fontWeight = 700;
+              }
+
+              return (
+                <button
+                  key={k.id}
+                  onClick={() => switchToKomponen(k.id)}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    border,
+                    background: bg,
+                    color,
+                    fontWeight,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: isScored ? '0 2px 8px rgba(5, 150, 105, 0.25)' : 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {isScored && <CheckCircle2 size={14} style={{ color: iconColor }} />}
+                  <span>{k.name}</span>
+                  <span style={{ fontSize: '11px', opacity: isScored ? 0.95 : 0.8 }}>({((k.bobot || 0) * 100).toFixed(0)}%)</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Student Header */}
+          <div className={styles.studentHeader}>
+            <div className={styles.studentHeaderLeft}>
+              <div className={styles.studentAvatar}>
+                <User size={22} />
+              </div>
+              <div>
+                <h2 className={styles.studentName}>{currentStudent.name}</h2>
+                <div className={styles.studentNavBtns}>
+                  <button className={styles.navBtn} disabled={currentStudentIdx === 0} onClick={goToPrevStudent}>
+                    <ChevronLeft size={14} /> Sebelumnya
+                  </button>
+                  <span className={styles.navCounter}>{currentStudentIdx + 1} / {studentNav.length}</span>
+                  <button className={styles.navBtn} disabled={currentStudentIdx === studentNav.length - 1} onClick={goToNextStudent}>
+                    Selanjutnya <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+            {rawScore !== null && (
+              <div className={styles.scorePreview}>
+                <span className={styles.scorePreviewLabel}>Skor Mentah ({activeKomponen.name})</span>
+                <span className={styles.scorePreviewValue}>{rawScore}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Dimension Cards */}
+          <div className={styles.dimensionList}>
+            {dimensions.map((dim, di) => {
+              const color = getDimensionColor(di);
+              const currentScore = scores[dim.code];
+              return (
+                <div 
+                  key={dim.code} 
+                  className={styles.dimCard}
+                  style={{ borderLeftColor: color.hex }}
+                >
+                  <div className={styles.dimHeader}>
+                    <div className={styles.dimHeaderLeft}>
+                      <span className={styles.dimCode} style={{ color: color.hex, background: color.bg }}>
+                        {dim.code}
+                      </span>
+                      <div>
+                        <h4 className={styles.dimName}>{dim.name}</h4>
+                        <span className={styles.dimWeight}>Bobot: {(dim.weight * 100).toFixed(0)}%</span>
+                      </div>
+                    </div>
+                    {currentScore && (
+                      <div className={styles.dimScoreChip} style={{ color: color.hex, background: color.bg }}>
+                        <Star size={12} /> {currentScore}/4
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Likert Scale Buttons */}
+                  <div className={styles.likertRow}>
+                    {[1, 2, 3, 4].map(score => (
+                      <button
+                        key={score}
+                        className={`${styles.likertBtn} ${currentScore === score ? styles.likertActive : ''}`}
+                        style={currentScore === score ? { 
+                          borderColor: color.hex, 
+                          background: color.bg,
+                          color: color.hex 
+                        } : {}}
+                        onClick={() => setScore(dim.code, score)}
+                      >
+                        <span className={styles.likertScore}>{score}</span>
+                        <span className={styles.likertLabel}>{LIKERT_SCALE[score].title}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Feedback */}
+                  <div className={styles.feedbackWrap}>
+                    <div className={styles.feedbackHeader}>
+                      <MessageSquare size={13} />
+                      <span>Feedback</span>
+                    </div>
+                    <textarea
+                      className={styles.feedbackInput}
+                      placeholder="Tulis feedback untuk dimensi ini..."
+                      value={feedback[dim.code] || ''}
+                      onChange={(e) => setFeedbackText(dim.code, e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Bottom Auto-Advance Bar */}
+          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '16px 20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+            <Button variant="outline" size="sm" onClick={goToPrevStudent} disabled={currentStudentIdx === 0}>
+              <ChevronLeft size={14} /> Mahasiswa Sebelumnya
+            </Button>
+            
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <Button 
+                variant="primary" 
+                size="md" 
+                onClick={async () => {
+                  await handleSave('PUBLISHED');
+                  if (currentStudentIdx < studentNav.length - 1) {
+                    goToNextStudent();
+                  }
+                }}
+                disabled={!allScored}
+              >
+                <Send size={15} /> Simpan & Lanjut ke Mahasiswa Berikutnya <ChevronRight size={15} />
+              </Button>
+            </div>
+          </div>
         </div>
-      </Modal>
+      </div>
     </div>
   );
 };

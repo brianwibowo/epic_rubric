@@ -22,12 +22,6 @@ export const FEEDBACK_TEMPLATES = {
     2: 'Siswa menyadari adanya kesalahan jumlah saldo, tetapi kesulitan melacak sumber kesalahan jurnal penyesuaian secara mandiri.',
     3: 'Siswa secara kritis memeriksa kembali kertas kerja, mendeteksi selisih angka, dan mampu melakukan koreksi jurnal penyesuaian dengan benar.',
     4: 'Siswa menunjukkan kemampuan audit mandiri yang sangat baik. Mampu memberikan analisis reflektif atas deviasi laporan keuangan dan memberikan solusi jurnal koreksi yang tepat.'
-  },
-  PE: { // Professional Ethics
-    1: 'Dokumen laporan keuangan diselesaikan dengan tidak rapi, banyak coretan, dan tidak mengindahkan batas waktu pengerjaan yang disepakati.',
-    2: 'Laporan keuangan cukup lengkap, namun kerapian penulisan angka desimal, garis pembatas saldo, dan ketepatan waktu pengumpulan masih harus ditingkatkan.',
-    3: 'Siswa menunjukkan sikap profesional: pengerjaan bersih, penulisan angka rapi, jujur dalam penyajian data keuangan, dan mengumpulkan tepat waktu.',
-    4: 'Sikap profesionalisme sangat menonjol. Hasil kerja sangat bersih dan rapi, integritas data keuangan terjaga penuh, serta diselesaikan sebelum batas waktu.'
   }
 };
 

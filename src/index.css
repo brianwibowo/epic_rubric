@@ -8,6 +8,22 @@
   --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
+  /* Standardized Typography Scale */
+  --text-xs: 0.6875rem; /* 11px */
+  --text-sm: 0.8125rem; /* 13px */
+  --text-base: 0.875rem; /* 14px */
+  --text-md: 0.9375rem; /* 15px */
+  --text-lg: 1rem;      /* 16px */
+  --text-xl: 1.125rem;  /* 18px */
+  --text-2xl: 1.375rem; /* 22px */
+  --text-3xl: 1.75rem;  /* 28px */
+
+  /* Standardized Icon Size Scale */
+  --icon-sm: 14px;
+  --icon-md: 18px;
+  --icon-lg: 22px;
+  --icon-xl: 28px;
+
   /* Theme: Clean Premium Light Slate & Emerald */
   --bg-app: #f8fafc;
   --bg-surface: #ffffff;
@@ -31,12 +47,17 @@
   --color-primary-hover: #047857;
   --color-secondary: #10b981;
   
-  /* EPIC Dimensions Custom Colors - Refined for Light Background */
-  --color-epic-e: #2563eb;  /* Evaluative - Rich Blue */
-  --color-epic-p: #d97706;  /* Predictive - Amber */
-  --color-epic-i: #ea580c;  /* Intelligent - Orange */
-  --color-epic-c: #059669;  /* Critical - Emerald */
-  --color-epic-pe: #0d9488; /* Professional - Teal */
+  /* Dynamic Dimension Colors */
+  --color-dim-1: #2563eb;
+  --color-dim-2: #d97706;
+  --color-dim-3: #ea580c;
+  --color-dim-4: #059669;
+  --color-dim-5: #0d9488;
+  --color-dim-6: #7c3aed;
+  --color-dim-7: #e11d48;
+  --color-dim-8: #0891b2;
+  --color-dim-9: #65a30d;
+  --color-dim-10: #4f46e5;
 
   /* UI Status Colors */
   --color-success: #059669;
@@ -60,8 +81,9 @@
 
   /* Modern Flat Shadows */
   --shadow-glass: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-  --shadow-glow-blue: 0 4px 12px rgba(16, 185, 129, 0.08);
-  --shadow-glow-teal: 0 4px 12px rgba(13, 148, 136, 0.08);
+  --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-float: 0 10px 25px -3px rgba(0, 0, 0, 0.07), 0 4px 10px -4px rgba(0, 0, 0, 0.04);
+  --shadow-glow-green: 0 4px 14px rgba(5, 150, 105, 0.10);
 }
 
 /* ==========================================
@@ -73,6 +95,10 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html, body {
   font-family: var(--font-sans);
   background-color: var(--bg-app);
@@ -82,6 +108,7 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -91,7 +118,7 @@ body {
 /* Premium Soft Ambient Gradients */
 body::before {
   content: "";
-  position: absolute;
+  position: fixed;
   top: -10%;
   left: -10%;
   width: 50%;
@@ -103,7 +130,7 @@ body::before {
 
 body::after {
   content: "";
-  position: absolute;
+  position: fixed;
   bottom: -10%;
   right: -10%;
   width: 50%;
@@ -115,21 +142,38 @@ body::after {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(241, 245, 249, 0.5);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
-  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: rgba(148, 163, 184, 0.45);
+}
+
+/* ==========================================
+   FOCUS STATES (Accessibility)
+   ========================================== */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* ==========================================
@@ -151,24 +195,22 @@ body::after {
 .glass-interactive:hover {
   border-color: var(--border-color-hover);
   background: var(--bg-surface-hover);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-elevated);
   transform: translateY(-1px);
-}
-
-.glow-text-blue {
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
 }
 
 .gradient-text-primary {
   background: linear-gradient(135deg, #09090b 0%, #059669 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .gradient-text-accent {
   background: linear-gradient(135deg, #059669 0%, #14b8a6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Form controls */
@@ -176,10 +218,15 @@ input, select, textarea {
   font-family: var(--font-sans);
 }
 
-
 button {
   font-family: var(--font-sans);
   cursor: pointer;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(5, 150, 105, 0.15);
+  color: var(--text-primary);
 }
 
 /* ==========================================
@@ -201,13 +248,40 @@ button {
   }
 }
 
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .animate-fade-in {
@@ -218,12 +292,54 @@ button {
   animation: slideUp var(--transition-normal) cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.animate-scale-in {
+  animation: scaleIn var(--transition-normal) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .shimmer-bg {
   background: linear-gradient(90deg, 
-    rgba(255,255,255,0.03) 25%, 
-    rgba(255,255,255,0.08) 50%, 
-    rgba(255,255,255,0.03) 75%
+    rgba(241, 245, 249, 0.6) 25%, 
+    rgba(226, 232, 240, 0.4) 50%, 
+    rgba(241, 245, 249, 0.6) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* ==========================================
+   PAGE TRANSITIONS
+   ========================================== */
+.page-enter {
+  animation: fadeIn 0.15s ease-out forwards;
+}
+
+/* ==========================================
+   TOOLTIP GLOBAL
+   ========================================== */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 5px 10px;
+  background: var(--text-primary);
+  color: var(--text-inverse);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  z-index: 1000;
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }

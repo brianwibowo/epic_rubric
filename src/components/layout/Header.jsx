@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 import styles from './Header.module.css';
 import { Menu, Bell } from 'lucide-react';
 import Badge from '../ui/Badge';
+import HelpButton from '../ui/HelpButton';
 
 const Header = ({ title = 'EPIC Platform', actions }) => {
   const { toggleSidebar } = useUiStore();
@@ -19,7 +20,10 @@ const Header = ({ title = 'EPIC Platform', actions }) => {
         >
           <Menu size={20} />
         </button>
-        <h1 className={styles.title}>{title}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h1 className={styles.title}>{title}</h1>
+          <HelpButton size={20} />
+        </div>
       </div>
       
       <div className={styles.right}>

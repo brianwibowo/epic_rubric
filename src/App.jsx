@@ -1,23 +1,35 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
+import { ROLES } from '@/utils/constants';
 
 // Layout Shell
 import AppShell from '@/components/layout/AppShell';
+import MKLayout from '@/components/layout/MKLayout';
 
 // Route Guards
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-// Pages
+// Pages — Global
 import LoginPage from '@/pages/LoginPage';
 import DashboardPage from '@/pages/DashboardPage';
-import RubricConfigPage from '@/pages/RubricConfigPage';
-import ClassListPage from '@/pages/ClassListPage';
-import StudentListPage from '@/pages/StudentListPage';
-import ScoringPage from '@/pages/ScoringPage';
-import AnalyticsPage from '@/pages/AnalyticsPage';
-import AuditLogPage from '@/pages/AuditLogPage';
+import MataKuliahListPage from '@/pages/MataKuliahListPage';
+import RubrikLibraryPage from '@/pages/RubrikLibraryPage';
+import NotificationsPage from '@/pages/NotificationsPage';
 import UserManagementPage from '@/pages/UserManagementPage';
+import AuditLogPage from '@/pages/AuditLogPage';
+
+// Pages — MK Context
+import MKOverviewPage from '@/pages/MKOverviewPage';
+import MKStudentListPage from '@/pages/MKStudentListPage';
+import KomponenPenilaianPage from '@/pages/KomponenPenilaianPage';
+import MKAnalyticsPage from '@/pages/MKAnalyticsPage';
+import CommentsPage from '@/pages/CommentsPage';
+import CreateMKPage from '@/pages/CreateMKPage';
+import ScoringPage from '@/pages/ScoringPage';
+
+const ALL_ROLES = [ROLES.ADMIN, ROLES.DOSEN, ROLES.MAHASISWA];
+const DOSEN_ADMIN = [ROLES.ADMIN, ROLES.DOSEN];
 
 function App() {
   const { initializeAuth } = useAuthStore();
@@ -36,83 +48,113 @@ function App() {
         <Route 
           path="/" 
           element={
-            <ProtectedRoute allowedRoles={['admin', 'guru', 'siswa']}>
+            <ProtectedRoute allowedRoles={ALL_ROLES}>
               <AppShell />
             </ProtectedRoute>
           }
         >
+          {/* === GLOBAL CONTEXT === */}
+          
           {/* Dashboard (All roles) */}
           <Route index element={<DashboardPage />} />
 
-          {/* Rubric Configuration (Admin, Guru) */}
+          {/* Mata Kuliah List (All roles) */}
+          <Route path="mk" element={<MataKuliahListPage />} />
+
+          {/* Create MK (Dosen, Admin) */}
           <Route 
-            path="rubric/config" 
+            path="mk/create" 
             element={
-              <ProtectedRoute allowedRoles={['admin', 'guru']}>
-                <RubricConfigPage />
+              <ProtectedRoute allowedRoles={DOSEN_ADMIN}>
+                <CreateMKPage />
               </ProtectedRoute>
             } 
           />
 
-          {/* Class List (Admin, Guru) */}
+          {/* Rubrik Template Library (Dosen, Admin) */}
           <Route 
-            path="classes" 
+            path="rubrik" 
             element={
-              <ProtectedRoute allowedRoles={['admin', 'guru']}>
-                <ClassListPage />
+              <ProtectedRoute allowedRoles={DOSEN_ADMIN}>
+                <RubrikLibraryPage />
               </ProtectedRoute>
             } 
           />
 
-          {/* Student List in Class (Admin, Guru) */}
+          {/* Notifications (All roles) */}
+          <Route path="notifications" element={<NotificationsPage />} />
+
+          {/* Admin: User Management */}
           <Route 
-            path="students/:classId" 
+            path="admin/users" 
             element={
-              <ProtectedRoute allowedRoles={['admin', 'guru']}>
-                <StudentListPage />
+              <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                <UserManagementPage />
               </ProtectedRoute>
             } 
           />
 
-          {/* Student Assessment Form (Guru only) */}
-          <Route 
-            path="scoring/:classId/:studentId" 
-            element={
-              <ProtectedRoute allowedRoles={['guru']}>
-                <ScoringPage />
-              </ProtectedRoute>
-            } 
-          />
-
-          {/* Learning Analytics (All roles) */}
-          <Route 
-            path="analytics" 
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'guru', 'siswa']}>
-                <AnalyticsPage />
-              </ProtectedRoute>
-            } 
-          />
-
-          {/* Audit Logs (Admin only) */}
+          {/* Admin: Audit Logs */}
           <Route 
             path="admin/audit-log" 
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
                 <AuditLogPage />
               </ProtectedRoute>
             } 
           />
 
-          {/* User Management (Admin only) */}
-          <Route 
-            path="admin/users" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <UserManagementPage />
-              </ProtectedRoute>
-            } 
-          />
+          {/* === MK CONTEXT (inside a specific Mata Kuliah) === */}
+          <Route path="mk/:mkId" element={<MKLayout />}>
+            {/* MK Overview */}
+            <Route index element={<MKOverviewPage />} />
+
+            {/* MK Student List (All roles — Read-only for Mahasiswa) */}
+            <Route 
+              path="students" 
+              element={
+                <ProtectedRoute allowedRoles={ALL_ROLES}>
+                  <MKStudentListPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Komponen Penilaian (Dosen, Admin) */}
+            <Route 
+              path="komponen" 
+              element={
+                <ProtectedRoute allowedRoles={DOSEN_ADMIN}>
+                  <KomponenPenilaianPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Analytics (All roles — scoped by role internally) */}
+            <Route path="analytics" element={<MKAnalyticsPage />} />
+
+            {/* Comments (All roles) */}
+            <Route path="comments" element={<CommentsPage />} />
+
+            {/* Scoring (Direct from student list or komponen) */}
+            <Route 
+              path="scoring" 
+              element={
+                <ProtectedRoute allowedRoles={DOSEN_ADMIN}>
+                  <ScoringPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Scoring per Komponen (Dosen, Admin) */}
+            <Route 
+              path="komponen/:komponenId/scoring" 
+              element={
+                <ProtectedRoute allowedRoles={DOSEN_ADMIN}>
+                  <ScoringPage />
+                </ProtectedRoute>
+              } 
+            />
+          </Route>
         </Route>
 
         {/* Catch-all Fallback */}

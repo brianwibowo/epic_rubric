@@ -1,0 +1,67 @@
+/* Skeleton Shimmer Styles */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.6) 25%,
+    rgba(241, 245, 249, 0.9) 50%,
+    rgba(226, 232, 240, 0.6) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+.text {
+  height: 14px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.title {
+  height: 24px;
+  width: 60%;
+  border-radius: 6px;
+}
+
+.circle {
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.card {
+  height: 140px;
+  width: 100%;
+  border-radius: var(--radius-md);
+}
+
+.chart {
+  height: 240px;
+  width: 100%;
+  border-radius: var(--radius-lg);
+}
+
+.tableRowSkeleton {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tableRowSkeleton td {
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+
+.flexCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

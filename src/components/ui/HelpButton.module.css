@@ -1,0 +1,25 @@
+/* HelpButton Styles */
+
+.helpBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  padding: 4px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  opacity: 0.85;
+}
+
+.helpBtn:hover {
+  opacity: 1;
+  background: rgba(5, 150, 105, 0.08);
+  transform: scale(1.1);
+}
+
+.helpBtn:active {
+  transform: scale(0.95);
+}

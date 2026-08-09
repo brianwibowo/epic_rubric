@@ -1,0 +1,106 @@
+/* Pagination Styles */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.leftInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.rangeText {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.rangeText strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.sizeSelectorWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sizeLabel {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.sizeSelect {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.sizeSelect:focus {
+  border-color: var(--color-primary);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.navBtn:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-color-hover);
+  color: var(--color-primary);
+}
+
+.navBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageCounter {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+}
+
+.pageCounter strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .pagination {
+    flex-direction: column;
+    align-items: center;
+  }
+}

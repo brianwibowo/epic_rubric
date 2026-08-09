@@ -32,10 +32,12 @@ export function formatRole(role) {
   switch (role?.toLowerCase()) {
     case 'admin':
       return 'Admin / Kaprog';
+    case 'dosen':
     case 'guru':
-      return 'Guru Akuntansi';
+      return 'Dosen / Guru';
+    case 'mahasiswa':
     case 'siswa':
-      return 'Siswa SMK';
+      return 'Mahasiswa / Siswa';
     default:
       return 'Pengguna';
   }
@@ -49,4 +51,18 @@ export function formatRole(role) {
 export function formatPercent(decimal) {
   if (decimal === undefined || decimal === null) return '0%';
   return `${Math.round(Number(decimal) * 100)}%`;
+}
+
+/**
+ * Convert numeric score (0-100) to Letter Grade
+ * @param {number} score 
+ * @returns {string} 'A' | 'B' | 'C' | 'D' | '-'
+ */
+export function getGradeLetter(score) {
+  if (score === null || score === undefined || isNaN(score)) return '-';
+  const s = Number(score);
+  if (s >= 85) return 'A';
+  if (s >= 70) return 'B';
+  if (s >= 55) return 'C';
+  return 'D';
 }
