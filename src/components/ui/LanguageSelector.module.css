@@ -1,0 +1,197 @@
+.selectorWrap {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  padding: 3px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.selectorWrap:hover {
+  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
+/* Dark / Glass Variant */
+.selectorWrap.glass {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.langBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary, #64748b);
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.selectorWrap.glass .langBtn {
+  color: #94a3b8;
+}
+
+.langBtn:hover {
+  color: var(--color-primary, #2563eb);
+}
+
+.selectorWrap.glass .langBtn:hover {
+  color: #60a5fa;
+}
+
+.langBtn.active {
+  background: var(--color-primary, #2563eb);
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.selectorWrap.glass .langBtn.active {
+  background: #2563eb;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
+
+.flag {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.label {
+  letter-spacing: 0.5px;
+}
+
+.divider {
+  width: 1px;
+  height: 14px;
+  background: var(--border-color, #e2e8f0);
+  margin: 0 1px;
+}
+
+.selectorWrap.glass .divider {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.compactBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.compactBtn:hover {
+  border-color: var(--color-primary, #2563eb);
+  transform: scale(1.06);
+}
+
+/* ───────────────────── DROPDOWN VARIANT ───────────────────── */
+.dropdownContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdownTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s ease);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.dropdownTrigger:hover {
+  border-color: var(--color-primary, #2563eb);
+  background: var(--bg-surface-hover, #f8fafc);
+}
+
+.dropdownLangText {
+  letter-spacing: 0.5px;
+}
+
+.dropdownArrow {
+  color: var(--text-muted, #94a3b8);
+  transition: transform 0.2s ease;
+}
+
+.dropdownArrow.open {
+  transform: rotate(180deg);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  padding: 4px;
+  min-width: 150px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: dropdownFade 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.dropdownItem:hover {
+  background: var(--bg-surface-hover, #f1f5f9);
+  color: var(--color-primary, #2563eb);
+}
+
+.dropdownItem.activeItem {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-primary, #2563eb);
+  font-weight: 700;
+}
+
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

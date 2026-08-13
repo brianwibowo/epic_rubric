@@ -12,6 +12,7 @@ import HelpButton from '@/components/ui/HelpButton';
 import { generateGeminiInsight } from '@/services/geminiService';
 import { exportMKToExcel } from '@/utils/exportExcel';
 import { exportReportCardToPdf } from '@/utils/exportPdf';
+import { getKomponenCode, getKomponenFullName, getKomponenFormatted } from '@/utils/komponenHelper';
 import styles from './MKAnalyticsPage.module.css';
 import { 
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, 
@@ -179,7 +180,7 @@ const MKAnalyticsPage = () => {
   // ─── Real Trend Data (from komponenScores, not mock) ───
   const trendData = komponenScores
     .filter(k => k.rawScore !== null)
-    .map(k => ({ komponen: k.name, score: k.rawScore }));
+    .map(k => ({ komponen: getKomponenCode(k.name), score: k.rawScore }));
 
   // ─── Feedback extraction for current student ───
   const getStudentFeedbackForKomponen = (komponenId) => {
@@ -256,14 +257,44 @@ const MKAnalyticsPage = () => {
   };
 
   const handleExportExcel = () => {
-    const roster = (mk?.students || []).map((s) => ({
-      nim: s.nim,
-      full_name: s.full_name || s.name,
-      scores: { 'Proyek': 85, 'Partisipasi': 90, 'Quiz': 78 },
-      final_score: 84,
-      status: 'PUBLISHED'
-    }));
-    exportMKToExcel(mk?.name || 'Mata Kuliah', mk?.kode_mk || 'MK', mk?.komponen || [], roster);
+    const komps = mk?.komponen || [];
+    const roster = (mk?.students || []).map((s) => {
+      const stuId = s.id || s.student_id;
+      const stuScoring = mk?.scoringData?.[stuId] || {};
+      const scores = {};
+      let totalWeighted = 0;
+      let hasAnyScore = false;
+
+      komps.forEach(komp => {
+        const sd = stuScoring[komp.id];
+        if (sd?.rawScore != null) {
+          scores[komp.name] = sd.rawScore;
+          totalWeighted += sd.rawScore * (komp.bobot || 0);
+          hasAnyScore = true;
+        } else {
+          scores[komp.name] = null;
+        }
+      });
+
+      return {
+        nim: s.nim,
+        full_name: s.full_name || s.name,
+        scores,
+        final_score: hasAnyScore ? Math.round(totalWeighted) : null,
+        status: hasAnyScore ? 'PUBLISHED' : 'DRAFT'
+      };
+    });
+
+    exportMKToExcel({
+      name: mk?.name || 'Mata Kuliah',
+      kode_mk: mk?.kode_mk || 'MK',
+      semester: mk?.semester || '',
+      kode_semester: mk?.kode_semester || '',
+      sks: mk?.sks || 0,
+      kelas: mk?.kelas || '',
+      dosen_name: mk?.dosen_name || '',
+      studentCount: (mk?.students || []).length
+    }, komps, roster);
     addToast('Ekspor data nilai MK ke Excel berhasil', 'success');
   };
 

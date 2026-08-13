@@ -25,11 +25,12 @@
   --icon-xl: 28px;
 
   /* Theme: Clean Premium Light Slate & Emerald */
-  --bg-app: #f8fafc;
+  --bg-app: #f0f4f8;
+  --bg-canvas: #f0f4f8;
   --bg-surface: #ffffff;
   --bg-surface-solid: #ffffff;
-  --bg-surface-hover: #f1f5f9;
-  --bg-panel: #f8fafc;
+  --bg-surface-hover: #e2e8f0;
+  --bg-panel: #ffffff;
   
   /* Borders */
   --border-color: #e2e8f0;
@@ -42,10 +43,11 @@
   --text-muted: #94a3b8;
   --text-inverse: #ffffff;
   
-  /* Brand Accents (Emerald Green) */
-  --color-primary: #059669;
-  --color-primary-hover: #047857;
-  --color-secondary: #10b981;
+  /* Brand Accents (Logo Royal Blue Primary & Emerald Green Secondary) */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-secondary: #059669;
+  --color-secondary-hover: #047857;
   
   /* Dynamic Dimension Colors */
   --color-dim-1: #2563eb;

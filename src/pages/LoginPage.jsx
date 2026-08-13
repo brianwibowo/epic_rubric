@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useUiStore } from '@/stores/uiStore';
+import { useLanguageStore } from '@/stores/languageStore';
 import styles from './LoginPage.module.css';
-import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
-import { Mail, Lock, LogIn, Sparkles } from 'lucide-react';
+import LanguageSelector from '@/components/ui/LanguageSelector';
+import { Mail, Lock, LogIn, Sparkles, CheckCircle2, ShieldCheck, Award, BookOpen } from 'lucide-react';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -15,11 +15,11 @@ const LoginPage = () => {
   const [formError, setFormError] = useState('');
   const { login, isLoading, isAuthenticated, initializeAuth } = useAuthStore();
   const { addToast } = useUiStore();
+  const { t } = useLanguageStore();
   
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get redirect path
   const from = location.state?.from?.pathname || '/';
 
   useEffect(() => {
@@ -50,7 +50,6 @@ const LoginPage = () => {
     }
   };
 
-  // Helper for quick login buttons
   const handleQuickLogin = async (role) => {
     setFormError('');
     try {
@@ -62,23 +61,68 @@ const LoginPage = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.bgGlow1} />
-      <div className={styles.bgGlow2} />
-      
-      <div className={styles.contentWrapper}>
-        <div className={styles.logoHeader}>
-          <img src="/logo.png" alt="EPIC e-Rubric Logo" className={styles.loginLogoImg} />
-          <h1 className={styles.logoText}>
-            EPIC <span className={styles.subLogo}>e-Rubric</span>
-          </h1>
-          <p className={styles.tagline}>Assessment SaaS for Vocational Accounting Education</p>
+    <div className={styles.splitPage}>
+      {/* LEFT HALF: 60% Fullscreen Hero Image + 40% Refined Text */}
+      <div className={styles.leftPanel}>
+        {/* 60% Top Fullscreen Image Section */}
+        <div className={styles.imageTopSection}>
+          <img 
+            src="/login_illustration.jpg" 
+            alt="EPIC Rubric Educational Assessment Illustration" 
+            className={styles.fullHeroImg}
+          />
+          <div className={styles.imageGradientOverlay} />
         </div>
 
-        <Card variant="glass" padding="lg" className={styles.loginCard}>
+        {/* 40% Bottom Text Section */}
+        <div className={styles.textBottomSection}>
+          <h2 className={styles.heroHeadline}>
+            {t('heroHeadline')}
+          </h2>
+
+          <p className={styles.heroSubtext}>
+            {t('heroSubtext')}
+          </p>
+
+          <div className={styles.featureHighlights}>
+            <div className={styles.featurePill}>
+              <CheckCircle2 size={14} className={styles.featurePillSvg} />
+              <span>{t('feature4Dim')}</span>
+            </div>
+            <div className={styles.featurePill}>
+              <ShieldCheck size={14} className={styles.featurePillSvg} />
+              <span>{t('featureAudit')}</span>
+            </div>
+            <div className={styles.featurePill}>
+              <BookOpen size={14} className={styles.featurePillSvg} />
+              <span>{t('featureExcel')}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT HALF: Logo, Language Selector & Login Form */}
+      <div className={styles.rightPanel}>
+        {/* Language Selector in top right corner */}
+        <div className={styles.topLangWrapper}>
+          <LanguageSelector />
+        </div>
+
+        <div className={styles.formContainer}>
+          {/* Logo Section Header */}
+          <div className={styles.logoHeaderRight}>
+            <img src="/logo.png" alt="EPIC e-Rubric Logo" className={styles.brandLogo} />
+            <div>
+              <h1 className={styles.brandTitle}>
+                EPIC <span className={styles.brandSub}>e-Rubric</span>
+              </h1>
+              <span className={styles.brandBadge}>{t('appSub')}</span>
+            </div>
+          </div>
+
           <div className={styles.cardHeader}>
-            <h2 className={styles.title}>Masuk Sesi</h2>
-            <p className={styles.subtitle}>Gunakan kredensial Anda atau pilih Akun Demo di bawah</p>
+            <h2 className={styles.title}>{t('loginTitle')}</h2>
+            <p className={styles.subtitle}>{t('loginSubtitle')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
@@ -89,9 +133,9 @@ const LoginPage = () => {
             )}
             
             <Input
-              label="Surel / Username"
+              label={t('emailLabel')}
               type="text"
-              placeholder="nama@kampus.ac.id atau 'dosen'"
+              placeholder={t('emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               iconLeft={<Mail size={18} />}
@@ -99,7 +143,7 @@ const LoginPage = () => {
             />
 
             <Input
-              label="Kata Sandi"
+              label={t('passwordLabel')}
               type="password"
               placeholder="••••••••"
               value={password}
@@ -115,16 +159,16 @@ const LoginPage = () => {
               className={styles.submitBtn}
               iconRight={<LogIn size={18} />}
             >
-              Masuk Sesi
+              {t('loginSubmit')}
             </Button>
           </form>
 
           <div className={styles.divider}>
-            <span>Akses Cepat Demo</span>
+            <span>{t('quickDemoTitle')}</span>
           </div>
 
           <div className={styles.quickLoginSection}>
-            <p className={styles.quickLoginHint}>Klik salah satu akun simulasi di bawah:</p>
+            <p className={styles.quickLoginHint}>{t('quickDemoHint')}</p>
             <div className={styles.quickLoginButtons}>
               <Button 
                 variant="outline" 
@@ -134,7 +178,7 @@ const LoginPage = () => {
                 className={styles.quickBtn}
               >
                 <Sparkles size={14} style={{ color: 'var(--color-error)' }} />
-                <span>Admin/Kaprog</span>
+                <span>{t('roleAdmin')}</span>
               </Button>
               <Button 
                 variant="outline" 
@@ -144,7 +188,7 @@ const LoginPage = () => {
                 className={styles.quickBtn}
               >
                 <Sparkles size={14} style={{ color: 'var(--color-primary)' }} />
-                <span>Dosen</span>
+                <span>{t('roleDosen')}</span>
               </Button>
               <Button 
                 variant="outline" 
@@ -154,14 +198,10 @@ const LoginPage = () => {
                 className={styles.quickBtn}
               >
                 <Sparkles size={14} style={{ color: 'var(--color-success)' }} />
-                <span>Mahasiswa</span>
+                <span>{t('roleMahasiswa')}</span>
               </Button>
             </div>
           </div>
-        </Card>
-        
-        <div className={styles.footer}>
-          © 2026 PT Vuriko Developer Studio. Hak Cipta Dilindungi.
         </div>
       </div>
     </div>

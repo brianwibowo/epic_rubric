@@ -39,6 +39,9 @@ const CreateMKPage = () => {
     name: '',
     kode_mk: '',
     semester: SEMESTER_OPTIONS[0],
+    kode_semester: '',
+    sks: 2,
+    kelas: '',
     description: '',
   });
   const [komponenList, setKomponenList] = useState(DEFAULT_KOMPONEN_CONFIG);
@@ -99,11 +102,11 @@ const CreateMKPage = () => {
     );
 
     setIsSubmitting(false);
-    addToast(`Mata Kuliah "${newMK.name}" berhasil dibuat (${newMK.status === 'ACTIVE' ? 'Otomatis Aktif!' : 'Status Draft'})`, 'success');
+    addToast(`Mata Kuliah "${newMK.name}" berhasil dibuat!`, 'success');
     navigate(`/mk/${newMK.id}`);
   };
 
-  const isStep1Valid = formData.name.trim() && formData.kode_mk.trim() && formData.semester;
+  const isStep1Valid = formData.name.trim() && formData.kode_mk.trim() && formData.semester && Number(formData.sks) > 0;
   const enabledKomponen = komponenList.filter(k => k.enabled);
 
   return (
@@ -146,7 +149,7 @@ const CreateMKPage = () => {
             />
             <Input
               label="Kode MK"
-              placeholder="e.g. AKT201"
+              placeholder="e.g. 25P04085"
               value={formData.kode_mk}
               onChange={(e) => updateField('kode_mk', e.target.value.toUpperCase())}
               required
@@ -161,6 +164,26 @@ const CreateMKPage = () => {
                 {SEMESTER_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
+            <Input
+              label={<>Kode Semester <span className={styles.optional}>(opsional)</span></>}
+              placeholder="e.g. R225"
+              value={formData.kode_semester}
+              onChange={(e) => updateField('kode_semester', e.target.value.toUpperCase())}
+            />
+            <Input
+              label="SKS"
+              type="number"
+              placeholder="2"
+              value={formData.sks}
+              onChange={(e) => updateField('sks', Math.max(1, Math.min(6, Number(e.target.value) || 1)))}
+              required
+            />
+            <Input
+              label={<>Nama Kelas <span className={styles.optional}>(opsional)</span></>}
+              placeholder="e.g. PE 2025 A"
+              value={formData.kelas}
+              onChange={(e) => updateField('kelas', e.target.value)}
+            />
             <div className={styles.textareaWrap}>
               <label className={styles.selectLabel}>Deskripsi <span className={styles.optional}>(opsional)</span></label>
               <textarea

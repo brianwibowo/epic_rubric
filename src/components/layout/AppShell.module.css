@@ -3,21 +3,23 @@
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
+  background-color: var(--bg-canvas, #eff3f0); /* Soft Canvas Background matching Freashday design */
 }
 
 .contentWrapper {
   flex: 1;
-  padding-left: var(--sidebar-width);
+  padding: 12px 16px 12px calc(var(--sidebar-width) + 12px);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  transition: padding-left var(--transition-normal);
-  width: calc(100% - var(--sidebar-width));
+  transition: padding var(--transition-normal), width var(--transition-normal);
+  width: 100%;
   box-sizing: border-box;
 }
 
-.contentWrapper.fullWidth {
-  padding-left: var(--sidebar-width);
+.contentWrapper.collapsed {
+  padding: 12px 16px 12px 92px;
+  width: 100%;
 }
 
 .main {
@@ -27,6 +29,11 @@
   position: relative;
   width: 100%;
   box-sizing: border-box;
+  background: #ffffff; /* Crisp Pure White Studio Window Frame */
+  border-radius: 20px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05), 0 2px 6px rgba(15, 23, 42, 0.02);
+  overflow: hidden;
 }
 
 /* Mobile Header */
@@ -42,6 +49,8 @@
   z-index: 100;
   width: 100%;
   box-sizing: border-box;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
 }
 
 .hamburger {
@@ -118,14 +127,25 @@
 
 /* --- Responsive Breakpoint 768px --- */
 @media (max-width: 768px) {
+  .appShell {
+    background-color: var(--bg-app);
+  }
+
   .contentWrapper {
-    padding-left: 0;
+    padding: 0;
     width: 100%;
   }
 
+  .contentWrapper.collapsed,
   .contentWrapper.fullWidth {
-    padding-left: 0;
+    padding: 0;
     width: 100%;
+  }
+
+  .main {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
   }
 
   .mobileHeader {

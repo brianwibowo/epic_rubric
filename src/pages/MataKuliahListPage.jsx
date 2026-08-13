@@ -1,40 +1,43 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Card from '@/components/ui/Card';
-import { BookOpen, PlusCircle } from 'lucide-react';
+import { BookOpen, PlusCircle, Users, ArrowRight, Layers } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import HelpButton from '@/components/ui/HelpButton';
 import { useNavigate } from 'react-router-dom';
 import styles from './MataKuliahListPage.module.css';
 import { useAuthStore } from '@/stores/authStore';
 import { useMKStore } from '@/stores/mkStore';
-import { useUiStore } from '@/stores/uiStore';
 import { useTourStore } from '@/stores/tourStore';
-import { ROLES, MK_STATUS_LABELS, MK_STATUS_COLORS } from '@/utils/constants';
+import { ROLES, MK_STATUS_LABELS } from '@/utils/constants';
+
+import { useLanguageStore } from '@/stores/languageStore';
+
+const TranslatedText = ({ text }) => {
+  const { lang, translateDynamic } = useLanguageStore();
+  const [translated, setTranslated] = React.useState(text);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    if (lang === 'en') {
+      translateDynamic(text, 'en').then(res => {
+        if (isMounted) setTranslated(res);
+      });
+    } else {
+      setTranslated(text);
+    }
+    return () => { isMounted = false; };
+  }, [text, lang, translateDynamic]);
+
+  return <>{translated}</>;
+};
 
 const MataKuliahListPage = () => {
   const navigate = useNavigate();
   const { profile } = useAuthStore();
-  const { mkList, joinMKByCode } = useMKStore();
-  const { addToast } = useUiStore();
-  const { openHelp } = useTourStore();
-  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const { mkList } = useMKStore();
+  const { t } = useLanguageStore();
 
   const isDosen = profile?.role === ROLES.DOSEN || profile?.role === ROLES.ADMIN;
-
-  const handleJoin = (e) => {
-    e.preventDefault();
-    if (!joinCodeInput.trim()) return;
-
-    const res = joinMKByCode(joinCodeInput, profile);
-    if (res.success) {
-      addToast(`Berhasil bergabung dengan ${res.mk.name}!`, 'success');
-      setJoinCodeInput('');
-      navigate(`/mk/${res.mk.id}`);
-    } else {
-      addToast(res.message, 'error');
-    }
-  };
-
   const isMhs = profile?.role === ROLES.MAHASISWA;
 
   return (
@@ -42,17 +45,17 @@ const MataKuliahListPage = () => {
       <div className={styles.header}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h1 className={styles.title}>Daftar Mata Kuliah</h1>
+            <h1 className={styles.title}>{t('mkListTitle')}</h1>
             <HelpButton size={22} />
           </div>
           <p className={styles.subtitle}>
-            {isDosen ? 'Mata kuliah yang Anda ampu semester ini' : 'Mata kuliah yang Anda ikuti'}
+            {isDosen ? t('mkListSubtitleDosen') : t('mkListSubtitleMhs')}
           </p>
         </div>
 
         {isDosen && (
           <Button variant="primary" onClick={() => navigate('/mk/create')}>
-            <PlusCircle size={18} /> Buat MK Baru
+            <PlusCircle size={18} /> {t('btnCreateMK')}
           </Button>
         )}
       </div>
@@ -68,33 +71,56 @@ const MataKuliahListPage = () => {
               role="button"
               tabIndex={0}
             >
-              <div className={styles.mkCardHeader}>
-                <div className={styles.mkIcon}>
-                  <BookOpen size={22} />
+              {/* Top Colored Accent Strip */}
+              <div className={styles.cardAccentBar} />
+
+              <div className={styles.mkCardBody}>
+                <div className={styles.mkCardHeader}>
+                  <div className={styles.mkIconBox}>
+                    <BookOpen size={20} />
+                  </div>
                 </div>
-                <span 
-                  className={styles.statusBadge}
-                  style={{ 
-                    color: getStatusColor(mk.status),
-                    background: getStatusColor(mk.status) + '15'
-                  }}
-                >
-                  {!isDosen && mk.status === 'DRAFT' ? 'Belum Aktif' : (MK_STATUS_LABELS[mk.status] || mk.status)}
-                </span>
+                
+                <h3 className={styles.mkName}>
+                  <TranslatedText text={mk.name} />
+                </h3>
+
+                {/* Metadata Chips Layout */}
+                <div className={styles.metaChipsGroup}>
+                  <span className={styles.metaChip}>
+                    <Layers size={13} />
+                    {mk.kode_mk}{mk.sks ? ` • ${mk.sks} ${t('sksLabel')}` : ''}
+                  </span>
+                  <span className={styles.metaChipSubtle}>
+                    {mk.semester}{mk.kode_semester ? ` (${mk.kode_semester})` : ''}
+                  </span>
+                  {mk.kelas && (
+                    <span className={styles.metaChipSubtle}>
+                      {t('classLabel')} {mk.kelas}
+                    </span>
+                  )}
+                </div>
               </div>
               
-              <h3 className={styles.mkName}>{mk.name}</h3>
-              <p className={styles.mkCode}>{mk.kode_mk} • {mk.semester}</p>
-              
               <div className={styles.mkFooter}>
-                <span className={styles.mkStudents}>
-                  <UsersIcon /> {mk.students ? mk.students.length : 0} mahasiswa
-                </span>
-                {isDosen && (
-                  <span className={styles.joinCode}>
-                    Kode: <strong>{mk.join_code}</strong>
+                <div className={styles.footerLeft}>
+                  <Users size={14} className={styles.studentIcon} />
+                  <span className={styles.studentCount}>
+                    {mk.students ? mk.students.length : 0} {t('studentCount')}
                   </span>
-                )}
+                </div>
+
+                <div className={styles.footerRight}>
+                  {isDosen && mk.join_code && (
+                    <div className={styles.joinCodePill} title="Kode MK">
+                      <span className={styles.joinCodeLabel}>{t('codeLabel')}:</span>
+                      <strong className={styles.joinCodeValue}>{mk.join_code}</strong>
+                    </div>
+                  )}
+                  <div className={styles.arrowCircle}>
+                    <ArrowRight size={14} />
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -103,63 +129,20 @@ const MataKuliahListPage = () => {
         <Card variant="glass" padding="lg" style={{ textAlign: 'center', marginTop: '20px' }}>
           <BookOpen size={40} style={{ color: 'var(--text-muted)', marginBottom: '12px', opacity: 0.5 }} />
           <h3 style={{ fontSize: '17px', fontWeight: 700, marginBottom: '8px' }}>
-            {isDosen ? 'Belum Ada Mata Kuliah' : 'Belum Mengikuti Mata Kuliah'}
+            {t('noMKTitle')}
           </h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
-            {isDosen 
-              ? 'Buat mata kuliah pertama Anda untuk memulai proses penilaian.' 
-              : 'Masukkan kode MK dari dosen untuk bergabung ke mata kuliah.'}
+            {isDosen ? t('noMKDescDosen') : t('noMKDescMhs')}
           </p>
           {isDosen && (
             <Button variant="primary" onClick={() => navigate('/mk/create')}>
-              <PlusCircle size={18} /> Buat MK Pertama
+              <PlusCircle size={18} /> {t('btnCreateMKFirst')}
             </Button>
           )}
-        </Card>
-      )}
-
-      {/* Join MK section for mahasiswa */}
-      {profile?.role === ROLES.MAHASISWA && (
-        <Card variant="glass" padding="md" style={{ marginTop: '24px' }}>
-          <div className={styles.joinSection}>
-            <div className={styles.joinText}>
-              <h3>Gabung ke Mata Kuliah Baru</h3>
-              <p>Masukkan 6 karakter kode MK dari dosen untuk bergabung</p>
-            </div>
-            <form onSubmit={handleJoin} className={styles.joinForm}>
-              <input 
-                type="text" 
-                placeholder="KODE MK (CONTOH: AK301F)"
-                className={styles.joinInput}
-                value={joinCodeInput}
-                onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
-                maxLength={6}
-              />
-              <Button type="submit" variant="primary" disabled={!joinCodeInput.trim()}>Gabung</Button>
-            </form>
-          </div>
         </Card>
       )}
     </div>
   );
 };
-
-const getStatusColor = (status) => {
-  switch (status) {
-    case 'ACTIVE': return '#059669';
-    case 'DRAFT': return '#d97706';
-    case 'ARCHIVED': return '#94a3b8';
-    default: return '#94a3b8';
-  }
-};
-
-const UsersIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-);
 
 export default MataKuliahListPage;

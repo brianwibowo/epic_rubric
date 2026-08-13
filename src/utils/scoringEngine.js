@@ -32,7 +32,7 @@ export function calculateRawScore(dimensionScores, dimensions) {
     return sum + (score * weight);
   }, 0);
 
-  return Math.round(weightedSum * 25);
+  return Math.round(Number((weightedSum * 25).toFixed(6)));
 }
 
 /**

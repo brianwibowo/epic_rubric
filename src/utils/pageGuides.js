@@ -46,22 +46,16 @@ export const PAGE_GUIDES = {
     route: '/mk',
     summary: 'Kelola seluruh mata kuliah yang Anda ampu atau ikuti dalam satu tampilan kartu yang rapi.',
     keyFeatures: [
-      'Status MK: DRAFT (belum aktif), ACTIVE (siap dinilai), ARCHIVED (selesai).',
-      'Kode Join MK: Dosen dapat membagikan kode 6 digit kepada mahasiswa.',
-      'Gabung MK: Mahasiswa dapat memasukkan kode MK untuk bergabung secara instan.'
+      'Informasi Institusi: Kode MK, SKS, Semester, dan Kelas tersusun rapi.',
+      'Daftar Mahasiswa: Terhubung langsung dengan roster kelas.'
     ],
-    dosenTips: 'Mata kuliah yang baru dibuat berstatus DRAFT. Tambahkan komponen & rubrik hingga bobot 100% untuk mengaktifkannya (ACTIVE).',
-    mahasiswaTips: 'Masukkan kode MK 6-digit dari dosen Anda pada form di bagian bawah halaman untuk bergabung.',
+    dosenTips: 'Mata kuliah yang Anda buat langsung siap digunakan untuk kegiatan perkuliahan dan penilaian.',
+    mahasiswaTips: 'Anda dapat melihat seluruh mata kuliah yang telah didaftarkan oleh Dosen atau Admin.',
     tourSteps: [
       {
         title: 'Katalog Mata Kuliah 📖',
-        description: 'Semua mata kuliah tersusun rapi dengan badge status (DRAFT/ACTIVE) dan jumlah mahasiswa terdaftar.',
+        description: 'Semua mata kuliah tersusun rapi beserta informasi SKS, kelas, dan jumlah mahasiswa terdaftar.',
         target: 'grid'
-      },
-      {
-        title: 'Gabung MK (Mahasiswa) 🔑',
-        description: 'Cukup masukkan kode unik MK dari dosen Anda untuk langsung bergabung ke kelas.',
-        target: 'join'
       }
     ]
   },

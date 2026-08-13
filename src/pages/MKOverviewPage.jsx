@@ -57,14 +57,44 @@ const MKOverviewPage = () => {
   };
 
   const handleExportExcel = () => {
-    const roster = (mk.students || []).map((s) => ({
-      nim: s.nim,
-      full_name: s.full_name,
-      scores: { 'Proyek': 85, 'Partisipasi': 90, 'Quiz': 78 },
-      final_score: 84,
-      status: 'PUBLISHED'
-    }));
-    exportMKToExcel(mk.name, mk.kode_mk, mk.komponen || [], roster);
+    const komps = mk.komponen || [];
+    const roster = (mk.students || []).map((s) => {
+      const stuId = s.id || s.student_id;
+      const stuScoring = mk?.scoringData?.[stuId] || {};
+      const scores = {};
+      let totalWeighted = 0;
+      let hasAnyScore = false;
+
+      komps.forEach(komp => {
+        const sd = stuScoring[komp.id];
+        if (sd?.rawScore != null) {
+          scores[komp.name] = sd.rawScore;
+          totalWeighted += sd.rawScore * (komp.bobot || 0);
+          hasAnyScore = true;
+        } else {
+          scores[komp.name] = null;
+        }
+      });
+
+      return {
+        nim: s.nim,
+        full_name: s.full_name,
+        scores,
+        final_score: hasAnyScore ? Math.round(totalWeighted) : null,
+        status: hasAnyScore ? 'PUBLISHED' : 'DRAFT'
+      };
+    });
+
+    exportMKToExcel({
+      name: mk.name,
+      kode_mk: mk.kode_mk,
+      semester: mk.semester || '',
+      kode_semester: mk.kode_semester || '',
+      sks: mk.sks || 0,
+      kelas: mk.kelas || '',
+      dosen_name: mk.dosen_name || '',
+      studentCount: (mk.students || []).length
+    }, komps, roster);
     addToast('Laporan MK berhasil diekspor ke Excel', 'success');
   };
 
@@ -94,12 +124,15 @@ const MKOverviewPage = () => {
           <div>
             <div className={styles.mkCodeRow}>
               <span className={styles.kodeMK}>{mk.kode_mk}</span>
-              <Badge variant={mk.status === 'ACTIVE' ? 'success' : mk.status === 'DRAFT' ? 'warning' : 'default'}>
-                {mk.status === 'ACTIVE' ? 'Aktif' : mk.status === 'DRAFT' ? 'Draft' : 'Diarsipkan'}
-              </Badge>
             </div>
             <h1 className={styles.mkTitle}>{mk.name}</h1>
-            <p className={styles.mkMeta}>{mk.semester} • Dosen: {mk.dosen_name || 'Dra. Sri Wahyuni, M.Ak.'}</p>
+            <p className={styles.mkMeta}>
+              {mk.semester}{mk.kode_semester ? ` (${mk.kode_semester})` : ''}
+              {mk.sks ? ` • ${mk.sks} SKS` : ''}
+              {mk.kelas ? ` • Kelas ${mk.kelas}` : ''}
+              {' • '}{studentCount} Mahasiswa
+              {' • '}Dosen: {mk.dosen_name || '-'}
+            </p>
           </div>
         </div>
 

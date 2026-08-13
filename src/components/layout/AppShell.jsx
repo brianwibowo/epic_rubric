@@ -10,7 +10,7 @@ import FeatureTourModal from '../ui/FeatureTourModal';
 import { Menu, Bell, HelpCircle } from 'lucide-react';
 
 const AppShell = () => {
-  const { toasts, removeToast, setSidebarOpen, notificationCount } = useUiStore();
+  const { toasts, removeToast, setSidebarOpen, sidebarCollapsed, notificationCount } = useUiStore();
   const { openHelp } = useTourStore();
   const location = useLocation();
   
@@ -23,7 +23,7 @@ const AppShell = () => {
       <Sidebar />
 
       {/* Main Content Layout */}
-      <div className={`${styles.contentWrapper} ${isScoringPage ? styles.fullWidth : ''}`}>
+      <div className={`${styles.contentWrapper} ${sidebarCollapsed ? styles.collapsed : ''}`}>
         {/* Mobile Header */}
         <div className={styles.mobileHeader}>
           <button className={styles.hamburger} onClick={() => setSidebarOpen(true)} aria-label="Open menu">

@@ -1,0 +1,248 @@
+.page {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 100%;
+}
+
+.content {
+  padding: 24px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Narrative Banner */
+.narrativeBanner {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  padding: 24px 28px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+}
+
+.narrativeHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.iconCircle {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-primary, #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.narrativeTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.narrativeSubtitle {
+  font-size: 0.825rem;
+  color: var(--color-primary, #2563eb);
+  font-weight: 600;
+  margin: 2px 0 0 0;
+}
+
+.narrativeBody {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #475569);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.narrativeBody strong {
+  color: var(--text-primary, #0f172a);
+}
+
+/* Lecturer Cards Grid (2 Columns Side-by-Side) */
+.lecturerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.lecturerCard {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.lecturerCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.cardInner {
+  display: flex;
+  align-items: flex-start;
+  padding: 24px;
+  gap: 20px;
+}
+
+/* Lecturer Photo Container */
+.photoWrapper {
+  width: 170px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lecturerPhoto {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1));
+}
+
+/* Lecturer Info Container */
+.infoWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lecturerName {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.01em;
+  margin: 0 0 14px 0;
+  line-height: 1.3;
+}
+
+.metaList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.metaIcon {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+/* Expertise Chips (Emerald Green Pills) */
+.expertiseContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.expertiseChip {
+  display: inline-flex;
+  align-items: center;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 0.725rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.01em;
+}
+
+.divider {
+  height: 1px;
+  background: #e2e8f0;
+  width: 100%;
+  margin: 8px 0 16px 0;
+}
+
+/* Stat Counters Row */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  text-align: center;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statValue {
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.statValue.sinta {
+  color: #10b981; /* Sinta score green */
+}
+
+.statValue.scopus {
+  color: #ef4444; /* Scopus score red/coral */
+}
+
+.statValue.scholar {
+  color: #f59e0b; /* GScholar score amber */
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .lecturerGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 16px;
+  }
+
+  .cardInner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .photoWrapper {
+    width: 140px;
+  }
+
+  .metaList {
+    align-items: center;
+  }
+
+  .expertiseContainer {
+    justify-content: center;
+  }
+}

@@ -1,14 +1,11 @@
 import React from 'react';
 import { useUiStore } from '@/stores/uiStore';
-import { useAuthStore } from '@/stores/authStore';
 import styles from './Header.module.css';
 import { Menu, Bell } from 'lucide-react';
-import Badge from '../ui/Badge';
 import HelpButton from '../ui/HelpButton';
 
 const Header = ({ title = 'EPIC Platform', actions }) => {
   const { toggleSidebar } = useUiStore();
-  const { isMock } = useAuthStore();
 
   return (
     <header className={styles.header}>
@@ -27,11 +24,6 @@ const Header = ({ title = 'EPIC Platform', actions }) => {
       </div>
       
       <div className={styles.right}>
-        {isMock && (
-          <Badge variant="warning" size="sm" className={styles.mockBadge} glow>
-            Mode Demo / Simulasi
-          </Badge>
-        )}
         {actions && <div className={styles.actions}>{actions}</div>}
         <button className={styles.iconBtn} aria-label="Notifications">
           <Bell size={18} />

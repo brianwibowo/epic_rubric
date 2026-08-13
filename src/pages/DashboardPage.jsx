@@ -11,9 +11,8 @@ import styles from './DashboardPage.module.css';
 import { useTourStore } from '@/stores/tourStore';
 import { 
   BookOpen, Users, ClipboardList, TrendingUp, 
-  PlusCircle, ArrowRight, Award, HelpCircle
+  ArrowRight, Award, HelpCircle
 } from 'lucide-react';
-import Button from '@/components/ui/Button';
 
 const DashboardPage = () => {
   const { profile } = useAuthStore();
@@ -46,12 +45,6 @@ const DashboardPage = () => {
             }
           </p>
         </div>
-        {isDosen && (
-          <Button variant="primary" onClick={() => navigate('/mk/create')}>
-            <PlusCircle size={18} />
-            Buat MK Baru
-          </Button>
-        )}
       </div>
 
       {/* Stats Overview */}
@@ -129,18 +122,13 @@ const DashboardPage = () => {
                 </div>
                 <div className={styles.mkItemInfo}>
                   <h4 className={styles.mkItemName}>{mk.name}</h4>
-                  <span className={styles.mkItemMeta}>{mk.kode_mk} • {mk.semester}</span>
+                  <span className={styles.mkItemMeta}>{mk.kode_mk}{mk.sks ? ` (${mk.sks} SKS)` : ''} • {mk.semester}</span>
                 </div>
                 <div className={styles.mkItemRight}>
                   {isDosen ? (
-                    <>
-                      <Badge variant={MK_STATUS_COLORS[mk.status] || 'default'} size="sm">
-                        {MK_STATUS_LABELS[mk.status] || mk.status}
-                      </Badge>
-                      <span className={styles.progressText}>
-                        {mk.students ? mk.students.length : 0} Mahasiswa
-                      </span>
-                    </>
+                    <span className={styles.progressText}>
+                      {mk.students ? mk.students.length : 0} Mahasiswa
+                    </span>
                   ) : (
                     <div className={styles.nilaiChip}>
                       <Award size={14} />

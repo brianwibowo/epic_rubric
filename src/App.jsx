@@ -18,6 +18,7 @@ import RubrikLibraryPage from '@/pages/RubrikLibraryPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import UserManagementPage from '@/pages/UserManagementPage';
 import AuditLogPage from '@/pages/AuditLogPage';
+import KreditPage from '@/pages/KreditPage';
 
 // Pages — MK Context
 import MKOverviewPage from '@/pages/MKOverviewPage';
@@ -83,6 +84,9 @@ function App() {
 
           {/* Notifications (All roles) */}
           <Route path="notifications" element={<NotificationsPage />} />
+
+          {/* Kredit & Tim Peneliti (All roles) */}
+          <Route path="kredit" element={<KreditPage />} />
 
           {/* Admin: User Management */}
           <Route 
