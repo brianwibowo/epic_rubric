@@ -5,15 +5,24 @@
 
 export const ROLES = {
   ADMIN: 'admin',
-  DOSEN: 'dosen',      // was 'guru'
-  MAHASISWA: 'mahasiswa' // was 'siswa'
+  DOSEN: 'dosen',
+  GURU: 'guru',
+  MAHASISWA: 'mahasiswa',
+  SISWA: 'siswa'
 };
 
 export const ROLE_LABELS = {
-  [ROLES.ADMIN]: 'Admin / Kaprog',
-  [ROLES.DOSEN]: 'Dosen / Guru',
-  [ROLES.MAHASISWA]: 'Mahasiswa / Siswa'
+  [ROLES.ADMIN]: 'Admin',
+  [ROLES.DOSEN]: 'Dosen',
+  [ROLES.GURU]: 'Guru',
+  [ROLES.MAHASISWA]: 'Mahasiswa',
+  [ROLES.SISWA]: 'Siswa'
 };
+
+export const EDUCATOR_ROLES = [ROLES.DOSEN, ROLES.GURU];
+export const LEARNER_ROLES = [ROLES.MAHASISWA, ROLES.SISWA];
+export const STAFF_ROLES = [ROLES.ADMIN, ROLES.DOSEN, ROLES.GURU];
+export const ALL_ROLES = [ROLES.ADMIN, ROLES.DOSEN, ROLES.GURU, ROLES.MAHASISWA, ROLES.SISWA];
 
 export const MK_STATUS = {
   DRAFT: 'DRAFT',

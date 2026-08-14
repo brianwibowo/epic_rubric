@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import { getDimensionColor } from '@/utils/constants';
+import { capitalizeWords, capitalizeFirstLetter } from '@/utils/formatters';
 import styles from './RubrikLibraryPage.module.css';
 import { PlusCircle, Edit2, Trash2, Layers, Eye, Plus, X } from 'lucide-react';
 import HelpButton from '@/components/ui/HelpButton';
@@ -204,7 +205,7 @@ const RubrikLibraryPage = () => {
             label="Nama Template Rubrik"
             placeholder="e.g. Rubrik Presentasi Kasus"
             value={newRubricName}
-            onChange={(e) => setNewRubricName(e.target.value)}
+            onChange={(e) => setNewRubricName(capitalizeWords(e.target.value))}
           />
           <div>
             <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Deskripsi</label>
@@ -217,7 +218,7 @@ const RubrikLibraryPage = () => {
               rows={2}
               placeholder="Deskripsi singkat penggunaan rubrik..."
               value={newRubricDesc}
-              onChange={(e) => setNewRubricDesc(e.target.value)}
+              onChange={(e) => setNewRubricDesc(capitalizeFirstLetter(e.target.value))}
             />
           </div>
 
@@ -241,7 +242,7 @@ const RubrikLibraryPage = () => {
                   <input
                     style={{ flex: 1, padding: '6px 10px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px' }}
                     value={d.name}
-                    onChange={(e) => handleDimChange(idx, 'name', e.target.value)}
+                    onChange={(e) => handleDimChange(idx, 'name', capitalizeWords(e.target.value))}
                     placeholder="Nama Dimensi"
                   />
                   <input
@@ -279,7 +280,7 @@ const RubrikLibraryPage = () => {
             label="Nama Template Rubrik"
             placeholder="e.g. Rubrik Presentasi Kasus"
             value={editName}
-            onChange={(e) => setEditName(e.target.value)}
+            onChange={(e) => setEditName(capitalizeWords(e.target.value))}
           />
           <div>
             <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Deskripsi</label>
@@ -292,7 +293,7 @@ const RubrikLibraryPage = () => {
               rows={2}
               placeholder="Deskripsi singkat penggunaan rubrik..."
               value={editDesc}
-              onChange={(e) => setEditDesc(e.target.value)}
+              onChange={(e) => setEditDesc(capitalizeFirstLetter(e.target.value))}
             />
           </div>
 
@@ -316,7 +317,7 @@ const RubrikLibraryPage = () => {
                   <input
                     style={{ flex: 1, padding: '6px 10px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px' }}
                     value={d.name}
-                    onChange={(e) => handleEditDimChange(idx, 'name', e.target.value)}
+                    onChange={(e) => handleEditDimChange(idx, 'name', capitalizeWords(e.target.value))}
                     placeholder="Nama Dimensi"
                   />
                   <input

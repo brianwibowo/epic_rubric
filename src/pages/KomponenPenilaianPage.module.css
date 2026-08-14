@@ -1,392 +1,477 @@
-/* KomponenPenilaianPage Styles */
+/* KomponenPenilaianPage Executive CRUD Styles */
 
 .page {
   width: 100%;
-  padding: 24px 32px 40px;
+  padding: 28px 32px 60px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ==========================================================================
+   1. HEADER SECTION
+   ========================================================================== */
+.headerNavRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+
+.backBtn:hover {
+  color: var(--color-primary, #2563eb);
 }
 
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
   gap: 16px;
   flex-wrap: wrap;
   width: 100%;
 }
 
-.title {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
-}
-
-.subtitle {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-top: 4px;
-}
-
-/* Weight Summary */
-.weightSummary {
-  margin-bottom: 20px;
-  padding: 16px 20px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.weightBarTrack {
-  width: 100%;
-  height: 8px;
-  background: var(--bg-surface-hover);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-.weightBarFill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.4s ease, background 0.3s;
-}
-
-.weightBarFill.valid {
-  background: linear-gradient(90deg, var(--color-primary), #14b8a6);
-}
-
-.weightBarFill.under {
-  background: var(--color-warning);
-}
-
-.weightBarFill.over {
-  background: var(--color-error);
-}
-
-.weightInfo {
+.titleRow {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.weightLabel {
-  font-size: 13px;
-  color: var(--text-secondary);
-  font-weight: 500;
+.title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  letter-spacing: -0.5px;
+  margin: 0;
 }
 
-.weightValue {
-  font-size: 15px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-}
-
-.weightValue.valid {
-  color: var(--color-success);
-}
-
-.weightValue.invalid {
-  color: var(--color-error);
-}
-
-/* Activation Warning */
-.activationWarning {
-  display: flex;
-  gap: 12px;
-  padding: 14px 18px;
-  background: rgba(217, 119, 6, 0.06);
-  border: 1px solid rgba(217, 119, 6, 0.15);
-  border-radius: var(--radius-md);
-  margin-bottom: 20px;
-  color: #92400e;
+.subtitle {
   font-size: 13.5px;
-  line-height: 1.5;
-  width: 100%;
-  box-sizing: border-box;
+  color: var(--text-secondary, #64748b);
+  margin-top: 4px;
 }
 
-.activationWarning svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--color-warning);
-}
-
-.activationWarning ul {
-  margin: 4px 0 0 16px;
-  padding: 0;
-}
-
-.activationWarning li {
-  font-weight: 500;
-}
-
-/* Komponen List */
-.list {
+/* ==========================================================================
+   2. WEIGHT SUMMARY & TRACKER CARD
+   ========================================================================== */
+.weightSummaryCard {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-xl, 14px);
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  width: 100%;
+  gap: 14px;
+  box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.04);
 }
 
-.item {
+.weightHeaderRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-normal);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.weightTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.weightStatNumber {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  line-height: 1;
+}
+
+.weightStatNumber.valid {
+  color: #059669;
+}
+
+.weightStatNumber.invalid {
+  color: #d97706;
+}
+
+.weightStatNumber.over {
+  color: #ef4444;
+}
+
+/* Multi-segmented weight track */
+.weightSegmentedBar {
+  display: flex;
   width: 100%;
-  box-sizing: border-box;
+  height: 12px;
+  background: #f1f5f9;
+  border-radius: 9999px;
+  overflow: hidden;
+  gap: 2px;
+  position: relative;
 }
 
-.item:hover {
-  border-color: var(--border-color-hover);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+.weightSegment {
+  height: 100%;
+  transition: width 0.3s ease, opacity 0.2s;
 }
 
-.itemLeft {
+.weightSegment:hover {
+  opacity: 0.85;
+}
+
+.weightLegendRow {
   display: flex;
   align-items: center;
   gap: 14px;
-  flex: 1;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-secondary, #64748b);
+}
+
+.weightLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Warning Banner */
+.warningBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  border-radius: 10px;
+  color: #92400e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   3. CRUD COMPONENT CARDS LIST
+   ========================================================================== */
+.komponenList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.komponenCard {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.komponenCard:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.komponenLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1.2;
   min-width: 0;
 }
 
-.itemOrder {
+.orderBadge {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  background: var(--bg-surface-hover);
-  color: var(--text-muted);
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: var(--text-secondary, #475569);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
+  font-family: var(--font-mono, monospace);
   flex-shrink: 0;
 }
 
-.itemInfo {
+.codeChip {
+  font-size: 11.5px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  padding: 3px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.komponenDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
 }
 
-.itemName {
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--text-primary);
+.komponenName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.itemRubric {
-  margin-top: 4px;
-}
-
-.rubricLinked {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+.komponenSubtext {
   font-size: 12px;
-  color: var(--color-primary);
-  font-weight: 500;
+  color: var(--text-muted, #64748b);
 }
 
-.assignRubricBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: var(--color-warning);
-  font-weight: 600;
-  background: none;
-  border: 1px dashed rgba(217, 119, 6, 0.3);
-  padding: 3px 10px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.assignRubricBtn:hover {
-  background: rgba(217, 119, 6, 0.06);
-  border-color: var(--color-warning);
-}
-
-.itemRight {
+/* Center Section: Rubric Dropdown & Bobot */
+.komponenCenter {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  flex: 1.5;
+}
+
+.bobotBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid var(--border-color, #e2e8f0);
+  font-size: 13px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-primary, #0f172a);
   flex-shrink: 0;
 }
 
-.bobotDisplay {
-  min-width: 48px;
-  text-align: right;
-}
-
-.bobotValue {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-}
-
-.itemActions {
-  display: flex;
-  gap: 4px;
-}
-
-.scoringBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
-  border: none;
-  background: rgba(5, 150, 105, 0.08);
-  color: var(--color-primary);
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.scoringBtn:hover {
-  background: rgba(5, 150, 105, 0.14);
-}
-
-.editBtn,
-.deleteBtn {
-  padding: 6px;
-  border: none;
-  background: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.editBtn:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
-}
-
-.deleteBtn:hover {
-  background: rgba(220, 38, 38, 0.08);
-  color: var(--color-error);
-}
-
-/* Edit Mode */
-.itemEditMode {
+.rubricInfoWrap {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 12px;
+  gap: 8px;
+  flex: 1;
+  min-width: 220px;
 }
 
-.editFields {
+.rubricInfoBox {
   display: flex;
-  gap: 10px;
-  flex: 1;
-}
-
-.editInput {
-  flex: 1;
+  align-items: center;
+  gap: 8px;
   padding: 8px 12px;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-family: var(--font-sans);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  outline: none;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-canvas, #f8fafc);
+  flex: 1;
+  min-width: 0;
 }
 
-.bobotInput {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.rubricInfoBox.unassigned {
+  border-color: #fde68a;
+  background: #fffbeb;
 }
 
-.editInputSmall {
-  width: 64px;
-  padding: 8px 10px;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-family: var(--font-mono);
-  text-align: right;
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  outline: none;
-}
-
-.bobotUnit {
-  font-size: 14px;
+.rubricInfoText {
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-primary, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.editActions {
-  display: flex;
-  gap: 6px;
+.rubricInfoBox.unassigned .rubricInfoText {
+  color: #b45309;
 }
 
-.saveBtn {
+.previewRubricBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: #f8fafc;
+  color: var(--text-secondary, #64748b);
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: var(--color-primary);
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.previewRubricBtn:hover {
+  background: #2563eb;
   color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 600;
+  border-color: #2563eb;
+}
+
+/* Right Action Buttons */
+.komponenActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.actionIconBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: #ffffff;
+  color: var(--text-secondary, #64748b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: all 0.15s;
 }
 
-.saveBtn:hover {
-  background: var(--color-primary-hover);
+.actionIconBtn:hover {
+  background: #f1f5f9;
+  color: var(--text-primary, #0f172a);
+  border-color: #cbd5e1;
 }
 
-.cancelBtn {
-  padding: 6px;
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
+.deleteIconBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: #ffffff;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.15s;
 }
 
-.cancelBtn:hover {
-  border-color: var(--color-error);
-  color: var(--color-error);
+.deleteIconBtn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
 }
 
-/* Add Form */
-.addForm {
+/* ==========================================================================
+   4. MODAL FORMS (TAMBAH & EDIT)
+   ========================================================================== */
+.modalForm {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 4px 0;
 }
 
-.addFormActions {
+.formGroup {
   display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 6px;
 }
 
-@media (max-width: 768px) {
-  .page { padding: 20px; }
-  .item { flex-direction: column; align-items: stretch; gap: 12px; }
-  .itemRight { justify-content: space-between; }
-  .header { flex-direction: column; align-items: flex-start; }
-  .editFields { flex-direction: column; }
+.formLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+}
+
+.formSelect {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: #ffffff;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary, #0f172a);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-sizing: border-box;
+}
+
+.formSelect:focus {
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Preset Suggestion Chips */
+.presetsRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.presetChip {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: var(--text-secondary, #475569);
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.presetChip:hover {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+/* Modal Actions */
+.modalActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .komponenCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .komponenLeft, .komponenCenter, .komponenActions {
+    width: 100%;
+  }
+  .komponenActions {
+    justify-content: flex-end;
+  }
 }

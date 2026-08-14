@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMKStore } from '@/stores/mkStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
-import { ROLES } from '@/utils/constants';
+import { ROLES, STAFF_ROLES } from '@/utils/constants';
+import { useTerminology } from '@/hooks/useTerminology';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
@@ -11,24 +12,79 @@ import Input from '@/components/ui/Input';
 import Pagination from '@/components/ui/Pagination';
 import Skeleton from '@/components/ui/Skeleton';
 import Spinner from '@/components/ui/Spinner';
+import HelpButton from '@/components/ui/HelpButton';
 import styles from './MKStudentListPage.module.css';
-import { UserPlus, Search, Upload, Download, Trash2, FileSpreadsheet, Edit3, ChevronDown } from 'lucide-react';
+import { 
+  UserPlus, Search, Upload, Download, Trash2, FileSpreadsheet, 
+  Edit3, ChevronDown, UsersRound, PlusCircle, ArrowRight, BookOpen, 
+  Clock, MapPin, User, LayoutGrid, List, FileText 
+} from 'lucide-react';
 import { exportMKToExcel } from '@/utils/exportExcel';
+import { capitalizeWords, capitalizeFirstLetter, getGradeInfo, getGradeColor, getGradeBg } from '@/utils/formatters';
 import * as XLSX from 'xlsx';
+
+const SEMESTER_OPTIONS = [
+  'Ganjil 2025/2026',
+  'Genap 2025/2026',
+  'Ganjil 2026/2027',
+  'Genap 2026/2027',
+  'Ganjil 2024/2025',
+  'Genap 2024/2025',
+  'Semester 1 (Ganjil)',
+  'Semester 2 (Genap)',
+  '__CUSTOM__'
+];
 
 const MKStudentListPage = () => {
   const { mkId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { profile } = useAuthStore();
-  const isDosen = profile?.role === ROLES.DOSEN || profile?.role === ROLES.ADMIN;
-  const { getMKById, updateMK } = useMKStore();
+  const { courseLabel, coursePluralLabel, learnerLabel, learnerPluralLabel, learnerIdLabel, isSchool } = useTerminology();
+  const isStaff = STAFF_ROLES.includes(profile?.role);
+  const { mkList, updateMK, updateRombel, addRombel, getAllStudents, getAllScoringData } = useMKStore();
   const { addToast } = useUiStore();
 
-  const mk = getMKById(mkId);
-  const students = mk?.students || [];
+  const mk = mkList.find(m => m.id === mkId);
+  const rawRombels = mk?.rombel || [];
 
-  const [searchQuery, setSearchQuery] = useState('');
+  // Filter rombels by role context to avoid collision
+  const rombelList = useMemo(() => {
+    if (isSchool) {
+      const schoolRombels = rawRombels.filter(r => r.is_school || r.name.includes('AKL'));
+      return schoolRombels.length > 0 ? schoolRombels : rawRombels;
+    } else if (profile?.role === ROLES.DOSEN || profile?.role === ROLES.MAHASISWA) {
+      const univRombels = rawRombels.filter(r => !r.is_school && !r.name.includes('AKL'));
+      return univRombels.length > 0 ? univRombels : rawRombels;
+    }
+    return rawRombels;
+  }, [rawRombels, isSchool, profile]);
+
+  const rombelIdParam = searchParams.get('rombelId');
+
+  // Determine active rombel
+  const selectedRombel = rombelIdParam && rombelIdParam !== 'ALL'
+    ? (rombelList.find(r => r.id === rombelIdParam) || rombelList[0] || null)
+    : (rombelList.length === 1 && !rombelIdParam ? rombelList[0] : null);
+
+  const students = useMemo(() => {
+    if (selectedRombel) {
+      return selectedRombel.students || [];
+    }
+    return rombelList.flatMap(r => r.students || []);
+  }, [selectedRombel, rombelList]);
+
+  const scoringData = useMemo(() => {
+    if (selectedRombel) {
+      return selectedRombel.scoringData || {};
+    }
+    return rombelList.reduce((acc, r) => ({ ...acc, ...(r.scoringData || {}) }), {});
+  }, [selectedRombel, rombelList]);
+
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddRombelModal, setShowAddRombelModal] = useState(false);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadFileName, setUploadFileName] = useState('');
@@ -36,12 +92,87 @@ const MKStudentListPage = () => {
   const [newNim, setNewNim] = useState('');
   const [newName, setNewName] = useState('');
 
+  // Rombel overview search, view mode (grid/list), and pagination
+  const [rombelSearchInput, setRombelSearchInput] = useState('');
+  const [debouncedRombelSearch, setDebouncedRombelSearch] = useState('');
+  const [rombelViewMode, setRombelViewMode] = useState('grid'); // 'grid' | 'list'
+  const [rombelCurrentPage, setRombelCurrentPage] = useState(1);
+  const [rombelItemsPerPage, setRombelItemsPerPage] = useState(6);
+
+  // Debounce rombel search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedRombelSearch(rombelSearchInput);
+      setRombelCurrentPage(1);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [rombelSearchInput]);
+
+  const filteredRombels = rombelList.filter(r => 
+    (r.name || '').toLowerCase().includes(debouncedRombelSearch.toLowerCase()) ||
+    (r.kode_rombel || '').toLowerCase().includes(debouncedRombelSearch.toLowerCase()) ||
+    (r.dosen_pengampu || '').toLowerCase().includes(debouncedRombelSearch.toLowerCase()) ||
+    (r.ruangan || '').toLowerCase().includes(debouncedRombelSearch.toLowerCase()) ||
+    (r.semester || '').toLowerCase().includes(debouncedRombelSearch.toLowerCase())
+  );
+
+  const totalRombelPages = Math.ceil(filteredRombels.length / rombelItemsPerPage);
+  const paginatedRombels = filteredRombels.slice(
+    (rombelCurrentPage - 1) * rombelItemsPerPage,
+    rombelCurrentPage * rombelItemsPerPage
+  );
+
+  // Debounce student search query by 250ms
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchInput);
+      setCurrentPage(1);
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [searchInput]);
+
+  // Reset search and page when switching rombel
+  useEffect(() => {
+    setSearchInput('');
+    setDebouncedSearchQuery('');
+    setCurrentPage(1);
+  }, [selectedRombel?.id, rombelIdParam]);
+
+  // Structured Rombel form fields
+  const [rombelForm, setRombelForm] = useState({
+    name: '',
+    kode_rombel: '',
+    semester: mk?.semester || SEMESTER_OPTIONS[0],
+    customSemester: '',
+    dosen_pengampu: mk?.dosen_name || '',
+    jadwal: '',
+    ruangan: '',
+    keterangan: ''
+  });
+  const [isCustomSemester, setIsCustomSemester] = useState(false);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
+
+  if (!mk) {
+    return (
+      <div className={styles.page}>
+        <Card variant="glass" padding="lg" style={{ textAlign: 'center', marginTop: '40px' }}>
+          <h2>{courseLabel} Tidak Ditemukan</h2>
+          <p style={{ margin: '12px 0 20px', color: 'var(--text-secondary)' }}>
+            {courseLabel} dengan ID "{mkId}" tidak ada atau telah dihapus.
+          </p>
+          <Button variant="primary" onClick={() => navigate(isSchool ? '/kelas' : '/mk')}>
+            Kembali ke {coursePluralLabel}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -53,9 +184,48 @@ const MKStudentListPage = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const getStudentRombelName = (studentId) => {
+    const found = rombelList.find(r => (r.students || []).some(s => s.id === studentId || s.student_id === studentId));
+    return found ? found.name : null;
+  };
+
+  const handleCreateRombel = (e) => {
+    if (e) e.preventDefault();
+    if (!rombelForm.name.trim()) return;
+
+    const finalSemester = isCustomSemester
+      ? (rombelForm.customSemester.trim() || 'Ganjil 2025/2026')
+      : rombelForm.semester;
+
+    const newR = addRombel(mkId, {
+      name: rombelForm.name.trim(),
+      kode_rombel: rombelForm.kode_rombel.trim(),
+      semester: finalSemester,
+      dosen_pengampu: rombelForm.dosen_pengampu.trim(),
+      jadwal: rombelForm.jadwal.trim(),
+      ruangan: rombelForm.ruangan.trim(),
+      keterangan: rombelForm.keterangan.trim()
+    });
+
+    addToast(`Rombel "${newR.name}" berhasil ditambahkan ke ${courseLabel}!`, 'success');
+    setRombelForm({
+      name: '',
+      kode_rombel: '',
+      semester: mk?.semester || SEMESTER_OPTIONS[0],
+      customSemester: '',
+      dosen_pengampu: mk?.dosen_name || '',
+      jadwal: '',
+      ruangan: '',
+      keterangan: ''
+    });
+    setIsCustomSemester(false);
+    setShowAddRombelModal(false);
+    setSearchParams({ rombelId: newR.id });
+  };
+
   const filtered = students.filter(s => 
-    (s.full_name || s.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (s.nim || '').includes(searchQuery)
+    (s.full_name || s.name || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+    (s.nim || s.nisn || '').includes(debouncedSearchQuery)
   );
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -63,13 +233,6 @@ const MKStudentListPage = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  const getGradeColor = (nilai) => {
-    if (nilai >= 85) return '#059669';
-    if (nilai >= 70) return '#2563eb';
-    if (nilai >= 55) return '#d97706';
-    return '#dc2626';
-  };
 
   const handleAddStudent = (e) => {
     if (e) e.preventDefault();
@@ -83,20 +246,36 @@ const MKStudentListPage = () => {
       enrolled_at: new Date().toISOString().split('T')[0]
     };
 
-    const updatedStudents = [...students, newStudent];
-    updateMK(mkId, { students: updatedStudents });
+    if (selectedRombel) {
+      const updatedStudents = [...(selectedRombel.students || []), newStudent];
+      updateRombel(mkId, selectedRombel.id, { students: updatedStudents });
+    } else if (rombelList[0]) {
+      const updatedStudents = [...(rombelList[0].students || []), newStudent];
+      updateRombel(mkId, rombelList[0].id, { students: updatedStudents });
+    } else {
+      updateMK(mkId, { students: [...students, newStudent] });
+    }
 
     setNewNim('');
     setNewName('');
     setShowAddModal(false);
-    addToast(`Mahasiswa "${newStudent.full_name}" (NIM: ${newStudent.nim}) berhasil ditambahkan!`, 'success');
+    addToast(`${learnerLabel} "${newStudent.full_name}" (${learnerIdLabel}: ${newStudent.nim}) berhasil ditambahkan!`, 'success');
   };
 
   const handleRemoveStudent = (studentId, studentName) => {
-    if (window.confirm(`Hapus ${studentName} dari mata kuliah ini?`)) {
-      const updatedStudents = students.filter(s => s.id !== studentId && s.student_id !== studentId);
-      updateMK(mkId, { students: updatedStudents });
-      addToast(`Mahasiswa ${studentName} dihapus dari MK`, 'info');
+    if (window.confirm(`Hapus ${studentName} dari ${courseLabel.toLowerCase()} ini?`)) {
+      if (selectedRombel) {
+        const updatedStudents = (selectedRombel.students || []).filter(s => s.id !== studentId && s.student_id !== studentId);
+        updateRombel(mkId, selectedRombel.id, { students: updatedStudents });
+      } else {
+        rombelList.forEach(r => {
+          if ((r.students || []).some(s => s.id === studentId || s.student_id === studentId)) {
+            const updated = (r.students || []).filter(s => s.id !== studentId && s.student_id !== studentId);
+            updateRombel(mkId, r.id, { students: updated });
+          }
+        });
+      }
+      addToast(`${learnerLabel} ${studentName} dihapus dari MK`, 'info');
     }
   };
 
@@ -104,7 +283,7 @@ const MKStudentListPage = () => {
     const komps = mk?.komponen || [];
     const roster = students.map((s) => {
       const stuId = s.id || s.student_id;
-      const stuScoring = mk?.scoringData?.[stuId] || {};
+      const stuScoring = scoringData?.[stuId] || {};
       
       const scores = {};
       let totalWeighted = 0;
@@ -127,7 +306,7 @@ const MKStudentListPage = () => {
       const status = isAllPublished ? 'PUBLISHED' : (hasAnyScore ? 'FINALIZED' : 'DRAFT');
 
       return {
-        nim: s.nim,
+        nim: s.nim || s.nisn,
         full_name: s.full_name || s.name,
         scores,
         final_score,
@@ -137,15 +316,15 @@ const MKStudentListPage = () => {
 
     exportMKToExcel({
       name: mk?.name || 'Mata Kuliah',
-      kode_mk: mk?.kode_mk || 'MK',
+      kode_mk: mk?.kode_mk || '',
       semester: mk?.semester || '',
       kode_semester: mk?.kode_semester || '',
       sks: mk?.sks || 0,
-      kelas: mk?.kelas || '',
-      dosen_name: mk?.dosen_name || '',
+      kelas: selectedRombel ? selectedRombel.name : rombelList.map(r => r.name).join(', '),
+      dosen_name: mk?.dosen_name || mk?.guru_name || '',
       studentCount: students.length
     }, komps, roster);
-    addToast(`Berhasil mengekspor data ${students.length} mahasiswa dan nilai ke Excel!`, 'success');
+    addToast(`Laporan ${courseLabel} berhasil diekspor ke Excel`, 'success');
   };
 
   // Open Native File Picker for Import Excel
@@ -343,8 +522,16 @@ const MKStudentListPage = () => {
                   return;
                 }
 
-                const updatedStudents = [...students, ...imported];
-                updateMK(mkId, { students: updatedStudents });
+                if (selectedRombel) {
+                  const updatedStudents = [...(selectedRombel.students || []), ...imported];
+                  updateRombel(mkId, selectedRombel.id, { students: updatedStudents });
+                } else if (rombelList[0]) {
+                  const updatedStudents = [...(rombelList[0].students || []), ...imported];
+                  updateRombel(mkId, rombelList[0].id, { students: updatedStudents });
+                } else {
+                  const updatedStudents = [...students, ...imported];
+                  updateMK(mkId, { students: updatedStudents });
+                }
                 setIsUploading(false);
 
                 // Rich Contextual Toast Notification
@@ -376,6 +563,8 @@ const MKStudentListPage = () => {
     }, 400);
   };
 
+  const isAllRombelView = !selectedRombel || rombelIdParam === 'ALL';
+
   return (
     <div className={styles.page}>
       {/* Hidden File Input for Native File Picker */}
@@ -383,228 +572,639 @@ const MKStudentListPage = () => {
         type="file" 
         ref={fileInputRef} 
         onChange={handleFileChange} 
-        accept=".xlsx, .xls, .csv" 
+        accept=".xlsx,.xls,.csv" 
         style={{ display: 'none' }} 
       />
 
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Daftar Mahasiswa</h1>
-          <p className={styles.subtitle}>{students.length} mahasiswa terdaftar di {mk?.name}</p>
-        </div>
-        <div className={styles.headerActions} ref={dropdownRef}>
-          <div style={{ position: 'relative' }}>
-            <Button 
-              variant="primary" 
-              size="sm" 
-              onClick={() => setShowAddDropdown(prev => !prev)}
+      {/* Rombel Tabs Bar (University MK or when multiple rombel exist) */}
+      {rombelList.length > 0 && (
+        <div className={styles.rombelTabsContainer}>
+          <div className={styles.rombelTabsGroup}>
+            <button
+              type="button"
+              className={`${styles.rombelTabBtn} ${isAllRombelView ? styles.activeTab : ''}`}
+              onClick={() => setSearchParams({ rombelId: 'ALL' })}
             >
-              <UserPlus size={16} /> Tambah Mahasiswa <ChevronDown size={14} style={{ marginLeft: '4px', transform: showAddDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-            </Button>
+              <UsersRound size={15} />
+              <span>Semua Rombel ({getAllStudents(mkId).length})</span>
+            </button>
 
-            {showAddDropdown && (
-              <div className={styles.addDropdownMenu}>
-                <button 
-                  className={styles.addDropdownOption}
-                  onClick={() => {
-                    setShowAddDropdown(false);
-                    handleImportClick();
-                  }}
-                >
-                  <div className={styles.dropdownOptionIcon}>
-                    <Upload size={18} />
-                  </div>
-                  <div className={styles.dropdownOptionText}>
-                    <strong>Import Berkas Excel / CSV</strong>
-                    <span>Unggah file data mahasiswa (.xlsx, .xls, .csv)</span>
-                  </div>
-                </button>
+            {rombelList.map(r => (
+              <button
+                key={r.id}
+                type="button"
+                className={`${styles.rombelTabBtn} ${selectedRombel?.id === r.id ? styles.activeTab : ''}`}
+                onClick={() => setSearchParams({ rombelId: r.id })}
+              >
+                <span>{r.name}</span>
+                <span style={{ opacity: 0.8, fontSize: '11px' }}>({r.students?.length || 0})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-                <div className={styles.dropdownDivider} />
+      {/* CASE 1: When viewing 'Semua Rombel' & MK has multiple rombels -> Show Rombel Overview only */}
+      {isAllRombelView && rombelList.length > 1 ? (
+        <div className={styles.rombelOverviewSection}>
+          <div className={styles.header} style={{ marginBottom: '16px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h1 className={styles.title}>
+                  Ringkasan Rombongan Belajar
+                </h1>
+                <HelpButton size={22} />
+              </div>
+              <p className={styles.subtitle}>
+                {courseLabel}: <strong>{mk?.name}</strong> • Total {rombelList.length} rombel ({getAllStudents(mkId).length} {learnerLabel.toLowerCase()} terdaftar)
+              </p>
+            </div>
+            {isStaff && (
+              <Button variant="primary" onClick={() => setShowAddRombelModal(true)}>
+                <PlusCircle size={16} />
+                <span>Tambah Rombel</span>
+              </Button>
+            )}
+          </div>
 
-                <button 
-                  className={styles.addDropdownOption}
-                  onClick={() => {
-                    setShowAddDropdown(false);
-                    setShowAddModal(true);
-                  }}
-                >
-                  <div className={styles.dropdownOptionIcon}>
-                    <UserPlus size={18} />
+          {/* Rombel Toolbar: Search & macOS Finder Style Grid/List View Toggle */}
+          <div className={styles.rombelToolbar}>
+            <div className={styles.rombelSearchWrap}>
+              <Search size={16} className={styles.searchIcon} />
+              <input 
+                className={styles.searchInput}
+                placeholder="Cari nama rombel, dosen, ruangan, kode..."
+                value={rombelSearchInput}
+                onChange={(e) => setRombelSearchInput(e.target.value)}
+              />
+            </div>
+
+            {/* macOS Finder Style View Toggle */}
+            <div className={styles.viewToggleGroup}>
+              <button
+                type="button"
+                className={`${styles.viewToggleBtn} ${rombelViewMode === 'grid' ? styles.viewToggleActive : ''}`}
+                onClick={() => setRombelViewMode('grid')}
+                title="Grid View"
+              >
+                <LayoutGrid size={15} />
+                <span>Grid</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.viewToggleBtn} ${rombelViewMode === 'list' ? styles.viewToggleActive : ''}`}
+                onClick={() => setRombelViewMode('list')}
+                title="List View"
+              >
+                <List size={15} />
+                <span>List</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Content: Grid or List */}
+          {rombelViewMode === 'grid' ? (
+            <div className={styles.rombelGrid}>
+              {paginatedRombels.map((rombel) => {
+                const studentCount = (rombel.students || []).length;
+                const gradedCount = (rombel.students || []).filter(s => {
+                  const stuId = s.id || s.student_id;
+                  const sd = rombel.scoringData?.[s.id] || rombel.scoringData?.[s.student_id] || rombel.scoringData?.[stuId];
+                  return sd && Object.keys(sd).length > 0;
+                }).length;
+                const progressPct = studentCount > 0 ? Math.round((gradedCount / studentCount) * 100) : 0;
+
+                return (
+                  <div
+                    key={rombel.id}
+                    className={styles.rombelCard}
+                    onClick={() => setSearchParams({ rombelId: rombel.id })}
+                  >
+                    <div className={styles.rombelCardAccent} />
+                    <div className={styles.rombelCardBody}>
+                      <div className={styles.rombelCardTop}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <h3 className={styles.rombelCardName}>{rombel.name}</h3>
+                          {rombel.kode_rombel && (
+                            <span className={styles.rombelMetaBadge}>{rombel.kode_rombel}</span>
+                          )}
+                        </div>
+                        <span className={styles.rombelMetaBadge}>{rombel.semester || mk.semester}</span>
+                      </div>
+
+                      <div className={styles.rombelCardMeta}>
+                        {rombel.dosen_pengampu && (
+                          <span className={styles.rombelMetaBadge}>
+                            <User size={12} /> {rombel.dosen_pengampu}
+                          </span>
+                        )}
+                        {rombel.jadwal && (
+                          <span className={styles.rombelMetaBadge}>
+                            <Clock size={12} /> {rombel.jadwal}
+                          </span>
+                        )}
+                        {rombel.ruangan && (
+                          <span className={styles.rombelMetaBadge}>
+                            <MapPin size={12} /> {rombel.ruangan}
+                          </span>
+                        )}
+                        {rombel.keterangan && (
+                          <span className={styles.rombelMetaBadge}>
+                            <FileText size={12} /> {rombel.keterangan}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className={styles.rombelStatsRow}>
+                        <div className={styles.rombelStatItem}>
+                          <span className={styles.rombelStatVal}>
+                            {studentCount}
+                          </span>
+                          <span className={styles.rombelStatLbl}>{learnerLabel} Terdaftar</span>
+                        </div>
+                        <div className={styles.rombelStatItem}>
+                          <span className={styles.rombelStatVal} style={{ color: gradedCount > 0 ? '#059669' : 'var(--text-secondary)' }}>
+                            {gradedCount}/{studentCount} ({progressPct}%)
+                          </span>
+                          <span className={styles.rombelStatLbl}>Telah Dinilai</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.rombelCardFooter}>
+                      <span className={styles.rombelActionLink}>Buka {rombel.name} & Nilai</span>
+                      <ArrowRight size={15} className={styles.rombelArrow} />
+                    </div>
                   </div>
-                  <div className={styles.dropdownOptionText}>
-                    <strong>Tambah Manual</strong>
-                    <span>Masukan NIM & Nama Mahasiswa secara manual</span>
+                );
+              })}
+            </div>
+          ) : (
+            /* macOS Finder Style List View */
+            <div className={styles.rombelListContainer}>
+              {paginatedRombels.map((rombel) => {
+                const studentCount = (rombel.students || []).length;
+                const gradedCount = (rombel.students || []).filter(s => {
+                  const stuId = s.id || s.student_id;
+                  const sd = rombel.scoringData?.[s.id] || rombel.scoringData?.[s.student_id] || rombel.scoringData?.[stuId];
+                  return sd && Object.keys(sd).length > 0;
+                }).length;
+                const progressPct = studentCount > 0 ? Math.round((gradedCount / studentCount) * 100) : 0;
+
+                return (
+                  <div
+                    key={rombel.id}
+                    className={styles.rombelListRow}
+                    onClick={() => setSearchParams({ rombelId: rombel.id })}
+                  >
+                    <div className={styles.rombelListLeft}>
+                      <div className={styles.rombelListIcon}>
+                        <UsersRound size={20} />
+                      </div>
+                      <div className={styles.rombelListInfo}>
+                        <div className={styles.rombelListNameRow}>
+                          <span className={styles.rombelListName}>{rombel.name}</span>
+                          {rombel.kode_rombel && (
+                            <span className={styles.rombelMetaBadge}>{rombel.kode_rombel}</span>
+                          )}
+                          <span className={styles.rombelMetaBadge}>{rombel.semester || mk.semester}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
+                          {rombel.dosen_pengampu && (
+                            <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <User size={12} /> {rombel.dosen_pengampu}
+                            </span>
+                          )}
+                          {rombel.jadwal && (
+                            <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <Clock size={12} /> {rombel.jadwal}
+                            </span>
+                          )}
+                          {rombel.ruangan && (
+                            <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <MapPin size={12} /> {rombel.ruangan}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.rombelListRight}>
+                      <div className={styles.rombelListStat}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {studentCount} {learnerLabel} Terdaftar
+                        </span>
+                        <span style={{ fontSize: '11.5px', color: gradedCount > 0 ? '#059669' : 'var(--text-muted)', fontWeight: 600 }}>
+                          {gradedCount}/{studentCount} dinilai ({progressPct}%)
+                        </span>
+                      </div>
+
+                      <div className={styles.rombelListAction}>
+                        <span>Buka Nilai</span>
+                        <ArrowRight size={15} />
+                      </div>
+                    </div>
                   </div>
-                </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Empty Search Result */}
+          {filteredRombels.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--bg-surface)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+                Tidak ada rombongan belajar yang sesuai dengan "<strong>{debouncedRombelSearch}</strong>"
+              </p>
+            </div>
+          )}
+
+          {/* Rombel Pagination */}
+          {filteredRombels.length > 0 && (
+            <Pagination
+              currentPage={rombelCurrentPage}
+              totalPages={totalRombelPages}
+              totalItems={filteredRombels.length}
+              itemsPerPage={rombelItemsPerPage}
+              onPageChange={(p) => setRombelCurrentPage(p)}
+              onItemsPerPageChange={(newSize) => {
+                setRombelItemsPerPage(newSize);
+                setRombelCurrentPage(1);
+              }}
+            />
+          )}
+        </div>
+      ) : (
+        /* CASE 2: Specific Rombel Selected OR single-rombel MK -> Show Student Table & Grading */
+        <div>
+          {/* Header Info */}
+          <div className={styles.header}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h1 className={styles.title}>
+                  {learnerPluralLabel} {selectedRombel ? `— ${selectedRombel.name}` : ''}
+                </h1>
+                <HelpButton size={22} />
+              </div>
+              <p className={styles.subtitle}>
+                {courseLabel}: <strong>{mk?.name}</strong> • Total {students.length} {learnerLabel.toLowerCase()} terdaftar {selectedRombel ? `di ${selectedRombel.name}` : ''}
+              </p>
+            </div>
+
+            {isStaff && (
+              <div className={styles.headerActions}>
+                {/* Split Action: Import Excel / Add Manual Dropdown */}
+                <div className={styles.addBtnContainer} ref={dropdownRef}>
+                  <Button 
+                    variant="primary" 
+                    className={styles.mainAddBtn}
+                    onClick={() => setShowAddDropdown(prev => !prev)}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? (
+                      <>
+                        <Spinner size="sm" />
+                        <span>Mengimpor...</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={18} />
+                        <span>Tambah {learnerLabel}</span>
+                        <ChevronDown size={15} style={{ marginLeft: '4px', opacity: 0.8 }} />
+                      </>
+                    )}
+                  </Button>
+
+                  {showAddDropdown && (
+                    <div className={styles.addDropdownMenu}>
+                      <button 
+                        className={styles.addDropdownOption}
+                        onClick={() => {
+                          setShowAddDropdown(false);
+                          handleImportClick();
+                        }}
+                      >
+                        <div className={styles.dropdownOptionIcon}>
+                          <Upload size={18} />
+                        </div>
+                        <div className={styles.dropdownOptionText}>
+                          <strong>Import Berkas Excel / CSV</strong>
+                          <span>Unggah file data {learnerLabel.toLowerCase()} (.xlsx, .xls, .csv)</span>
+                        </div>
+                      </button>
+
+                      <div className={styles.dropdownDivider} />
+
+                      <button 
+                        className={styles.addDropdownOption}
+                        onClick={() => {
+                          setShowAddDropdown(false);
+                          setShowAddModal(true);
+                        }}
+                      >
+                        <div className={styles.dropdownOptionIcon}>
+                          <UserPlus size={18} />
+                        </div>
+                        <div className={styles.dropdownOptionText}>
+                          <strong>Tambah Manual</strong>
+                          <span>Masukan {learnerIdLabel} & Nama {learnerLabel} secara manual</span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
-        </div>
-      </div>
 
-      <div className={styles.toolbar}>
-        <div className={styles.searchWrap}>
-          <Search size={16} className={styles.searchIcon} />
-          <input 
-            className={styles.searchInput}
-            placeholder="Cari nama atau NIM..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <Button variant="outline" size="sm" className={styles.exportBtn} onClick={handleExport}>
-          <Download size={16} /> Export Mahasiswa & Nilai (.xlsx)
-        </Button>
-      </div>
+          <div className={styles.toolbar}>
+            <div className={styles.searchWrap}>
+              <Search size={16} className={styles.searchIcon} />
+              <input 
+                className={styles.searchInput}
+                placeholder={`Cari nama atau ${learnerIdLabel}...`}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </div>
+            <Button variant="outline" size="sm" className={styles.exportBtn} onClick={handleExport}>
+              <Download size={16} /> Export {learnerLabel} & Nilai (.xlsx)
+            </Button>
+          </div>
 
-      <div className={styles.tableWrap}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>NIM</th>
-              <th>Nama Mahasiswa</th>
-              <th>Progress Penilaian</th>
-              <th>Nilai Akhir</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedStudents.map((s, i) => {
-              const name = s.full_name || s.name || 'Mahasiswa';
-              const stuId = s.id || s.student_id;
-              const stuScoring = mk?.scoringData?.[stuId] || {};
-              const totalKomponen = (mk?.komponen || []).length || 6;
-              const gradedKomponen = Object.keys(stuScoring).length;
-              const progressPct = totalKomponen > 0 ? (gradedKomponen / totalKomponen) * 100 : 0;
-              const itemNumber = (currentPage - 1) * itemsPerPage + i + 1;
-
-              // Calculate weighted final score from all graded komponen
-              let nilaiAkhir = null;
-              if (gradedKomponen > 0) {
-                let total = 0;
-                const komps = mk?.komponen || [];
-                for (const komp of komps) {
-                  const sd = stuScoring[komp.id];
-                  if (sd?.rawScore != null) {
-                    total += sd.rawScore * (komp.bobot || 0);
-                  }
-                }
-                nilaiAkhir = Math.round(total);
-              }
-
-              return (
-                <tr key={stuId} className={styles.row}>
-                  <td className={styles.cellNum}>{itemNumber}</td>
-                  <td className={styles.cellNim}>{s.nim || '-'}</td>
-                  <td className={styles.cellName}>
-                    <div className={styles.nameWrapper}>
-                      <div className={styles.studentAvatar}>
-                        {name.charAt(0)}
-                      </div>
-                      {name}
-                    </div>
-                  </td>
-                  <td>
-                    <div className={styles.progressCell}>
-                      <div className={styles.progressBar}>
-                        <div 
-                          className={styles.progressFill} 
-                          style={{ width: `${progressPct}%` }}
-                        />
-                      </div>
-                      <span className={styles.progressText}>
-                        {gradedKomponen}/{totalKomponen}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    {nilaiAkhir !== null ? (
-                      <span 
-                        className={styles.nilaiChip}
-                        style={{ color: getGradeColor(nilaiAkhir), background: getGradeColor(nilaiAkhir) + '15' }}
-                      >
-                        {nilaiAkhir}
-                      </span>
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '13px' }}>—</span>
-                    )}
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {isDosen && (
-                        <Button 
-                          variant="primary" 
-                          size="sm" 
-                          onClick={() => navigate(`/mk/${mkId}/scoring?studentId=${stuId}`)}
-                        >
-                          <Edit3 size={14} /> Nilai
-                        </Button>
-                      )}
-                      {isDosen && (
-                        <button 
-                          className={styles.moreBtn} 
-                          onClick={() => handleRemoveStudent(stuId, name)}
-                          title="Hapus Mahasiswa"
-                        >
-                          <Trash2 size={16} stroke="#ef4444" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>{learnerIdLabel}</th>
+                  <th>Nama {learnerLabel}</th>
+                  <th>Progress Penilaian</th>
+                  <th>Nilai Akhir</th>
+                  <th>Aksi</th>
                 </tr>
-              );
-            })}
+              </thead>
+              <tbody>
+                {paginatedStudents.map((s, i) => {
+                  const name = s.full_name || s.name || learnerLabel;
+                  const stuId = s.id || s.student_id;
+                  const stuScoring = scoringData?.[s.id] || scoringData?.[s.student_id] || scoringData?.[stuId] || {};
+                  const totalKomponen = (mk?.komponen || []).length || 6;
+                  const gradedKomponen = (mk?.komponen || []).filter(k => stuScoring[k.id]?.rawScore != null).length;
+                  const progressPct = totalKomponen > 0 ? (gradedKomponen / totalKomponen) * 100 : 0;
+                  const itemNumber = (currentPage - 1) * itemsPerPage + i + 1;
 
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
-                  Tidak ada mahasiswa yang sesuai dengan pencarian
-                </td>
-              </tr>
+                  // Calculate weighted final score from all graded komponen
+                  let nilaiAkhir = null;
+                  if (gradedKomponen > 0) {
+                    let total = 0;
+                    const komps = mk?.komponen || [];
+                    for (const komp of komps) {
+                      const sd = stuScoring[komp.id];
+                      if (sd?.rawScore != null) {
+                        total += sd.rawScore * (komp.bobot || 0);
+                      }
+                    }
+                    nilaiAkhir = Math.round(total);
+                  }
+
+                  return (
+                    <tr key={stuId} className={styles.row}>
+                      <td className={styles.cellNum}>{itemNumber}</td>
+                      <td className={styles.cellNim}>{s.nim || s.nisn || '-'}</td>
+                      <td className={styles.cellName}>
+                        <div className={styles.nameWrapper}>
+                          <div className={styles.studentAvatar}>
+                            {name.charAt(0)}
+                          </div>
+                          {name}
+                        </div>
+                      </td>
+                      <td>
+                        <div className={styles.progressCell}>
+                          <div className={styles.progressBar}>
+                            <div 
+                              className={styles.progressFill} 
+                              style={{ width: `${progressPct}%` }}
+                            />
+                          </div>
+                          <span className={styles.progressText}>
+                            {gradedKomponen}/{totalKomponen}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        {nilaiAkhir !== null ? (
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <span 
+                              className={styles.nilaiChip}
+                              style={{ color: getGradeColor(nilaiAkhir), background: getGradeBg(nilaiAkhir) }}
+                              title={getGradeInfo(nilaiAkhir).desc}
+                            >
+                              {nilaiAkhir}
+                            </span>
+                            <span 
+                              style={{ 
+                                fontSize: '11px', 
+                                fontWeight: 800, 
+                                fontFamily: 'var(--font-mono)',
+                                color: getGradeColor(nilaiAkhir),
+                                padding: '2px 5px',
+                                borderRadius: '4px',
+                                background: getGradeBg(nilaiAkhir)
+                              }}
+                              title={`Grade ${getGradeInfo(nilaiAkhir).grade}: ${getGradeInfo(nilaiAkhir).desc}`}
+                            >
+                              {getGradeInfo(nilaiAkhir).grade}
+                            </span>
+                          </div>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '13px' }}>—</span>
+                        )}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {isStaff && (
+                            <Button 
+                              variant="primary" 
+                              size="sm" 
+                              onClick={() => navigate(`/mk/${mkId}/scoring?studentId=${stuId}${selectedRombel ? `&rombelId=${selectedRombel.id}` : ''}`)}
+                            >
+                              <Edit3 size={14} /> Nilai
+                            </Button>
+                          )}
+                          {isStaff && (
+                            <button 
+                              className={styles.moreBtn} 
+                              onClick={() => handleRemoveStudent(stuId, name)}
+                              title={`Hapus ${learnerLabel}`}
+                            >
+                              <Trash2 size={16} stroke="#ef4444" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                      {debouncedSearchQuery 
+                        ? `Tidak ada ${learnerLabel.toLowerCase()} yang sesuai dengan "${debouncedSearchQuery}"`
+                        : `Belum ada ${learnerLabel.toLowerCase()} di rombel ini`}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Pagination Bar */}
+            {filtered.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filtered.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(p) => setCurrentPage(p)}
+                onItemsPerPageChange={(newSize) => {
+                  setItemsPerPage(newSize);
+                  setCurrentPage(1);
+                }}
+              />
             )}
-          </tbody>
-        </table>
+          </div>
+        </div>
+      )}
 
-        {/* Pagination Bar */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={filtered.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={(p) => setCurrentPage(p)}
-          onItemsPerPageChange={(newSize) => {
-            setItemsPerPage(newSize);
-            setCurrentPage(1);
-          }}
-        />
-      </div>
+      {/* Structured Add Rombel Modal */}
+      <Modal
+        isOpen={showAddRombelModal}
+        onClose={() => setShowAddRombelModal(false)}
+        title="Tambah Rombongan Belajar (Rombel)"
+      >
+        <form onSubmit={handleCreateRombel} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+            Lengkapi data kelas/rombongan belajar untuk mata kuliah <strong>{mk.name}</strong>.
+          </p>
+
+          <div className={styles.modalFormGrid}>
+            <Input 
+              label="Nama Rombel" 
+              placeholder="Contoh: PE 2025 C"
+              value={rombelForm.name}
+              onChange={(e) => setRombelForm(prev => ({ ...prev, name: capitalizeWords(e.target.value) }))}
+              required
+              autoFocus
+            />
+            <Input 
+              label="Kode Rombel" 
+              placeholder="Contoh: 25P04085-C"
+              value={rombelForm.kode_rombel}
+              onChange={(e) => setRombelForm(prev => ({ ...prev, kode_rombel: e.target.value.toUpperCase() }))}
+            />
+
+            <div className={styles.selectWrap}>
+              <label className={styles.selectLabel}>Semester / Tahun Ajaran</label>
+              <select
+                className={styles.selectInput}
+                value={isCustomSemester ? '__CUSTOM__' : rombelForm.semester}
+                onChange={(e) => {
+                  if (e.target.value === '__CUSTOM__') {
+                    setIsCustomSemester(true);
+                  } else {
+                    setIsCustomSemester(false);
+                    setRombelForm(prev => ({ ...prev, semester: e.target.value }));
+                  }
+                }}
+              >
+                {SEMESTER_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>
+                    {opt === '__CUSTOM__' ? 'Lainnya (Ketik Manual...)' : opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <Input 
+              label="Dosen Pengampu" 
+              placeholder="Nama dosen pengampu"
+              value={rombelForm.dosen_pengampu}
+              onChange={(e) => setRombelForm(prev => ({ ...prev, dosen_pengampu: capitalizeWords(e.target.value) }))}
+            />
+
+            {isCustomSemester && (
+              <div className={styles.modalFormFull}>
+                <Input 
+                  label="Ketik Semester / Tahun Ajaran Manual" 
+                  placeholder="Contoh: Semester Pendek 2025/2026"
+                  value={rombelForm.customSemester}
+                  onChange={(e) => setRombelForm(prev => ({ ...prev, customSemester: capitalizeWords(e.target.value) }))}
+                  required
+                />
+              </div>
+            )}
+
+            <div className={styles.modalFormFull}>
+              <Input 
+                label="Hari & Jam Kuliah" 
+                placeholder="Contoh: Senin, 08:00 - 10:30 WIB"
+                value={rombelForm.jadwal}
+                onChange={(e) => setRombelForm(prev => ({ ...prev, jadwal: capitalizeWords(e.target.value) }))}
+              />
+            </div>
+
+            <div className={styles.modalFormFull}>
+              <Input 
+                label="Ruangan / Lab" 
+                placeholder="Contoh: Lab Akuntansi 1 / Gedung D302"
+                value={rombelForm.ruangan}
+                onChange={(e) => setRombelForm(prev => ({ ...prev, ruangan: capitalizeWords(e.target.value) }))}
+              />
+            </div>
+
+            <div className={styles.modalFormFull}>
+              <Input 
+                label="Catatan / Keterangan (Opsional)" 
+                placeholder="Keterangan tambahan untuk rombel ini"
+                value={rombelForm.keterangan}
+                onChange={(e) => setRombelForm(prev => ({ ...prev, keterangan: capitalizeFirstLetter(e.target.value) }))}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '14px' }}>
+            <Button variant="outline" type="button" onClick={() => setShowAddRombelModal(false)}>Batal</Button>
+            <Button variant="primary" type="submit" disabled={!rombelForm.name.trim()}>Simpan Rombel</Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Manual Add Student Modal */}
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title="Tambah Mahasiswa Manual"
+        title={`Tambah ${learnerLabel} Manual ${selectedRombel ? `ke ${selectedRombel.name}` : ''}`}
       >
         <form onSubmit={handleAddStudent} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <Input 
-            label="NIM Mahasiswa" 
-            placeholder="Contoh: 2024081005"
+            label={`${learnerIdLabel} ${learnerLabel}`} 
+            placeholder={`Contoh: ${learnerIdLabel === 'NISN' ? '0081234567' : '2024081005'}`}
             value={newNim}
-            onChange={(e) => setNewNim(e.target.value)}
+            onChange={(e) => setNewNim(e.target.value.trim().toUpperCase())}
             required
           />
           <Input 
-            label="Nama Lengkap" 
+            label={`Nama Lengkap ${learnerLabel}`} 
             placeholder="Contoh: Muhammad Farhan"
             value={newName}
-            onChange={(e) => setNewName(e.target.value)}
+            onChange={(e) => setNewName(capitalizeWords(e.target.value))}
             required
           />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
             <Button variant="ghost" type="button" onClick={() => setShowAddModal(false)}>Batal</Button>
-            <Button variant="primary" type="submit">Tambah Mahasiswa</Button>
+            <Button variant="primary" type="submit">Tambah {learnerLabel}</Button>
           </div>
         </form>
       </Modal>

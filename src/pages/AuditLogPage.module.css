@@ -5,13 +5,12 @@
 }
 
 .content {
-  padding: 24px;
+  padding: 28px 32px 60px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 1400px;
   width: 100%;
-  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 /* Warnings layout */

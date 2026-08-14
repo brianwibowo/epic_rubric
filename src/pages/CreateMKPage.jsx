@@ -8,7 +8,10 @@ import { useAuthStore } from '@/stores/authStore';
 import { useMKStore } from '@/stores/mkStore';
 import { useRubricStore } from '@/stores/rubricStore';
 import { useUiStore } from '@/stores/uiStore';
+import { useTerminology } from '@/hooks/useTerminology';
 import Modal from '@/components/ui/Modal';
+import HelpButton from '@/components/ui/HelpButton';
+import { capitalizeWords, capitalizeFirstLetter } from '@/utils/formatters';
 import { ArrowLeft, BookOpen, PlusCircle, Sparkles, X, Check, Eye, CheckCircle2 } from 'lucide-react';
 
 const SEMESTER_OPTIONS = [
@@ -33,6 +36,7 @@ const CreateMKPage = () => {
   const { createMK } = useMKStore();
   const { rubrics } = useRubricStore();
   const { addToast } = useUiStore();
+  const { courseLabel, courseCodeLabel, rombelLabel, isSchool } = useTerminology();
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -102,7 +106,7 @@ const CreateMKPage = () => {
     );
 
     setIsSubmitting(false);
-    addToast(`Mata Kuliah "${newMK.name}" berhasil dibuat!`, 'success');
+    addToast(`${courseLabel} "${newMK.name}" berhasil dibuat!`, 'success');
     navigate(`/mk/${newMK.id}`);
   };
 
@@ -111,23 +115,26 @@ const CreateMKPage = () => {
 
   return (
     <div className={styles.page}>
-      <button className={styles.backBtn} onClick={() => navigate('/mk')}>
-        <ArrowLeft size={16} /> Kembali ke Daftar MK
+      <button className={styles.backBtn} onClick={() => navigate(isSchool ? '/kelas' : '/mk')}>
+        <ArrowLeft size={16} /> Kembali ke {isSchool ? 'Daftar Kelas' : 'Daftar MK'}
       </button>
 
       <div className={styles.headerSection}>
         <div className={styles.headerIcon}>
           <BookOpen size={28} />
         </div>
-        <h1 className={styles.title}>Buat Mata Kuliah Baru</h1>
-        <p className={styles.subtitle}>Isi informasi dasar MK, lalu konfigurasi komponen penilaian</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <h1 className={styles.title}>Buat {courseLabel} Baru</h1>
+          <HelpButton size={22} />
+        </div>
+        <p className={styles.subtitle}>Isi informasi dasar {courseLabel.toLowerCase()}, lalu konfigurasi komponen penilaian</p>
       </div>
 
       {/* Step Indicator */}
       <div className={styles.steps}>
         <div className={`${styles.step} ${step >= 1 ? styles.active : ''} ${step > 1 ? styles.completed : ''}`}>
           <div className={styles.stepDot}>{step > 1 ? <Check size={14} /> : '1'}</div>
-          <span>Informasi MK</span>
+          <span>Informasi {courseLabel}</span>
         </div>
         <div className={styles.stepLine} />
         <div className={`${styles.step} ${step >= 2 ? styles.active : ''}`}>
@@ -141,15 +148,15 @@ const CreateMKPage = () => {
         <Card variant="glass" padding="lg" className={styles.formCard}>
           <div className={styles.formGrid}>
             <Input
-              label="Nama Mata Kuliah"
-              placeholder="e.g. Praktikum Akuntansi Dasar"
+              label={`Nama ${courseLabel}`}
+              placeholder={isSchool ? "e.g. Praktikum Akuntansi Lembaga" : "e.g. Praktikum Akuntansi Dasar"}
               value={formData.name}
-              onChange={(e) => updateField('name', e.target.value)}
+              onChange={(e) => updateField('name', capitalizeWords(e.target.value))}
               required
             />
             <Input
-              label="Kode MK"
-              placeholder="e.g. 25P04085"
+              label={courseCodeLabel}
+              placeholder={isSchool ? "e.g. AKL-01" : "e.g. 25P04085"}
               value={formData.kode_mk}
               onChange={(e) => updateField('kode_mk', e.target.value.toUpperCase())}
               required
@@ -171,7 +178,7 @@ const CreateMKPage = () => {
               onChange={(e) => updateField('kode_semester', e.target.value.toUpperCase())}
             />
             <Input
-              label="SKS"
+              label="SKS / Beban Jam"
               type="number"
               placeholder="2"
               value={formData.sks}
@@ -179,24 +186,24 @@ const CreateMKPage = () => {
               required
             />
             <Input
-              label={<>Nama Kelas <span className={styles.optional}>(opsional)</span></>}
-              placeholder="e.g. PE 2025 A"
+              label={<>Nama {rombelLabel} Awal <span className={styles.optional}>(opsional)</span></>}
+              placeholder={isSchool ? "e.g. XII AKL 1" : "e.g. PE 2025 A"}
               value={formData.kelas}
-              onChange={(e) => updateField('kelas', e.target.value)}
+              onChange={(e) => updateField('kelas', capitalizeWords(e.target.value))}
             />
             <div className={styles.textareaWrap}>
               <label className={styles.selectLabel}>Deskripsi <span className={styles.optional}>(opsional)</span></label>
               <textarea
                 className={styles.textarea}
-                placeholder="Deskripsi singkat mata kuliah..."
+                placeholder={`Deskripsi singkat ${courseLabel.toLowerCase()}...`}
                 value={formData.description}
-                onChange={(e) => updateField('description', e.target.value)}
+                onChange={(e) => updateField('description', capitalizeFirstLetter(e.target.value))}
                 rows={3}
               />
             </div>
           </div>
           <div className={styles.formActions}>
-            <Button variant="outline" onClick={() => navigate('/mk')}>Batal</Button>
+            <Button variant="outline" onClick={() => navigate(isSchool ? '/kelas' : '/mk')}>Batal</Button>
             <Button variant="primary" disabled={!isStep1Valid} onClick={() => setStep(2)}>
               Lanjut ke Komponen
             </Button>

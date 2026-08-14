@@ -1,5 +1,5 @@
 /**
- * Dictionary for EPIC e-Rubric System (Indonesian 🇮🇩 & English 🇺🇸)
+ * Comprehensive Multi-Language Dictionary for EPIC e-Rubric System (Indonesian 🇮🇩 & English 🇺🇸)
  */
 export const TRANSLATIONS = {
   id: {
@@ -10,16 +10,22 @@ export const TRANSLATIONS = {
 
     // Navigation
     navDashboard: 'Dasbor',
-    navMK: 'Mata Kuliah',
+    navMK: 'Daftar Mata Kuliah',
+    navKelas: 'Daftar Kelas',
     navRubric: 'Bank Rubrik',
-    navAnalytics: 'Analitik',
-    navStudents: 'Mahasiswa',
+    navAnalytics: 'Analisis & Radar',
+    navStudents: 'Daftar Siswa / Mahasiswa',
+    navNotifications: 'Notifikasi',
+    navUsers: 'Manajemen Pengguna',
+    navAudit: 'Audit Logs',
     navCredits: 'Kredit & Tim Peneliti',
 
     // Roles & User
-    roleAdmin: 'Admin / Kaprog',
-    roleDosen: 'Dosen',
+    roleAdmin: 'Administrator',
+    roleDosen: 'Dosen Vokasi',
+    roleGuru: 'Guru SMK',
     roleMahasiswa: 'Mahasiswa',
+    roleSiswa: 'Siswa SMK',
     welcomeUser: 'Selamat Datang',
     logout: 'Keluar Sesi',
 
@@ -38,6 +44,16 @@ export const TRANSLATIONS = {
     featureAudit: 'Audit Penilaian',
     featureExcel: 'Format Institusi (.xlsx)',
 
+    // Admin Executive Command Center
+    adminCommandCenter: 'Pusat Komando Eksekutif Administrator',
+    adminSubtitle: 'Monitoring terpadu seluruh jalur institusi: SMK & Perguruan Tinggi, tata kelola pengguna, dan audit keamanan.',
+    smkTrack: 'Jalur SMK',
+    univTrack: 'Jalur Perguruan Tinggi',
+    userDemographics: 'Distribusi Akun & Peran',
+    recentAudit: 'Audit Trail & Aktivitas Terkini',
+    btnManageUsers: 'Kelola Pengguna',
+    btnViewAuditLogs: 'Buka Audit Logs',
+
     // MK List & Overview
     mkListTitle: 'Daftar Mata Kuliah',
     mkListSubtitleDosen: 'Mata kuliah yang Anda ampu semester ini',
@@ -52,28 +68,34 @@ export const TRANSLATIONS = {
     sksLabel: 'SKS',
     classLabel: 'Kelas',
 
-    // MK Detail Header
+    // MK Detail Header & Tabs
     btnBackMK: 'Kembali ke Daftar MK',
+    btnBackKelas: 'Kembali ke Detail Kelas',
     tabOverview: 'Ringkasan',
-    tabStudents: 'Daftar Mahasiswa & Nilai',
-    tabAnalytics: 'Analitik & Radar',
+    tabStudents: 'Daftar Siswa & Nilai',
+    tabComponents: 'Komponen & Rubrik',
+    tabAnalytics: 'Analisis & Radar',
+    tabComments: 'Komentar & Diskusi',
 
     // Actions & General
-    btnExportExcel: 'Ekspor Mahasiswa & Nilai (.xlsx)',
-    btnImportExcel: 'Import Excel',
+    btnExportExcel: 'Ekspor Excel (.xlsx)',
+    btnExportPdf: 'Cetak Rapor A4 (.pdf)',
+    btnImportExcel: 'Impor Excel',
     btnSave: 'Simpan',
     btnCancel: 'Batal',
     btnBack: 'Kembali',
     btnNext: 'Lanjut',
-    searchPlaceholder: 'Cari nama atau NIM...',
+    searchPlaceholder: 'Cari nama, NIM, atau NISN...',
     
-    // Academic Component Shortcodes Legend
-    napf: 'Aktivitas Partisipatif (NAPF)',
-    nhpy: 'Hasil Proyek (NHPY)',
-    ntgs: 'Tugas (NTGS)',
-    nkus: 'Kuis (NKUS)',
-    nuts: 'Ujian Tengah Semester (NUTS)',
-    nuas: 'Ujian Akhir Semester (NUAS)'
+    // Rubric Dimensions
+    dimEvaluative: 'Evaluatif',
+    dimPredictive: 'Prediktif',
+    dimIntegrative: 'Integratif',
+    dimCritical: 'Kritis',
+
+    // Photo Upload
+    uploadPhotoTitle: 'Unggah Foto Profil',
+    uploadPhotoFormats: 'Mendukung: JPG, PNG, WEBP, HEIC, HEIF (iOS)'
   },
 
   en: {
@@ -84,16 +106,22 @@ export const TRANSLATIONS = {
 
     // Navigation
     navDashboard: 'Dashboard',
-    navMK: 'Courses',
+    navMK: 'Course Directory',
+    navKelas: 'Classes Directory',
     navRubric: 'Rubric Bank',
-    navAnalytics: 'Analytics',
-    navStudents: 'Students',
+    navAnalytics: 'Analytics & Radar',
+    navStudents: 'Student Directory',
+    navNotifications: 'Notifications',
+    navUsers: 'User Management',
+    navAudit: 'Audit Logs',
     navCredits: 'Credits & Research Team',
 
     // Roles & User
-    roleAdmin: 'Admin / Head of Dept',
-    roleDosen: 'Lecturer',
-    roleMahasiswa: 'Student',
+    roleAdmin: 'Administrator',
+    roleDosen: 'Vocational Lecturer',
+    roleGuru: 'Vocational Teacher (SMK)',
+    roleMahasiswa: 'University Student',
+    roleSiswa: 'School Student (SMK)',
     welcomeUser: 'Welcome',
     logout: 'Sign Out',
 
@@ -112,6 +140,16 @@ export const TRANSLATIONS = {
     featureAudit: 'Assessment Audit',
     featureExcel: 'Institutional Excel (.xlsx)',
 
+    // Admin Executive Command Center
+    adminCommandCenter: 'Executive Administrator Command Center',
+    adminSubtitle: 'Unified institutional monitoring for Vocational High Schools (SMK) & Universities, user management, and security audit.',
+    smkTrack: 'Vocational School (SMK)',
+    univTrack: 'Higher Education (Univ)',
+    userDemographics: 'User Demographics & Roles',
+    recentAudit: 'Recent Audit Trail & Activity',
+    btnManageUsers: 'Manage Users',
+    btnViewAuditLogs: 'View Audit Logs',
+
     // MK List & Overview
     mkListTitle: 'Course Directory',
     mkListSubtitleDosen: 'Courses assigned to you this semester',
@@ -126,27 +164,33 @@ export const TRANSLATIONS = {
     sksLabel: 'Credits',
     classLabel: 'Class',
 
-    // MK Detail Header
+    // MK Detail Header & Tabs
     btnBackMK: 'Back to Courses List',
+    btnBackKelas: 'Back to Class Details',
     tabOverview: 'Overview',
     tabStudents: 'Students & Roster Scores',
-    tabAnalytics: 'Competency Analytics',
+    tabComponents: 'Components & Rubrics',
+    tabAnalytics: 'Competency Analytics & Radar',
+    tabComments: 'Comments & Discussion',
 
     // Actions & General
-    btnExportExcel: 'Export Students & Scores (.xlsx)',
+    btnExportExcel: 'Export Excel (.xlsx)',
+    btnExportPdf: 'Print A4 Report (.pdf)',
     btnImportExcel: 'Import Excel',
     btnSave: 'Save',
     btnCancel: 'Cancel',
     btnBack: 'Back',
     btnNext: 'Next',
-    searchPlaceholder: 'Search name or Student ID...',
+    searchPlaceholder: 'Search name, NIM, or NISN...',
+    
+    // Rubric Dimensions
+    dimEvaluative: 'Evaluative',
+    dimPredictive: 'Predictive',
+    dimIntegrative: 'Integrative',
+    dimCritical: 'Critical',
 
-    // Academic Component Shortcodes Legend
-    napf: 'Participatory Activity (NAPF)',
-    nhpy: 'Project Output (NHPY)',
-    ntgs: 'Assignment (NTGS)',
-    nkus: 'Quiz (NKUS)',
-    nuts: 'Midterm Exam (NUTS)',
-    nuas: 'Final Exam (NUAS)'
+    // Photo Upload
+    uploadPhotoTitle: 'Upload Profile Photo',
+    uploadPhotoFormats: 'Supports: JPG, PNG, WEBP, HEIC, HEIF (iOS)'
   }
 };

@@ -53,16 +53,33 @@ export function formatPercent(decimal) {
   return `${Math.round(Number(decimal) * 100)}%`;
 }
 
+export { 
+  GRADE_SCALE, 
+  getGradeInfo, 
+  getGradeLetter, 
+  getGradeDesc, 
+  getGradeColor, 
+  getGradeBg 
+} from './gradeHelper';
+
 /**
- * Convert numeric score (0-100) to Letter Grade
- * @param {number} score 
- * @returns {string} 'A' | 'B' | 'C' | 'D' | '-'
+ * Capitalize first letter of each word (Title Case)
+ * e.g. "praktikum akuntansi dasar" -> "Praktikum Akuntansi Dasar"
+ * @param {string} str 
+ * @returns {string}
  */
-export function getGradeLetter(score) {
-  if (score === null || score === undefined || isNaN(score)) return '-';
-  const s = Number(score);
-  if (s >= 85) return 'A';
-  if (s >= 70) return 'B';
-  if (s >= 55) return 'C';
-  return 'D';
+export function capitalizeWords(str) {
+  if (!str) return '';
+  return str.replace(/(?:^|\s)\S/g, (a) => a.toUpperCase());
 }
+
+/**
+ * Capitalize only the first letter of the sentence/string
+ * @param {string} str 
+ * @returns {string}
+ */
+export function capitalizeFirstLetter(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+

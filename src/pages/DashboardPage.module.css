@@ -2,33 +2,34 @@
 
 .page {
   width: 100%;
-  padding: 32px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 28px 32px 60px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 /* Welcome */
 .welcomeSection {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 28px;
   gap: 16px;
   flex-wrap: wrap;
   width: 100%;
 }
 
 .welcomeTitle {
-  font-size: var(--text-3xl);
+  font-size: var(--text-3xl, 28px);
   font-weight: 800;
-  color: var(--text-primary);
+  color: var(--text-primary, #0f172a);
   letter-spacing: -0.5px;
+  margin: 0;
 }
 
 .welcomeSubtitle {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
+  font-size: var(--text-base, 14.5px);
+  color: var(--text-secondary, #64748b);
   margin-top: 4px;
 }
 
@@ -37,7 +38,6 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  margin-bottom: 32px;
   width: 100%;
 }
 
@@ -48,9 +48,9 @@
 }
 
 .statIconWrap {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md, 12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,17 +58,110 @@
 }
 
 .statValue {
-  font-size: var(--text-2xl);
+  font-size: var(--text-2xl, 24px);
   font-weight: 800;
-  color: var(--text-primary);
+  color: var(--text-primary, #0f172a);
   letter-spacing: -0.5px;
   line-height: 1.2;
 }
 
 .statLabel {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  font-weight: 500;
+  font-size: var(--text-sm, 13px);
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+}
+
+/* --- Admin Specific Tabs & Container --- */
+.adminTabContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-canvas, #f1f5f9);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  width: fit-content;
+  flex-wrap: wrap;
+}
+
+.adminTabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.adminTabBtn:hover {
+  color: var(--text-primary, #0f172a);
+}
+
+.adminTabBtn.activeAdminTab {
+  background: var(--bg-surface, #ffffff);
+  color: var(--color-primary, #2563eb);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.adminTabBadge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-weight: 800;
+}
+
+/* User Demographics Grid */
+.demographicsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.demoCard {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.demoCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+}
+
+.demoIconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.demoCount {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+}
+
+.demoRole {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
 }
 
 /* Main Grid */
@@ -89,27 +182,30 @@
 }
 
 .sectionTitle {
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--text-primary);
+  font-size: var(--text-xl, 18px);
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  letter-spacing: -0.3px;
+  margin: 0;
 }
 
 .viewAllBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: var(--color-primary, #2563eb);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s);
 }
 
 .viewAllBtn:hover {
-  background: rgba(5, 150, 105, 0.06);
+  background: rgba(37, 99, 235, 0.08);
 }
 
 /* MK List */
@@ -121,7 +217,7 @@
 .mkList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
 }
 
@@ -130,27 +226,27 @@
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 12px);
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: all var(--transition-normal, 0.2s);
   width: 100%;
   box-sizing: border-box;
 }
 
 .mkItem:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08);
-  transform: translateY(-1px);
+  border-color: var(--color-primary, #2563eb);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.06);
 }
 
 .mkItemIcon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, rgba(5, 150, 105, 0.08), rgba(20, 184, 166, 0.06));
-  color: var(--color-primary);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md, 10px);
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-primary, #2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -165,10 +261,8 @@
 .mkItemName {
   font-size: 14.5px;
   font-weight: 700;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 2px 0;
 }
 
 .mkItemMeta {
@@ -185,32 +279,10 @@
   flex-shrink: 0;
 }
 
-.progressMini {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.progressBar {
-  width: 70px;
-  height: 6px;
-  background: var(--bg-surface-hover);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-primary), #14b8a6);
-  border-radius: 3px;
-  transition: width 0.6s ease;
-}
-
 .progressText {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 600;
-  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary, #475569);
+  font-weight: 700;
 }
 
 .nilaiChip {
@@ -219,23 +291,17 @@
   gap: 6px;
   padding: 4px 12px;
   background: rgba(5, 150, 105, 0.08);
-  color: var(--color-primary);
+  color: #059669;
   border-radius: 20px;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 800;
 }
 
-.nilaiPending {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-/* Notifications */
+/* Notifications & Audit Stream */
 .notifSection {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 16px);
   padding: 20px;
   width: 100%;
   box-sizing: border-box;
@@ -244,7 +310,7 @@
 .notifList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .notifItem {
@@ -252,27 +318,30 @@
   align-items: flex-start;
   gap: 12px;
   padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  transition: background var(--transition-fast);
+  border-radius: var(--radius-sm, 8px);
+  transition: background var(--transition-fast, 0.15s);
+  border: 1px solid transparent;
 }
 
 .notifItem:hover {
-  background: var(--bg-surface-hover);
+  background: var(--bg-surface-hover, #f8fafc);
+  border-color: var(--border-color, #e2e8f0);
 }
 
 .notifDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--color-primary);
-  margin-top: 5px;
+  background: var(--color-primary, #2563eb);
+  margin-top: 6px;
   flex-shrink: 0;
 }
 
 .notifTitle {
   font-size: 13.5px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 2px 0;
   line-height: 1.3;
 }
 
@@ -280,14 +349,15 @@
   font-size: 12px;
   color: #64748b;
   font-weight: 500;
-  margin-top: 2px;
+  margin: 0;
 }
 
 .emptyNotif {
   text-align: center;
-  color: var(--text-muted);
+  color: var(--text-muted, #94a3b8);
   font-size: 13px;
   padding: 20px;
+  margin: 0;
 }
 
 /* Responsive */
@@ -304,6 +374,7 @@
   .page { padding: 20px; }
   .statsRow { grid-template-columns: 1fr 1fr; }
   .welcomeSection { flex-direction: column; }
+  .adminTabContainer { width: 100%; }
 }
 
 @media (max-width: 480px) {

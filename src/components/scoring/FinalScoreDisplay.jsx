@@ -1,18 +1,10 @@
 import React from 'react';
+import { getGradeInfo } from '@/utils/gradeHelper';
 import styles from './FinalScoreDisplay.module.css';
 
-const FinalScoreDisplay = ({ score, kkm = 75 }) => {
-  // Determine Grade Letter and description
-  const getGradeInfo = (val) => {
-    if (val === null || val === undefined) return { letter: '-', desc: 'Nilai belum lengkap', color: 'var(--text-muted)' };
-    if (val >= 85) return { letter: 'A', desc: 'Sangat Baik (Professional)', color: 'var(--color-success)' };
-    if (val >= 75) return { letter: 'B', desc: 'Baik (Kompeten)', color: 'var(--color-primary)' };
-    if (val >= 60) return { letter: 'C', desc: 'Cukup', color: 'var(--color-warning)' };
-    return { letter: 'D', desc: 'Kurang (Perlu Remedial)', color: 'var(--color-error)' };
-  };
-
+const FinalScoreDisplay = ({ score, kkm = 60 }) => {
   const gradeInfo = getGradeInfo(score);
-  const isPassed = score !== null && score >= kkm;
+  const isPassed = score !== null && score > 50;
 
   return (
     <div className={styles.container}>

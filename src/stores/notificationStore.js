@@ -1,33 +1,81 @@
 import { create } from 'zustand';
 
 const INITIAL_NOTIFICATIONS = [
-  { id: 'n1', type: 'SCORE_PUBLISHED', title: 'Nilai Quiz dipublikasikan', message: 'Dosen telah mempublikasikan nilai Quiz untuk Praktikum Akuntansi Dasar.', mkId: 'mk-1', mkName: 'Praktikum Akuntansi Dasar', is_read: false, created_at: '2026-07-31T14:30:00Z' },
-  { id: 'n2', type: 'NEW_COMMENT', title: 'Komentar baru dari dosen', message: 'Dra. Sri Wahyuni memberikan komentar pada MK Auditing & Assurance.', mkId: 'mk-3', mkName: 'Auditing & Assurance', is_read: false, created_at: '2026-07-31T10:15:00Z' },
-  { id: 'n3', type: 'COMMENT_REPLY', title: 'Balasan komentar', message: 'Feri Irawan membalas komentar Anda di Praktikum Akuntansi Dasar.', mkId: 'mk-1', mkName: 'Praktikum Akuntansi Dasar', is_read: true, created_at: '2026-07-30T16:45:00Z' },
-  { id: 'n4', type: 'MK_ACTIVATED', title: 'MK diaktifkan', message: 'Akuntansi Keuangan Menengah telah diaktifkan. Mahasiswa sekarang bisa bergabung.', mkId: 'mk-2', mkName: 'Akuntansi Keuangan Menengah', is_read: true, created_at: '2026-07-29T09:00:00Z' },
-  { id: 'n5', type: 'SCORE_PUBLISHED', title: 'Nilai Proyek dipublikasikan', message: 'Nilai Proyek untuk Praktikum Akuntansi Dasar telah tersedia.', mkId: 'mk-1', mkName: 'Praktikum Akuntansi Dasar', is_read: true, created_at: '2026-07-28T11:20:00Z' },
+  { id: 'n1', type: 'SCORE_PUBLISHED', title: 'Nilai Quiz dipublikasikan', message: 'Dosen telah mempublikasikan nilai Quiz untuk Praktikum Akuntansi Dasar.', mkId: 'mk-1', mkName: 'Praktikum Akuntansi Dasar', is_read: false, is_archived: false, created_at: '2026-08-14T14:30:00Z' },
+  { id: 'n2', type: 'NEW_COMMENT', title: 'Catatan Privat 1-on-1 dari Dosen', message: 'Dosen memberikan catatan evaluasi privat untuk Anda pada Praktikum Akuntansi Dasar.', mkId: 'mk-1', mkName: 'Praktikum Akuntansi Dasar', is_read: false, is_archived: false, created_at: '2026-08-14T10:15:00Z' },
+  { id: 'n3', type: 'COMMENT_REPLY', title: 'Balasan Diskusi Baru', message: 'Feri Irawan membalas topik pengumuman kelas di Praktikum Akuntansi Dasar.', mkId: 'mk-1', mkName: 'Praktikum Akuntansi Dasar', is_read: true, is_archived: false, created_at: '2026-08-13T16:45:00Z' },
+  { id: 'n4', type: 'MK_ACTIVATED', title: 'Mata Kuliah Diaktifkan', message: 'Akuntansi Keuangan Menengah telah diaktifkan untuk semester berjalan.', mkId: 'mk-2', mkName: 'Akuntansi Keuangan Menengah', is_read: true, is_archived: false, created_at: '2026-08-12T09:00:00Z' },
+  { id: 'n5', type: 'SCORE_PUBLISHED', title: 'Nilai Proyek dipublikasikan', message: 'Nilai Proyek untuk Praktikum Akuntansi Dasar telah tersedia di laman analitik.', mkId: 'mk-1', mkName: 'Praktikum Akuntansi Dasar', is_read: true, is_archived: false, created_at: '2026-08-11T11:20:00Z' },
 ];
 
+const loadSavedNotifications = () => {
+  try {
+    const saved = localStorage.getItem('epic_notifications');
+    if (!saved) return INITIAL_NOTIFICATIONS;
+    const parsed = JSON.parse(saved);
+    return parsed.map(n => ({ ...n, is_archived: n.is_archived ?? false }));
+  } catch (e) {
+    return INITIAL_NOTIFICATIONS;
+  }
+};
+
+const saveNotificationsToStorage = (notifications) => {
+  try {
+    localStorage.setItem('epic_notifications', JSON.stringify(notifications));
+  } catch (e) {}
+};
+
 export const useNotificationStore = create((set, get) => ({
-  notifications: INITIAL_NOTIFICATIONS,
+  notifications: loadSavedNotifications(),
 
   getUnreadCount: () => {
-    return get().notifications.filter(n => !n.is_read).length;
+    return get().notifications.filter(n => !n.is_read && !n.is_archived).length;
   },
 
   markAsRead: (id) => {
-    set(state => ({
-      notifications: state.notifications.map(n => n.id === id ? { ...n, is_read: true } : n)
-    }));
+    const { notifications } = get();
+    const updated = notifications.map(n => n.id === id ? { ...n, is_read: true } : n);
+    set({ notifications: updated });
+    saveNotificationsToStorage(updated);
   },
 
   markAllAsRead: () => {
-    set(state => ({
-      notifications: state.notifications.map(n => ({ ...n, is_read: true }))
-    }));
+    const { notifications } = get();
+    const updated = notifications.map(n => ({ ...n, is_read: true }));
+    set({ notifications: updated });
+    saveNotificationsToStorage(updated);
+  },
+
+  archiveNotification: (id) => {
+    const { notifications } = get();
+    const updated = notifications.map(n => n.id === id ? { ...n, is_archived: true, is_read: true } : n);
+    set({ notifications: updated });
+    saveNotificationsToStorage(updated);
+  },
+
+  unarchiveNotification: (id) => {
+    const { notifications } = get();
+    const updated = notifications.map(n => n.id === id ? { ...n, is_archived: false } : n);
+    set({ notifications: updated });
+    saveNotificationsToStorage(updated);
+  },
+
+  archiveAllNotifications: () => {
+    const { notifications } = get();
+    const updated = notifications.map(n => ({ ...n, is_archived: true, is_read: true }));
+    set({ notifications: updated });
+    saveNotificationsToStorage(updated);
+  },
+
+  deleteNotification: (id) => {
+    const { notifications } = get();
+    const updated = notifications.filter(n => n.id !== id);
+    set({ notifications: updated });
+    saveNotificationsToStorage(updated);
   },
 
   addNotification: (notifData) => {
+    const { notifications } = get();
     const newNotif = {
       id: `n-${Date.now()}`,
       type: notifData.type || 'SYSTEM',
@@ -36,9 +84,12 @@ export const useNotificationStore = create((set, get) => ({
       mkId: notifData.mkId || null,
       mkName: notifData.mkName || '',
       is_read: false,
+      is_archived: false,
       created_at: new Date().toISOString()
     };
-    set(state => ({ notifications: [newNotif, ...state.notifications] }));
+    const updated = [newNotif, ...notifications];
+    set({ notifications: updated });
+    saveNotificationsToStorage(updated);
     return newNotif;
   }
 }));

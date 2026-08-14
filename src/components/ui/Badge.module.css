@@ -7,6 +7,7 @@
   border-radius: 9999px;
   line-height: 1;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* --- Sizes --- */

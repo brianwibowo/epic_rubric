@@ -67,20 +67,19 @@ export function useAnalytics() {
         const min = Math.min(...scores);
         const avg = Math.round(scores.reduce((sum, s) => sum + s, 0) / total);
         
-        const passedCount = scores.filter(s => s >= 75).length;
+        const passedCount = scores.filter(s => s > 50).length;
         const passingRate = Math.round((passedCount / total) * 100);
 
         // Grade ranges distribution
-        const ranges = {
-          remedial: scores.filter(s => s < 75).length,
-          kompeten: scores.filter(s => s >= 75 && s < 85).length,
-          sangatBaik: scores.filter(s => s >= 85).length
-        };
-
         const distribution = [
-          { name: 'Remedial (<75)', count: ranges.remedial },
-          { name: 'Kompeten (75-84)', count: ranges.kompeten },
-          { name: 'Sangat Baik (≥85)', count: ranges.sangatBaik }
+          { name: 'A (>85)', count: scores.filter(s => s > 85).length },
+          { name: 'AB (>80-85)', count: scores.filter(s => s > 80 && s <= 85).length },
+          { name: 'B (>70-80)', count: scores.filter(s => s > 70 && s <= 80).length },
+          { name: 'BC (>65-70)', count: scores.filter(s => s > 65 && s <= 70).length },
+          { name: 'C (>60-65)', count: scores.filter(s => s > 60 && s <= 65).length },
+          { name: 'CD (>55-60)', count: scores.filter(s => s > 55 && s <= 60).length },
+          { name: 'D (>50-55)', count: scores.filter(s => s > 50 && s <= 55).length },
+          { name: 'E (≤50)', count: scores.filter(s => s <= 50).length }
         ];
 
         return {

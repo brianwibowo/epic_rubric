@@ -6,6 +6,378 @@
   box-sizing: border-box;
 }
 
+/* Rombel Tabs Bar */
+.rombelTabsContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+}
+
+.rombelTabsGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.rombelTabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.rombelTabBtn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--bg-surface-hover);
+}
+
+.rombelTabBtn.activeTab {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+/* Rombel Summary Overview (When in Semua Rombel view) */
+.rombelOverviewSection {
+  margin-bottom: 28px;
+}
+
+.rombelToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.rombelSearchWrap {
+  position: relative;
+  flex: 1;
+  max-width: 380px;
+  min-width: 240px;
+}
+
+/* macOS Finder Style View Toggle */
+.viewToggleGroup {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-canvas, #f1f5f9);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.viewToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.viewToggleBtn:hover {
+  color: var(--text-primary);
+}
+
+.viewToggleBtn.viewToggleActive {
+  background: var(--bg-surface, #ffffff);
+  color: var(--color-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Rombel Grid View */
+.rombelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* Rombel List View (macOS Finder style) */
+.rombelListContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.rombelListRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rombelListRow:hover {
+  border-color: var(--color-primary);
+  background: var(--bg-surface-hover);
+  transform: translateX(3px);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.08);
+}
+
+.rombelListLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.rombelListIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rombelListInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rombelListNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rombelListName {
+  font-size: 15px;
+  font-weight: 750;
+  color: var(--text-primary);
+}
+
+.rombelListRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.rombelListStat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.rombelListAction {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.rombelCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.rombelCard:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.10), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.rombelCardAccent {
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), #7c3aed);
+}
+
+.rombelCardBody {
+  padding: 16px 18px 14px;
+}
+
+.rombelCardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rombelCardName {
+  font-size: 16px;
+  font-weight: 750;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.rombelCardMeta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rombelMetaBadge {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.rombelStatsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.rombelStatItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rombelStatVal {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.rombelStatLbl {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.rombelCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface);
+}
+
+.rombelActionLink {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.rombelArrow {
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.rombelCard:hover .rombelArrow {
+  color: var(--color-primary);
+  transform: translateX(4px);
+}
+
+.rombelChipBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-primary);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+/* Modal Form Grid */
+.modalFormGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modalFormFull {
+  grid-column: span 2;
+}
+
+.selectWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.selectLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+}
+
+.selectInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-primary, #0f172a);
+  font-size: 13.5px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.selectInput:focus {
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 .header {
   display: flex;
   align-items: flex-start;

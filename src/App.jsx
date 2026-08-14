@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { ROLES } from '@/utils/constants';
+import { ROLES, ALL_ROLES, STAFF_ROLES } from '@/utils/constants';
 
 // Layout Shell
 import AppShell from '@/components/layout/AppShell';
@@ -9,11 +9,14 @@ import MKLayout from '@/components/layout/MKLayout';
 
 // Route Guards
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 
 // Pages — Global
 import LoginPage from '@/pages/LoginPage';
 import DashboardPage from '@/pages/DashboardPage';
 import MataKuliahListPage from '@/pages/MataKuliahListPage';
+import KelasListPage from '@/pages/KelasListPage';
+import KelasDetailPage from '@/pages/KelasDetailPage';
 import RubrikLibraryPage from '@/pages/RubrikLibraryPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import UserManagementPage from '@/pages/UserManagementPage';
@@ -22,15 +25,13 @@ import KreditPage from '@/pages/KreditPage';
 
 // Pages — MK Context
 import MKOverviewPage from '@/pages/MKOverviewPage';
+import RombelListPage from '@/pages/RombelListPage';
 import MKStudentListPage from '@/pages/MKStudentListPage';
 import KomponenPenilaianPage from '@/pages/KomponenPenilaianPage';
 import MKAnalyticsPage from '@/pages/MKAnalyticsPage';
 import CommentsPage from '@/pages/CommentsPage';
 import CreateMKPage from '@/pages/CreateMKPage';
 import ScoringPage from '@/pages/ScoringPage';
-
-const ALL_ROLES = [ROLES.ADMIN, ROLES.DOSEN, ROLES.MAHASISWA];
-const DOSEN_ADMIN = [ROLES.ADMIN, ROLES.DOSEN];
 
 function App() {
   const { initializeAuth } = useAuthStore();
@@ -50,7 +51,9 @@ function App() {
           path="/" 
           element={
             <ProtectedRoute allowedRoles={ALL_ROLES}>
-              <AppShell />
+              <ErrorBoundary>
+                <AppShell />
+              </ErrorBoundary>
             </ProtectedRoute>
           }
         >
@@ -59,24 +62,28 @@ function App() {
           {/* Dashboard (All roles) */}
           <Route index element={<DashboardPage />} />
 
-          {/* Mata Kuliah List (All roles) */}
+          {/* Kelas List & Detail (All roles — primarily SMK / Admin) */}
+          <Route path="kelas" element={<KelasListPage />} />
+          <Route path="kelas/:kelasId" element={<KelasDetailPage />} />
+
+          {/* Mata Kuliah / Mapel List (All roles) */}
           <Route path="mk" element={<MataKuliahListPage />} />
 
-          {/* Create MK (Dosen, Admin) */}
+          {/* Create MK / Mapel (Admin, Dosen, Guru) */}
           <Route 
             path="mk/create" 
             element={
-              <ProtectedRoute allowedRoles={DOSEN_ADMIN}>
+              <ProtectedRoute allowedRoles={STAFF_ROLES}>
                 <CreateMKPage />
               </ProtectedRoute>
             } 
           />
 
-          {/* Rubrik Template Library (Dosen, Admin) */}
+          {/* Rubrik Template Library (Admin, Dosen, Guru) */}
           <Route 
             path="rubrik" 
             element={
-              <ProtectedRoute allowedRoles={DOSEN_ADMIN}>
+              <ProtectedRoute allowedRoles={STAFF_ROLES}>
                 <RubrikLibraryPage />
               </ProtectedRoute>
             } 
@@ -108,12 +115,22 @@ function App() {
             } 
           />
 
-          {/* === MK CONTEXT (inside a specific Mata Kuliah) === */}
+          {/* === MK / MAPEL CONTEXT (inside a specific Mata Kuliah / Mapel) === */}
           <Route path="mk/:mkId" element={<MKLayout />}>
             {/* MK Overview */}
             <Route index element={<MKOverviewPage />} />
 
-            {/* MK Student List (All roles — Read-only for Mahasiswa) */}
+            {/* Rombel List (University context) */}
+            <Route 
+              path="rombel" 
+              element={
+                <ProtectedRoute allowedRoles={STAFF_ROLES}>
+                  <RombelListPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* MK Student / Siswa List (All roles) */}
             <Route 
               path="students" 
               element={
@@ -123,11 +140,11 @@ function App() {
               } 
             />
 
-            {/* Komponen Penilaian (Dosen, Admin) */}
+            {/* Komponen Penilaian (Admin, Dosen, Guru) */}
             <Route 
               path="komponen" 
               element={
-                <ProtectedRoute allowedRoles={DOSEN_ADMIN}>
+                <ProtectedRoute allowedRoles={STAFF_ROLES}>
                   <KomponenPenilaianPage />
                 </ProtectedRoute>
               } 
@@ -143,17 +160,17 @@ function App() {
             <Route 
               path="scoring" 
               element={
-                <ProtectedRoute allowedRoles={DOSEN_ADMIN}>
+                <ProtectedRoute allowedRoles={STAFF_ROLES}>
                   <ScoringPage />
                 </ProtectedRoute>
               } 
             />
 
-            {/* Scoring per Komponen (Dosen, Admin) */}
+            {/* Scoring per Komponen (Admin, Dosen, Guru) */}
             <Route 
               path="komponen/:komponenId/scoring" 
               element={
-                <ProtectedRoute allowedRoles={DOSEN_ADMIN}>
+                <ProtectedRoute allowedRoles={STAFF_ROLES}>
                   <ScoringPage />
                 </ProtectedRoute>
               } 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { EPIC_DIMENSIONS } from '@/utils/constants';
+import { getGradeInfo } from '@/utils/gradeHelper';
 import Badge from '../ui/Badge';
 import Card from '../ui/Card';
 import styles from './StudentReportCard.module.css';
@@ -16,14 +17,6 @@ const StudentReportCard = ({
   focusAreaCode,
   dateEvaluated
 }) => {
-  const getGradeInfo = (val) => {
-    if (val === null || val === undefined) return { letter: '-', desc: 'N/A', color: 'var(--text-muted)' };
-    if (val >= 85) return { letter: 'A', desc: 'Sangat Baik (Professional)', color: 'var(--color-success)' };
-    if (val >= 75) return { letter: 'B', desc: 'Baik (Kompeten)', color: 'var(--color-primary)' };
-    if (val >= 60) return { letter: 'C', desc: 'Cukup', color: 'var(--color-warning)' };
-    return { letter: 'D', desc: 'Kurang (Perlu Remedial)', color: 'var(--color-error)' };
-  };
-
   const gradeInfo = getGradeInfo(finalScore);
   const formattedDate = dateEvaluated 
     ? new Date(dateEvaluated).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })

@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 import styles from './KreditPage.module.css';
 import { useLanguageStore } from '@/stores/languageStore';
+import { useUiStore } from '@/stores/uiStore';
+import { generateUserManualPdf } from '@/utils/generateUserManualPdf';
 import {
   Award,
   UserCheck,
@@ -13,11 +16,33 @@ import {
   Sparkles,
   Search,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  FileText,
+  Download
 } from 'lucide-react';
 
 const KreditPage = () => {
   const { t } = useLanguageStore();
+  const { addToast } = useUiStore();
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleDownloadManual = () => {
+    setIsGenerating(true);
+    try {
+      const link = document.createElement('a');
+      link.href = '/Buku_Panduan_Lengkap_Platform_EPIC_Rubric.pdf';
+      link.download = 'Buku_Panduan_Lengkap_Platform_EPIC_Rubric.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      addToast('Buku Panduan Lengkap (9 Halaman + Screenshot Asli) berhasil diunduh!', 'success');
+    } catch (err) {
+      generateUserManualPdf();
+      addToast('Buku Panduan Pengguna berhasil diunduh!', 'success');
+    } finally {
+      setTimeout(() => setIsGenerating(false), 500);
+    }
+  };
 
   const lecturers = [
     {
@@ -62,6 +87,8 @@ const KreditPage = () => {
       <Header
         title={t('navCredits', 'Kredit & Tim Peneliti')}
         subtitle="Tim akademisi pengembang standar rubrik asesmen vokasi akuntansi berbasis 4 Dimensi EPIC"
+        showHelp={false}
+        showBell={false}
       />
 
       <div className={styles.content}>
@@ -71,11 +98,23 @@ const KreditPage = () => {
             <div className={styles.iconCircle}>
               <Sparkles size={22} />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <h2 className={styles.narrativeTitle}>Pengembang & Peneliti Utama Rubrik EPIC</h2>
               <p className={styles.narrativeSubtitle}>
                 Inovasi Asesmen Vokasi Akuntansi Berstandar Akademik Institusional
               </p>
+            </div>
+            <div>
+              <Button
+                variant="epic"
+                size="md"
+                onClick={handleDownloadManual}
+                isLoading={isGenerating}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+              >
+                <FileText size={16} />
+                <span>Unduh Buku Panduan Resmi (.pdf)</span>
+              </Button>
             </div>
           </div>
 
@@ -161,6 +200,21 @@ const KreditPage = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Developer Attribution Footer */}
+        <div className={styles.developerFooter}>
+          <p className={styles.developerText}>
+            Turut membantu dalam pengembangan platform 'EPIC e-Rubric' oleh{' '}
+            <a
+              href="https://instagram.com/brianwibowoo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.developerLink}
+            >
+              Apriansyah Wibowo
+            </a>
+          </p>
         </div>
       </div>
     </div>

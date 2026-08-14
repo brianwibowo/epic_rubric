@@ -118,7 +118,7 @@ const BulkImport = ({ onImport, isLoading = false, classId }) => {
 
   return (
     <Card variant="glass" padding="md" className={styles.container}>
-      <h4 className={styles.title}>Impor Roster Siswa Massal (.xlsx)</h4>
+      <h4 className={styles.title}>Impor Data Siswa Massal (.xlsx)</h4>
       
       {!file ? (
         /* Drag and Drop Zone */

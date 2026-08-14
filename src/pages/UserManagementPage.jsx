@@ -9,6 +9,8 @@ import DataTable from '@/components/ui/DataTable';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { useUiStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
+import { ROLES, ROLE_LABELS } from '@/utils/constants';
+import { capitalizeWords } from '@/utils/formatters';
 import { 
   Search, 
   Plus, 
@@ -19,7 +21,10 @@ import {
   ShieldAlert, 
   User, 
   BookOpen, 
-  Check 
+  Check,
+  GraduationCap,
+  School,
+  ShieldCheck
 } from 'lucide-react';
 import styles from './UserManagementPage.module.css';
 
@@ -29,27 +34,27 @@ const UserManagementPage = () => {
   const { 
     isLoading, 
     fetchUsers, 
-    fetchClassesList, 
     createUser, 
     updateUser, 
     deleteUser 
   } = useUserManagement();
 
   const [users, setUsers] = useState([]);
-  const [classes, setClasses] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('ALL'); // ALL, admin, guru, siswa
+  const [activeTab, setActiveTab] = useState('ALL'); // ALL, admin, dosen, guru, mahasiswa, siswa
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null); // null means adding a new user
+  const [selectedUser, setSelectedUser] = useState(null);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
-    role: 'siswa',
+    role: ROLES.DOSEN,
+    nim: '',
     nisn: '',
+    nidn: '',
     nip: '',
-    class_id: ''
+    unit_info: ''
   });
   const [formErrors, setFormErrors] = useState({});
 
@@ -57,13 +62,11 @@ const UserManagementPage = () => {
   const loadData = async () => {
     const fetchedUsers = await fetchUsers();
     setUsers(fetchedUsers);
-    const fetchedClasses = await fetchClassesList();
-    setClasses(fetchedClasses);
   };
 
   useEffect(() => {
     loadData();
-  }, [fetchUsers, fetchClassesList]);
+  }, [fetchUsers]);
 
   // Filters and search logic
   const filteredUsers = useMemo(() => {
@@ -75,7 +78,10 @@ const UserManagementPage = () => {
         user.full_name?.toLowerCase().includes(cleanSearch) || 
         user.email?.toLowerCase().includes(cleanSearch) || 
         (user.nip && String(user.nip).includes(cleanSearch)) || 
-        (user.nisn && String(user.nisn).includes(cleanSearch));
+        (user.nidn && String(user.nidn).includes(cleanSearch)) || 
+        (user.nim && String(user.nim).includes(cleanSearch)) || 
+        (user.nisn && String(user.nisn).includes(cleanSearch)) ||
+        (user.unit_info && user.unit_info.toLowerCase().includes(cleanSearch));
       
       return matchesTab && matchesSearch;
     });
@@ -87,10 +93,12 @@ const UserManagementPage = () => {
     setFormData({
       full_name: '',
       email: '',
-      role: 'siswa',
+      role: ROLES.DOSEN,
+      nim: '',
       nisn: '',
+      nidn: '',
       nip: '',
-      class_id: classes[0]?.id || ''
+      unit_info: ''
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -102,10 +110,12 @@ const UserManagementPage = () => {
     setFormData({
       full_name: user.full_name || '',
       email: user.email || '',
-      role: user.role || 'siswa',
+      role: user.role || ROLES.DOSEN,
+      nim: user.nim || '',
       nisn: user.nisn || '',
+      nidn: user.nidn || '',
       nip: user.nip || '',
-      class_id: user.class_id || (classes[0]?.id || '')
+      unit_info: user.unit_info || ''
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -126,9 +136,15 @@ const UserManagementPage = () => {
   // Form input change handlers
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let formattedValue = value;
+    if (name === 'full_name' || name === 'unit_info') {
+      formattedValue = capitalizeWords(value);
+    } else if (name === 'nim' || name === 'nisn' || name === 'nidn' || name === 'nip') {
+      formattedValue = value.trim().toUpperCase();
+    }
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: formattedValue
     }));
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: null }));
@@ -145,21 +161,16 @@ const UserManagementPage = () => {
       errors.email = 'Format email tidak valid';
     }
 
-    if (formData.role === 'siswa') {
-      if (!formData.nisn.trim()) {
-        errors.nisn = 'NISN wajib diisi untuk Siswa';
-      } else if (!/^\d+$/.test(formData.nisn)) {
-        errors.nisn = 'NISN hanya boleh berupa angka';
+    if (formData.role === ROLES.MAHASISWA) {
+      if (!formData.nim.trim()) errors.nim = 'NIM wajib diisi untuk Mahasiswa';
+    } else if (formData.role === ROLES.SISWA) {
+      if (!formData.nisn.trim()) errors.nisn = 'NISN wajib diisi untuk Siswa';
+    } else if (formData.role === ROLES.DOSEN) {
+      if (!formData.nidn.trim() && !formData.nip.trim()) {
+        errors.nidn = 'NIDN atau NIP wajib diisi untuk Dosen';
       }
-      if (!formData.class_id) {
-        errors.class_id = 'Pilihan kelas wajib dipilih';
-      }
-    } else {
-      if (!formData.nip.trim()) {
-        errors.nip = 'NIP wajib diisi untuk Guru/Admin';
-      } else if (!/^\d+$/.test(formData.nip)) {
-        errors.nip = 'NIP hanya boleh berupa angka';
-      }
+    } else if (formData.role === ROLES.GURU) {
+      if (!formData.nip.trim()) errors.nip = 'NIP wajib diisi untuk Guru';
     }
 
     setFormErrors(errors);
@@ -180,7 +191,7 @@ const UserManagementPage = () => {
       setIsModalOpen(false);
       loadData();
     } catch (e) {
-      // Toast notification is managed by hook/store
+      // Toast managed by hook
     }
   };
 
@@ -188,7 +199,7 @@ const UserManagementPage = () => {
   const columns = [
     {
       key: 'user',
-      label: 'Nama & Pengguna',
+      label: 'Nama & Akun Pengguna',
       sortable: true,
       render: (row) => (
         <div className={styles.userCell}>
@@ -199,28 +210,49 @@ const UserManagementPage = () => {
           />
           <div className={styles.userInfo}>
             <span className={styles.userName}>{row.full_name}</span>
-            <span className={styles.userEmail}>{row.email || `${row.role}@epic.school.id`}</span>
+            <span className={styles.userEmail}>{row.email || `${row.role}@epic.id`}</span>
           </div>
         </div>
       )
     },
     {
       key: 'role',
-      label: 'Hak Akses (Role)',
+      label: 'Peran (Role)',
       sortable: true,
       render: (row) => {
         let badgeVariant = 'primary';
-        let badgeText = 'Siswa SMK';
-        if (row.role === 'admin') {
-          badgeVariant = 'error';
-          badgeText = 'Admin/Kaprog';
-        } else if (row.role === 'guru') {
-          badgeVariant = 'info';
-          badgeText = 'Guru AKL';
+        let badgeLabel = ROLE_LABELS[row.role] || row.role;
+        let isGlow = false;
+
+        switch (row.role) {
+          case ROLES.ADMIN:
+            badgeVariant = 'error';
+            badgeLabel = 'Admin';
+            isGlow = true;
+            break;
+          case ROLES.DOSEN:
+            badgeVariant = 'primary';
+            badgeLabel = 'Dosen (Univ)';
+            break;
+          case ROLES.GURU:
+            badgeVariant = 'info';
+            badgeLabel = 'Guru (SMK)';
+            break;
+          case ROLES.MAHASISWA:
+            badgeVariant = 'success';
+            badgeLabel = 'Mahasiswa';
+            break;
+          case ROLES.SISWA:
+            badgeVariant = 'warning';
+            badgeLabel = 'Siswa (SMK)';
+            break;
+          default:
+            badgeVariant = 'default';
         }
+
         return (
-          <Badge variant={badgeVariant} size="sm" glow={row.role === 'admin'}>
-            {badgeText}
+          <Badge variant={badgeVariant} size="sm" glow={isGlow}>
+            {badgeLabel}
           </Badge>
         );
       }
@@ -228,21 +260,34 @@ const UserManagementPage = () => {
     {
       key: 'identity',
       label: 'Nomor Identitas',
-      render: (row) => (
-        <span className={styles.idText}>
-          {row.role === 'siswa' ? `NISN: ${row.nisn || '-'}` : `NIP: ${row.nip || '-'}`}
-        </span>
-      )
+      render: (row) => {
+        if (row.role === ROLES.MAHASISWA) {
+          return <span className={styles.idText}>NIM: {row.nim || '-'}</span>;
+        }
+        if (row.role === ROLES.SISWA) {
+          return <span className={styles.idText}>NISN: {row.nisn || '-'}</span>;
+        }
+        if (row.role === ROLES.DOSEN) {
+          return <span className={styles.idText}>NIDN: {row.nidn || row.nip || '-'}</span>;
+        }
+        if (row.role === ROLES.GURU) {
+          return <span className={styles.idText}>NIP: {row.nip || '-'}</span>;
+        }
+        if (row.role === ROLES.ADMIN) {
+          return <span className={styles.idText}>{row.nip ? `NIP: ${row.nip}` : 'Admin Sistem'}</span>;
+        }
+        return <span className={styles.idText}>-</span>;
+      }
     },
     {
-      key: 'class_id',
-      label: 'Penempatan Kelas',
+      key: 'unit_info',
+      label: 'Unit / Program / Kelas',
       sortable: true,
-      render: (row) => {
-        if (row.role !== 'siswa') return <span style={{ color: 'var(--text-muted)' }}>-</span>;
-        const className = classes.find(c => c.id === row.class_id)?.name || row.class_id || '-';
-        return <span className={styles.classText}>{className}</span>;
-      }
+      render: (row) => (
+        <span className={styles.classText}>
+          {row.unit_info || '-'}
+        </span>
+      )
     },
     {
       key: 'actions',
@@ -252,15 +297,15 @@ const UserManagementPage = () => {
           <button 
             className={`${styles.actionBtn} ${styles.editBtn}`}
             onClick={() => handleOpenEditModal(row)}
-            title="Edit Pengguna"
+            title="Edit Informasi Akun"
           >
             <Edit2 size={14} />
           </button>
           <button 
             className={`${styles.actionBtn} ${styles.deleteBtn}`}
             onClick={() => handleDeleteUser(row)}
-            title="Hapus Pengguna"
-            disabled={row.id === 'mock-admin-uuid'} // Prevent deleting primary mock admin
+            title="Hapus Akun"
+            disabled={row.id === 'mock-admin-uuid'}
           >
             <Trash2 size={14} />
           </button>
@@ -275,12 +320,11 @@ const UserManagementPage = () => {
         title="Manajemen Pengguna & Peran" 
         actions={
           <Button
-            variant="epic"
+            variant="primary"
             size="sm"
             onClick={handleOpenAddModal}
-            iconLeft={<Plus size={16} />}
           >
-            Tambah Pengguna
+            <Plus size={16} /> Tambah Pengguna Baru
           </Button>
         }
       />
@@ -291,7 +335,7 @@ const UserManagementPage = () => {
           <div className={styles.mockAlert}>
             <Info className={styles.mockIcon} size={18} />
             <div>
-              <strong>Simulasi Mode Lokal (Local Preview):</strong> Penambahan, pengeditan, dan penghapusan pengguna di halaman ini disimpan sementara di <code>localStorage</code> dan disinkronisasikan ke roster kelas secara otomatis.
+              <strong>Mode Manajemen Akun:</strong> Admin dapat membuat akun sesama <strong>Admin</strong>, <strong>Dosen</strong> (Universitas), <strong>Guru</strong> (SMK), <strong>Mahasiswa</strong>, dan <strong>Siswa</strong> dengan identitas yang tersinkronisasi.
             </div>
           </div>
         )}
@@ -304,7 +348,7 @@ const UserManagementPage = () => {
               <input
                 type="text"
                 className={styles.searchInput}
-                placeholder="Cari nama, email, NIP, NISN..."
+                placeholder="Cari nama, email, NIM, NISN, NIDN, NIP..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -318,22 +362,34 @@ const UserManagementPage = () => {
                 Semua ({users.length})
               </button>
               <button 
-                className={`${styles.tabBtn} ${activeTab === 'admin' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('admin')}
+                className={`${styles.tabBtn} ${activeTab === ROLES.ADMIN ? styles.activeTab : ''}`}
+                onClick={() => setActiveTab(ROLES.ADMIN)}
               >
-                Admin ({users.filter(u => u.role === 'admin').length})
+                Admin ({users.filter(u => u.role === ROLES.ADMIN).length})
               </button>
               <button 
-                className={`${styles.tabBtn} ${activeTab === 'guru' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('guru')}
+                className={`${styles.tabBtn} ${activeTab === ROLES.DOSEN ? styles.activeTab : ''}`}
+                onClick={() => setActiveTab(ROLES.DOSEN)}
               >
-                Guru ({users.filter(u => u.role === 'guru').length})
+                Dosen ({users.filter(u => u.role === ROLES.DOSEN).length})
               </button>
               <button 
-                className={`${styles.tabBtn} ${activeTab === 'siswa' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('siswa')}
+                className={`${styles.tabBtn} ${activeTab === ROLES.GURU ? styles.activeTab : ''}`}
+                onClick={() => setActiveTab(ROLES.GURU)}
               >
-                Siswa ({users.filter(u => u.role === 'siswa').length})
+                Guru ({users.filter(u => u.role === ROLES.GURU).length})
+              </button>
+              <button 
+                className={`${styles.tabBtn} ${activeTab === ROLES.MAHASISWA ? styles.activeTab : ''}`}
+                onClick={() => setActiveTab(ROLES.MAHASISWA)}
+              >
+                Mahasiswa ({users.filter(u => u.role === ROLES.MAHASISWA).length})
+              </button>
+              <button 
+                className={`${styles.tabBtn} ${activeTab === ROLES.SISWA ? styles.activeTab : ''}`}
+                onClick={() => setActiveTab(ROLES.SISWA)}
+              >
+                Siswa ({users.filter(u => u.role === ROLES.SISWA).length})
               </button>
             </div>
           </div>
@@ -347,7 +403,7 @@ const UserManagementPage = () => {
             isLoading={isLoading}
             pagination={true}
             pageSize={10}
-            emptyStateMessage="Tidak ada pengguna yang cocok dengan filter pencarian Anda."
+            emptyStateMessage="Tidak ada akun pengguna yang cocok dengan pencarian Anda."
           />
         </Card>
       </div>
@@ -356,7 +412,7 @@ const UserManagementPage = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={selectedUser ? 'Edit Informasi Pengguna' : 'Daftarkan Pengguna Baru'}
+        title={selectedUser ? 'Edit Informasi Pengguna' : 'Daftarkan Akun Pengguna Baru'}
         size="md"
       >
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -368,7 +424,7 @@ const UserManagementPage = () => {
               name="full_name"
               value={formData.full_name}
               onChange={handleInputChange}
-              placeholder="Contoh: Ahmad Rifai, S.E."
+              placeholder="Contoh: Dra. Sri Wahyuni, M.Ak. atau Ahmad Rifai"
               error={formErrors.full_name}
             />
           </div>
@@ -382,30 +438,136 @@ const UserManagementPage = () => {
               type="email"
               value={formData.email}
               onChange={handleInputChange}
-              placeholder="Contoh: ahmad@epic.school.id"
+              placeholder="Contoh: user@epic.id"
               error={formErrors.email}
             />
           </div>
 
           <div className={styles.formGroup}>
             <label className={styles.label}>
-              Hak Akses / Peran <span className={styles.required}>*</span>
+              Pilihan Peran (Role) <span className={styles.required}>*</span>
             </label>
             <select
               name="role"
               value={formData.role}
               onChange={handleInputChange}
               className={styles.select}
-              disabled={!!selectedUser && selectedUser.id === 'mock-admin-uuid'} // Lock role for primary mock admin
+              disabled={!!selectedUser && selectedUser.id === 'mock-admin-uuid'}
             >
-              <option value="siswa">Siswa SMK</option>
-              <option value="guru">Guru AKL</option>
-              <option value="admin">Admin / Kaprog</option>
+              <option value={ROLES.ADMIN}>🛡️ Admin (Hak Akses Penuh & Manajemen Akun)</option>
+              <option value={ROLES.DOSEN}>👨‍🏫 Dosen (Perguruan Tinggi / Vokasi)</option>
+              <option value={ROLES.GURU}>👩‍🏫 Guru (Sekolah Menengah Kejuruan / SMK)</option>
+              <option value={ROLES.MAHASISWA}>🎓 Mahasiswa (Perguruan Tinggi / Vokasi)</option>
+              <option value={ROLES.SISWA}>🎒 Siswa (Sekolah Menengah Kejuruan / SMK)</option>
             </select>
           </div>
 
-          {/* Dynamic attributes based on selected role */}
-          {formData.role === 'siswa' ? (
+          {/* DYNAMIC IDENTITY FIELDS ACCORDING TO ROLE */}
+          {formData.role === ROLES.ADMIN && (
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Unit / Lembaga Admin
+              </label>
+              <Input
+                name="unit_info"
+                value={formData.unit_info}
+                onChange={handleInputChange}
+                placeholder="Contoh: Pusat Asesmen & Penjaminan Mutu"
+              />
+            </div>
+          )}
+
+          {formData.role === ROLES.DOSEN && (
+            <>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  Nomor Induk Dosen Nasional (NIDN / NIP) <span className={styles.required}>*</span>
+                </label>
+                <Input
+                  name="nidn"
+                  value={formData.nidn || formData.nip}
+                  onChange={(e) => {
+                    handleInputChange({ target: { name: 'nidn', value: e.target.value } });
+                    handleInputChange({ target: { name: 'nip', value: e.target.value } });
+                  }}
+                  placeholder="Contoh: 197508242000032001"
+                  error={formErrors.nidn}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  Program Studi / Fakultas
+                </label>
+                <Input
+                  name="unit_info"
+                  value={formData.unit_info}
+                  onChange={handleInputChange}
+                  placeholder="Contoh: Pendidikan Akuntansi (S1/D4)"
+                />
+              </div>
+            </>
+          )}
+
+          {formData.role === ROLES.GURU && (
+            <>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  Nomor Induk Pegawai (NIP Guru) <span className={styles.required}>*</span>
+                </label>
+                <Input
+                  name="nip"
+                  value={formData.nip}
+                  onChange={handleInputChange}
+                  placeholder="Contoh: 198506122010012023"
+                  error={formErrors.nip}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  Jurusan / Kompetensi Keahlian SMK
+                </label>
+                <Input
+                  name="unit_info"
+                  value={formData.unit_info}
+                  onChange={handleInputChange}
+                  placeholder="Contoh: Akuntansi & Keuangan Lembaga (AKL)"
+                />
+              </div>
+            </>
+          )}
+
+          {formData.role === ROLES.MAHASISWA && (
+            <>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  Nomor Induk Mahasiswa (NIM) <span className={styles.required}>*</span>
+                </label>
+                <Input
+                  name="nim"
+                  value={formData.nim}
+                  onChange={handleInputChange}
+                  placeholder="Contoh: 2024081001"
+                  error={formErrors.nim}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  Kelas Perkuliahan / Angkatan
+                </label>
+                <Input
+                  name="unit_info"
+                  value={formData.unit_info}
+                  onChange={handleInputChange}
+                  placeholder="Contoh: Kelas PE 2025 A"
+                />
+              </div>
+            </>
+          )}
+
+          {formData.role === ROLES.SISWA && (
             <>
               <div className={styles.formGroup}>
                 <label className={styles.label}>
@@ -422,41 +584,16 @@ const UserManagementPage = () => {
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>
-                  Rombongan Belajar (Kelas) <span className={styles.required}>*</span>
+                  Rombongan Belajar (Kelas SMK)
                 </label>
-                <select
-                  name="class_id"
-                  value={formData.class_id}
+                <Input
+                  name="unit_info"
+                  value={formData.unit_info}
                   onChange={handleInputChange}
-                  className={styles.select}
-                >
-                  <option value="" disabled>Pilih Kelas</option>
-                  {classes.map(cls => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.name}
-                    </option>
-                  ))}
-                </select>
-                {formErrors.class_id && (
-                  <span style={{ color: 'var(--color-error)', fontSize: '0.75rem', marginTop: '4px' }}>
-                    {formErrors.class_id}
-                  </span>
-                )}
+                  placeholder="Contoh: XII AKL 1"
+                />
               </div>
             </>
-          ) : (
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                Nomor Induk Pegawai (NIP) <span className={styles.required}>*</span>
-              </label>
-              <Input
-                name="nip"
-                value={formData.nip}
-                onChange={handleInputChange}
-                placeholder="Contoh: 198203112009021003"
-                error={formErrors.nip}
-              />
-            </div>
           )}
 
           <div className={styles.formActions}>
@@ -470,7 +607,7 @@ const UserManagementPage = () => {
             </Button>
             <Button
               type="submit"
-              variant="epic"
+              variant="primary"
               disabled={isLoading}
             >
               {selectedUser ? 'Simpan Pembaruan' : 'Daftarkan Akun'}

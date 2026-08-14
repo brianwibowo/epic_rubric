@@ -62,7 +62,7 @@ const ClassListPage = () => {
               </div>
 
               <div className={styles.cardFooter}>
-                <span className={styles.actionLink}>Buka Roster Siswa</span>
+                <span className={styles.actionLink}>Buka Daftar Siswa</span>
                 <ArrowRight size={16} className={styles.arrow} />
               </div>
             </Card>

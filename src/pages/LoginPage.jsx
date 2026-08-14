@@ -193,12 +193,32 @@ const LoginPage = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
+                onClick={() => handleQuickLogin('guru')}
+                disabled={isLoading}
+                className={styles.quickBtn}
+              >
+                <Sparkles size={14} style={{ color: '#0284c7' }} />
+                <span>{t('roleGuru')}</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
                 onClick={() => handleQuickLogin('mahasiswa')}
                 disabled={isLoading}
                 className={styles.quickBtn}
               >
                 <Sparkles size={14} style={{ color: 'var(--color-success)' }} />
                 <span>{t('roleMahasiswa')}</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleQuickLogin('siswa')}
+                disabled={isLoading}
+                className={styles.quickBtn}
+              >
+                <Sparkles size={14} style={{ color: '#10b981' }} />
+                <span>{t('roleSiswa')}</span>
               </Button>
             </div>
           </div>

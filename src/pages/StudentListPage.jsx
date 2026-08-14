@@ -147,7 +147,7 @@ const StudentListPage = () => {
   return (
     <div className={styles.container}>
       <Header
-        title={`Roster Siswa Kelas ${classId.replace('-', ' ')}`}
+        title={`Daftar Siswa Kelas ${classId.replace('-', ' ')}`}
         actions={
           <div style={{ display: 'flex', gap: '8px' }}>
             <Button
@@ -163,18 +163,17 @@ const StudentListPage = () => {
               size="sm"
               onClick={loadRoster}
               disabled={isLoading}
-              iconLeft={<RefreshCw size={14} />}
+              iconLeft={<RefreshCw size={16} />}
             >
               Segarkan
             </Button>
             <Button
-              variant="epic"
+              variant="primary"
               size="sm"
               onClick={() => setImportModalOpen(true)}
-              disabled={isLoading}
-              iconLeft={<Plus size={16} />}
+              iconLeft={<Upload size={16} />}
             >
-              Impor Siswa (.xlsx)
+              Impor Siswa
             </Button>
           </div>
         }

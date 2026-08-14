@@ -161,8 +161,20 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.userProfile:hover {
+  background: var(--bg-hover, rgba(0, 0, 0, 0.03));
+}
+
+.avatarWrap {
+  position: relative;
+  flex-shrink: 0;
 }
 
 .avatar {
@@ -171,7 +183,22 @@
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--border-color);
-  flex-shrink: 0;
+  display: block;
+}
+
+.avatarEditBadge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary, #2563eb);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid white;
 }
 
 .userInfo {
@@ -179,15 +206,35 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  flex: 1;
+}
+
+.userNameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .userName {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.editIcon {
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.userProfile:hover .editIcon {
+  opacity: 1;
+  color: var(--color-primary);
 }
 
 /* ---- MK Context Header ---- */
@@ -299,6 +346,63 @@
   padding: 12px;
   border-top: 1px solid var(--border-color);
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kreditLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  background: rgba(37, 99, 235, 0.04);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.kreditLink:hover {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+  text-decoration: none;
+}
+
+.kreditLink.activeKredit {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: var(--color-primary);
+}
+
+.kreditIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.kreditTextWrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+}
+
+.kreditTitle {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.kreditSub {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
 }
 
 .logoutBtn {
@@ -395,6 +499,11 @@
 
 .sidebarWrapper.collapsed .footer {
   padding: 12px 8px;
+}
+
+.sidebarWrapper.collapsed .kreditLink {
+  justify-content: center;
+  padding: 8px 0;
 }
 
 .sidebarWrapper.collapsed .logoutBtn {

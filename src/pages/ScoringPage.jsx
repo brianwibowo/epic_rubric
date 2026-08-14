@@ -12,6 +12,7 @@ import Modal from '@/components/ui/Modal';
 import { getDimensionColor, LIKERT_SCALE } from '@/utils/constants';
 import { calculateRawScore } from '@/utils/scoringEngine';
 import { getKomponenCode, getKomponenFullName, getKomponenFormatted } from '@/utils/komponenHelper';
+import { getGradeInfo, GRADE_SCALE } from '@/utils/gradeHelper';
 import styles from './ScoringPage.module.css';
 import {
   ArrowLeft, Save, Send, ChevronLeft, ChevronRight,
@@ -30,14 +31,35 @@ const ScoringPage = () => {
   const { mkId, komponenId: paramKomponenId } = useParams();
   const [searchParams] = useSearchParams();
   const targetStudentId = searchParams.get('studentId');
+  const rombelIdParam = searchParams.get('rombelId');
   const navigate = useNavigate();
-  const { getMKById, updateMK } = useMKStore();
+  const { profile } = useAuthStore();
+  const { courseLabel, learnerLabel, educatorLabel, isSchool } = useTerminology();
+  const { mkList, updateMK, updateRombel, getAllStudents, getAllScoringData } = useMKStore();
   const { rubrics } = useRubricStore();
   const { addToast } = useUiStore();
   const { addNotification } = useNotificationStore();
 
-  const mk = getMKById(mkId);
-  const students = mk?.students || [];
+  const mk = mkList.find(m => m.id === mkId);
+  const rawRombels = mk?.rombel || [];
+  const rombelList = useMemo(() => {
+    if (isSchool) {
+      const schoolRombels = rawRombels.filter(r => r.is_school || r.name.includes('AKL'));
+      return schoolRombels.length > 0 ? schoolRombels : rawRombels;
+    } else if (profile?.role === ROLES.DOSEN || profile?.role === ROLES.MAHASISWA) {
+      const univRombels = rawRombels.filter(r => !r.is_school && !r.name.includes('AKL'));
+      return univRombels.length > 0 ? univRombels : rawRombels;
+    }
+    return rawRombels;
+  }, [rawRombels, isSchool, profile]);
+
+  const targetRombel = rombelIdParam 
+    ? (rombelList.find(r => r.id === rombelIdParam) || rombelList[0])
+    : (rombelList.find(r => (r.students || []).some(s => s.id === targetStudentId || s.student_id === targetStudentId)) || rombelList[0]);
+
+  const students = targetRombel?.students?.length > 0 ? targetRombel.students : (rombelList.flatMap(r => r.students || []));
+  const scoringData = targetRombel?.scoringData || (rombelList.reduce((acc, r) => ({ ...acc, ...(r.scoringData || {}) }), {}));
+
   const komponenList = mk?.komponen?.length > 0
     ? mk.komponen
     : [
@@ -59,13 +81,13 @@ const ScoringPage = () => {
   const assignedRubric = rubrics.find(r => r.id === activeKomponen?.rubricId);
   const dimensions = assignedRubric?.dimensions?.length > 0 ? assignedRubric.dimensions : DEFAULT_DIMENSIONS;
 
-  // Build student nav list with progress calculation (Total Steps = Komponen + 1 Rekap/Publikasi)
+  // Build student nav list with progress calculation (Total = Komponen List length)
   const studentNav = useMemo(() => {
-    const totalSteps = komponenList.length + 1; // 6 Komponen + 1 Publikasi = 7 Steps Total
+    const totalKomponen = komponenList.length || 6;
     const baseList = students.length > 0
       ? students.map(s => {
         const stuId = s.id || s.student_id;
-        const stuScoring = mk?.scoringData?.[stuId] || {};
+        const stuScoring = scoringData?.[stuId] || {};
         let scoredKomponenCount = 0;
         let isPublished = false;
 
@@ -78,27 +100,25 @@ const ScoringPage = () => {
           }
         });
 
-        // Total completed = scored components + (1 if published)
-        const completedCount = scoredKomponenCount + (isPublished ? 1 : 0);
-        const percent = Math.round((completedCount / totalSteps) * 100);
+        const percent = Math.round((scoredKomponenCount / totalKomponen) * 100);
 
         return {
           id: stuId,
           name: s.full_name || s.name || 'Mahasiswa',
           nim: s.nim || '',
-          completedCount,
-          totalKomp: totalSteps,
+          completedCount: scoredKomponenCount,
+          totalKomp: totalKomponen,
           percent,
           isPublished
         };
       })
       : [
-        { id: 's1', name: 'Feri Irawan', nim: '2024081001', completedCount: 7, totalKomp: totalSteps, percent: 100, isPublished: true },
-        { id: 's2', name: 'Rina Permata Sari', nim: '2024081002', completedCount: 7, totalKomp: totalSteps, percent: 100, isPublished: true },
-        { id: 's3', name: 'Andi Prasetyo', nim: '2024081003', completedCount: 4, totalKomp: totalSteps, percent: 57, isPublished: false },
+        { id: 's1', name: 'Feri Irawan', nim: '2024081001', completedCount: 6, totalKomp: 6, percent: 100, isPublished: true },
+        { id: 's2', name: 'Rina Permata Sari', nim: '2024081002', completedCount: 6, totalKomp: 6, percent: 100, isPublished: true },
+        { id: 's3', name: 'Andi Prasetyo', nim: '2024081003', completedCount: 4, totalKomp: 6, percent: 67, isPublished: false },
       ];
     return baseList;
-  }, [students, mk?.scoringData, komponenList]);
+  }, [students, scoringData, komponenList]);
 
   const initialIdx = targetStudentId
     ? Math.max(0, studentNav.findIndex(s => s.id === targetStudentId))
@@ -107,30 +127,27 @@ const ScoringPage = () => {
   const [currentStudentIdx, setCurrentStudentIdx] = useState(initialIdx);
   const currentStudent = studentNav[currentStudentIdx];
 
-  // Load saved scores for current student + active komponen
-  const savedScores = mk?.scoringData?.[currentStudent?.id]?.[activeKomponen?.id] || {};
-  const [scores, setScores] = useState(savedScores.scores || {});
-  const [feedback, setFeedback] = useState(savedScores.feedbacks || {});
-  const [status, setStatus] = useState(savedScores.status || 'DRAFT');
+  // Scoring states
+  const [scores, setScores] = useState({});
+  const [feedback, setFeedback] = useState({});
+  const [status, setStatus] = useState('DRAFT');
   const [isDirty, setIsDirty] = useState(false);
-
-  // Auto-save state: 'idle' | 'saving' | 'saved'
-  const [autoSaveState, setAutoSaveState] = useState('idle');
-  const [showFormulaModal, setShowFormulaModal] = useState(false);
+  const [autoSaveState, setAutoSaveState] = useState('idle'); // 'idle' | 'saving' | 'saved'
   const [showPublishConfirmModal, setShowPublishConfirmModal] = useState(false);
+  const [showFormulaModal, setShowFormulaModal] = useState(false);
   const debounceTimerRef = useRef(null);
 
   // Synchronize state when student or active komponen changes
   useEffect(() => {
     if (!isRekapTab) {
-      const saved = mk?.scoringData?.[currentStudent?.id]?.[activeKomponen?.id] || {};
+      const saved = scoringData?.[currentStudent?.id]?.[activeKomponen?.id] || {};
       setScores(saved.scores || {});
       setFeedback(saved.feedbacks || {});
       setStatus(saved.status || 'DRAFT');
       setIsDirty(false);
       setAutoSaveState('idle');
     }
-  }, [currentStudentIdx, activeKomponenId, mk?.scoringData, isRekapTab]);
+  }, [currentStudentIdx, activeKomponenId, scoringData, isRekapTab]);
 
   // Handle Auto-Save with 1.5s Debounce
   const executeAutoSave = (scoresToSave, feedbackToSave) => {
@@ -140,7 +157,7 @@ const ScoringPage = () => {
 
     setTimeout(() => {
       const raw = calculateRawScore(scoresToSave, dimensions);
-      const existingScoringData = mk?.scoringData || {};
+      const existingScoringData = targetRombel?.scoringData || mk?.scoringData || {};
       const studentScoringData = existingScoringData[currentStudent.id] || {};
 
       const updatedScoringData = {
@@ -157,7 +174,11 @@ const ScoringPage = () => {
         }
       };
 
-      updateMK(mkId, { scoringData: updatedScoringData });
+      if (targetRombel) {
+        updateRombel(mkId, targetRombel.id, { scoringData: updatedScoringData });
+      } else {
+        updateMK(mkId, { scoringData: updatedScoringData });
+      }
       setIsDirty(false);
       setAutoSaveState('saved');
 
@@ -198,6 +219,27 @@ const ScoringPage = () => {
   };
 
   const setScore = (dimCode, value) => {
+    // If the clicked score is already selected -> unchoose / unclick it!
+    if (scores[dimCode] === value) {
+      const newScores = { ...scores };
+      delete newScores[dimCode];
+      setScores(newScores);
+
+      const dim = dimensions.find(d => d.code === dimCode);
+      let newFeedback = { ...feedback };
+      if (dim) {
+        const currentFb = feedback[dimCode] || '';
+        const allTemplates = [dim.feedback_1, dim.feedback_2, dim.feedback_3, dim.feedback_4].filter(Boolean);
+        if (allTemplates.includes(currentFb)) {
+          delete newFeedback[dimCode];
+          setFeedback(newFeedback);
+        }
+      }
+
+      triggerDebouncedAutoSave(newScores, newFeedback);
+      return;
+    }
+
     const newScores = { ...scores, [dimCode]: value };
     setScores(newScores);
 
@@ -233,7 +275,7 @@ const ScoringPage = () => {
   const studentRekap = useMemo(() => {
     if (!currentStudent?.id) return { items: [], finalScore: 0, grade: 'E', allCompleted: false };
 
-    const stuScoring = mk?.scoringData?.[currentStudent.id] || {};
+    const stuScoring = scoringData?.[currentStudent.id] || {};
     let totalWeighted = 0;
     let totalBobot = 0;
     let completedCount = 0;
@@ -263,21 +305,19 @@ const ScoringPage = () => {
     });
 
     const finalScore = Math.round(totalWeighted);
-    let grade = 'E';
-    if (finalScore >= 85) grade = 'A';
-    else if (finalScore >= 75) grade = 'B';
-    else if (finalScore >= 65) grade = 'C';
-    else if (finalScore >= 50) grade = 'D';
+    const gradeData = getGradeInfo(finalScore);
 
     return {
       items,
       finalScore,
-      grade,
+      grade: gradeData.grade,
+      gradeDesc: gradeData.desc,
+      gradeColor: gradeData.color,
       allCompleted: completedCount === komponenList.length,
       completedCount,
       totalKomponen: komponenList.length
     };
-  }, [currentStudent?.id, komponenList, mk?.scoringData]);
+  }, [currentStudent?.id, komponenList, scoringData]);
 
   // Handle Publish Final Score in Rekap Tab
   const handlePublishFinalScore = () => {
@@ -286,7 +326,7 @@ const ScoringPage = () => {
       return;
     }
 
-    const existingScoringData = mk?.scoringData || {};
+    const existingScoringData = targetRombel?.scoringData || mk?.scoringData || {};
     const stuScoring = existingScoringData[currentStudent.id] || {};
 
     const updatedStuScoring = {};
@@ -304,7 +344,11 @@ const ScoringPage = () => {
       [currentStudent.id]: updatedStuScoring
     };
 
-    updateMK(mkId, { scoringData: updatedScoringData });
+    if (targetRombel) {
+      updateRombel(mkId, targetRombel.id, { scoringData: updatedScoringData });
+    } else {
+      updateMK(mkId, { scoringData: updatedScoringData });
+    }
 
     addNotification({
       type: 'SCORE_PUBLISHED',
@@ -325,6 +369,8 @@ const ScoringPage = () => {
     if (currentStudentIdx < studentNav.length - 1) switchToStudent(currentStudentIdx + 1);
   };
 
+  const backUrl = `/mk/${mkId}/students${targetRombel ? `?rombelId=${targetRombel.id}` : ''}`;
+
   if (!currentStudent) {
     return (
       <div className={styles.page}>
@@ -333,7 +379,7 @@ const ScoringPage = () => {
           <p style={{ margin: '12px 0 20px', color: 'var(--text-secondary)' }}>
             Mahasiswa tidak ditemukan atau telah keluar dari mata kuliah ini.
           </p>
-          <Button variant="primary" onClick={() => navigate(`/mk/${mkId}/students`)}>
+          <Button variant="primary" onClick={() => navigate(backUrl)}>
             Kembali ke Daftar Mahasiswa
           </Button>
         </Card>
@@ -345,8 +391,8 @@ const ScoringPage = () => {
     <div className={styles.page}>
       {/* Top Bar Header */}
       <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={() => navigate(`/mk/${mkId}/students`)}>
-          <ArrowLeft size={16} /> Kembali
+        <button className={styles.backBtn} onClick={() => navigate(backUrl)}>
+          <ArrowLeft size={16} /> Kembali ke Daftar Mahasiswa
         </button>
 
         <div className={styles.topBarCenter}>
@@ -444,7 +490,7 @@ const ScoringPage = () => {
           <div className={styles.komponenTabsBar}>
             {komponenList.map((k) => {
               const isActive = k.id === activeKomponenId && !isRekapTab;
-              const kompScoring = mk?.scoringData?.[currentStudent?.id]?.[k.id];
+              const kompScoring = scoringData?.[currentStudent?.id]?.[k.id];
               const isScored = !!(kompScoring?.scores && Object.keys(kompScoring.scores).length > 0);
 
               let bg = 'var(--bg-card)';
@@ -754,16 +800,42 @@ const ScoringPage = () => {
           </div>
 
           <p style={{ fontSize: '13px', color: '#475569', lineHeight: '1.6', margin: 0 }}>
-            Setiap komponen dinilai berbasis <strong>4 Dimensi EPIC</strong> (Evaluative, Predictive, Integrative, Critical) dengan skala Likert 1-4. Skor mentah (1-100) dihitung secara proporsional dari ketercapaian 4 dimensi tersebut.
+            Setiap komponen dinilai berbasis <strong>4 Dimensi EPIC</strong> (Evaluative, Predictive, Intelligent, Critical) dengan skala Likert 1-4. Skor mentah (1-100) dihitung secara proporsional dari ketercapaian 4 dimensi tersebut.
           </p>
 
-          <div style={{ background: 'rgba(79, 70, 229, 0.05)', padding: '12px 14px', borderRadius: '8px', fontSize: '12px', color: '#4338ca' }}>
-            <strong>Contoh Perhitungan:</strong> Jika Hasil Proyek (Bobot 20%) mendapat Skor Mentah 85, maka Nilai Terbobot = 85 × 20% = <strong>17.0</strong>.
+          <div>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#0f172a', fontWeight: 700 }}>
+              Standar Konversi Grade Nilai Akhir:
+            </h4>
+            <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+              <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>
+                    <th style={{ padding: '6px 10px' }}>Nilai</th>
+                    <th style={{ padding: '6px 10px' }}>Rentang Skor</th>
+                    <th style={{ padding: '6px 10px' }}>Arti Nilai</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {GRADE_SCALE.map((g, idx) => (
+                    <tr key={g.grade} style={{ borderBottom: idx < GRADE_SCALE.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                      <td style={{ padding: '6px 10px', fontWeight: 800, color: g.color }}>{g.grade}</td>
+                      <td style={{ padding: '6px 10px', fontFamily: 'var(--font-mono)' }}>{g.range}</td>
+                      <td style={{ padding: '6px 10px', color: '#475569' }}>{g.desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+          <div style={{ background: 'rgba(79, 70, 229, 0.05)', padding: '10px 12px', borderRadius: '8px', fontSize: '12px', color: '#4338ca' }}>
+            <strong>Contoh:</strong> Jika Hasil Proyek (Bobot 20%) mendapat Skor Mentah 85, maka Nilai Terbobot = 85 × 20% = <strong>17.0</strong>.
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
             <Button variant="primary" size="sm" onClick={() => setShowFormulaModal(false)}>
-              Mengerti
+              Tutup
             </Button>
           </div>
         </div>

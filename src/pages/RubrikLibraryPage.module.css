@@ -2,9 +2,7 @@
 
 .page {
   width: 100%;
-  padding: 32px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 28px 32px 60px;
   box-sizing: border-box;
 }
 
