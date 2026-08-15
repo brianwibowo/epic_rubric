@@ -184,7 +184,7 @@ const Sidebar = () => {
           {/* Header / Logo + Language Dropdown */}
           <div className={styles.header}>
             <div className={styles.logoContainer}>
-              <img src="/logo.png" alt="EPIC e-Rubric Logo" className={styles.logoImg} title="EPIC e-Rubric" />
+              <img src="/logo.svg" alt="EPIC e-Rubric Logo" className={styles.logoImg} title="EPIC e-Rubric" />
               {!sidebarCollapsed && (
                 <div className={styles.logoText}>
                   <span className={styles.epic}>EPIC</span>

@@ -30,7 +30,7 @@ const AppShell = () => {
             <Menu size={22} />
           </button>
           <div className={styles.mobileLogoRow}>
-            <img src="/logo.png" alt="EPIC e-Rubric" className={styles.mobileLogoImg} />
+            <img src="/logo.svg" alt="EPIC e-Rubric" className={styles.mobileLogoImg} />
             <span className={styles.mobileLogoText}>EPIC e-Rubric</span>
           </div>
           <button className={styles.mobileNotifBtn} aria-label="Notifications">

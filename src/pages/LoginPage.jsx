@@ -67,7 +67,7 @@ const LoginPage = () => {
         {/* 60% Top Fullscreen Image Section */}
         <div className={styles.imageTopSection}>
           <img 
-            src="/login_illustration.jpg" 
+            src="/login_illustration.svg" 
             alt="EPIC Rubric Educational Assessment Illustration" 
             className={styles.fullHeroImg}
           />
@@ -111,7 +111,7 @@ const LoginPage = () => {
         <div className={styles.formContainer}>
           {/* Logo Section Header */}
           <div className={styles.logoHeaderRight}>
-            <img src="/logo.png" alt="EPIC e-Rubric Logo" className={styles.brandLogo} />
+            <img src="/logo.svg" alt="EPIC e-Rubric Logo" className={styles.brandLogo} />
             <div>
               <h1 className={styles.brandTitle}>
                 EPIC <span className={styles.brandSub}>e-Rubric</span>
