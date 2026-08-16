@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './Input.module.css';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Input = React.forwardRef(({
   label,
@@ -16,6 +17,9 @@ const Input = React.forwardRef(({
 }, ref) => {
   const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
   const hasError = !!error;
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === 'password';
+  const effectiveType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
   return (
     <div className={`${styles.wrapper} ${disabled ? styles.disabled : ''} ${className}`}>
@@ -66,18 +70,32 @@ const Input = React.forwardRef(({
           <input
             id={inputId}
             ref={ref}
-            type={type}
+            type={effectiveType}
             disabled={disabled}
             className={`
               ${styles.input}
               ${hasError ? styles.inputError : ''}
               ${iconLeft ? styles.hasIconLeft : ''}
-              ${iconRight ? styles.hasIconRight : ''}
+              ${(iconRight || isPassword) ? styles.hasIconRight : ''}
             `}
             {...props}
           />
         )}
         
+        {isPassword && !iconRight && (
+          <button
+            type="button"
+            className={styles.passwordToggleBtn}
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+            title={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+            tabIndex={-1}
+            disabled={disabled}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        )}
+
         {iconRight && <span className={styles.iconRight}>{iconRight}</span>}
       </div>
       

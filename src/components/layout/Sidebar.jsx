@@ -31,12 +31,14 @@ import {
   Edit2
 } from 'lucide-react';
 import Badge from '../ui/Badge';
+import Button from '../ui/Button';
+import Modal from '../ui/Modal';
 import LanguageSelector from '../ui/LanguageSelector';
 import { useLanguageStore } from '@/stores/languageStore';
 
 const Sidebar = () => {
   const { profile, logout } = useAuthStore();
-  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, toggleSidebarCollapse, notificationCount } = useUiStore();
+  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, toggleSidebarCollapse, notificationCount, addToast } = useUiStore();
   const { t } = useLanguageStore();
   const { coursePluralLabel, courseLabel, learnerPluralLabel, isSchool, isUniversity, isAdmin } = useTerminology();
   const navigate = useNavigate();
@@ -44,15 +46,28 @@ const Sidebar = () => {
   const location = useLocation();
 
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Determine if we're inside an MK/Mapel context
   const mkId = params.mkId;
   const isInMKContext = !!mkId && location.pathname.startsWith(`/mk/${mkId}`);
 
-  const handleLogout = async () => {
-    await logout();
-    setSidebarOpen(false);
-    navigate('/login');
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      setShowLogoutConfirm(false);
+      setSidebarOpen(false);
+      navigate('/login');
+      addToast(t('logoutToast', 'Anda telah berhasil keluar dari sesi.'), 'info');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   // === GLOBAL NAVIGATION (outside MK) ===
@@ -319,7 +334,7 @@ const Sidebar = () => {
 
             <button
               className={styles.logoutBtn}
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               title={sidebarCollapsed ? "Keluar" : undefined}
             >
               <LogOut size={20} />
@@ -328,6 +343,61 @@ const Sidebar = () => {
           </div>
         </aside>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        isOpen={showLogoutConfirm}
+        onClose={() => !isLoggingOut && setShowLogoutConfirm(false)}
+        title={t('logoutConfirmTitle', 'Konfirmasi Keluar Sesi')}
+        size="sm"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '4px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '12px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ef4444',
+              flexShrink: 0
+            }}>
+              <LogOut size={22} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.975rem', color: 'var(--text-primary)' }}>
+                {t('logoutConfirmMessage', 'Apakah Anda yakin ingin keluar dari sesi akun ini?')}
+              </p>
+              <p style={{ margin: '6px 0 0 0', fontSize: '0.825rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                {t('logoutConfirmSub', 'Anda harus memasukkan kredensial login kembali untuk mengakses sistem.')}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => setShowLogoutConfirm(false)}
+              disabled={isLoggingOut}
+            >
+              {t('logoutCancel', 'Batal')}
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
+              onClick={handleConfirmLogout}
+              isLoading={isLoggingOut}
+              iconLeft={<LogOut size={16} />}
+            >
+              {t('logoutConfirmBtn', 'Ya, Keluar Sesi')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Edit Profile Modal */}
       <EditProfileModal

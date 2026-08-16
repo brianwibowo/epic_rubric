@@ -1,9 +1,10 @@
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import styles from './AppShell.module.css';
 import { useUiStore } from '@/stores/uiStore';
 import { useTourStore } from '@/stores/tourStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import Toast from '../ui/Toast';
 import PageHelpModal from '../ui/PageHelpModal';
 import FeatureTourModal from '../ui/FeatureTourModal';
@@ -12,7 +13,9 @@ import { Menu, Bell, HelpCircle } from 'lucide-react';
 const AppShell = () => {
   const { toasts, removeToast, setSidebarOpen, sidebarCollapsed, notificationCount } = useUiStore();
   const { openHelp } = useTourStore();
+  const unreadCount = useNotificationStore(state => state.getUnreadCount ? state.getUnreadCount() : 0);
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Check if we're on a scoring page (which has its own layout)
   const isScoringPage = location.pathname.includes('/scoring');
@@ -33,9 +36,13 @@ const AppShell = () => {
             <img src="/logo.svg" alt="EPIC e-Rubric" className={styles.mobileLogoImg} />
             <span className={styles.mobileLogoText}>EPIC e-Rubric</span>
           </div>
-          <button className={styles.mobileNotifBtn} aria-label="Notifications">
+          <button 
+            className={styles.mobileNotifBtn} 
+            onClick={() => navigate('/notifications')} 
+            aria-label="Notifications"
+          >
             <Bell size={20} />
-            {notificationCount > 0 && <span className={styles.mobileNotifDot} />}
+            {(unreadCount > 0 || notificationCount > 0) && <span className={styles.mobileNotifDot} />}
           </button>
         </div>
 

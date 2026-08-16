@@ -222,6 +222,22 @@ const LoginPage = () => {
               </Button>
             </div>
           </div>
+
+          {/* Mobile-Only Feature Highlights Pill Row */}
+          <div className={styles.mobileFeaturePills}>
+            <div className={styles.mobilePillItem}>
+              <CheckCircle2 size={13} className={styles.mobilePillSvg} />
+              <span>{t('feature4Dim')}</span>
+            </div>
+            <div className={styles.mobilePillItem}>
+              <ShieldCheck size={13} className={styles.mobilePillSvg} />
+              <span>{t('featureAudit')}</span>
+            </div>
+            <div className={styles.mobilePillItem}>
+              <BookOpen size={13} className={styles.mobilePillSvg} />
+              <span>{t('featureExcel')}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -28,6 +28,11 @@ export const TRANSLATIONS = {
     roleSiswa: 'Siswa SMK',
     welcomeUser: 'Selamat Datang',
     logout: 'Keluar Sesi',
+    logoutConfirmTitle: 'Konfirmasi Keluar Sesi',
+    logoutConfirmMessage: 'Apakah Anda yakin ingin keluar dari sesi akun ini?',
+    logoutConfirmSub: 'Anda harus memasukkan kredensial login kembali untuk mengakses sistem.',
+    logoutCancel: 'Batal',
+    logoutConfirmBtn: 'Ya, Keluar Sesi',
 
     // Login Page
     loginTitle: 'Masuk Sesi',
@@ -124,6 +129,11 @@ export const TRANSLATIONS = {
     roleSiswa: 'School Student (SMK)',
     welcomeUser: 'Welcome',
     logout: 'Sign Out',
+    logoutConfirmTitle: 'Confirm Sign Out',
+    logoutConfirmMessage: 'Are you sure you want to sign out from this account session?',
+    logoutConfirmSub: 'You will need to enter your login credentials again to access the system.',
+    logoutCancel: 'Cancel',
+    logoutConfirmBtn: 'Yes, Sign Out',
 
     // Login Page
     loginTitle: 'Sign In',

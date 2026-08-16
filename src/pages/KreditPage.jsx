@@ -1,12 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Header from '@/components/layout/Header';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
 import styles from './KreditPage.module.css';
 import { useLanguageStore } from '@/stores/languageStore';
-import { useUiStore } from '@/stores/uiStore';
-import { generateUserManualPdf } from '@/utils/generateUserManualPdf';
 import {
   Award,
   UserCheck,
@@ -16,38 +13,17 @@ import {
   Sparkles,
   Search,
   ExternalLink,
-  ShieldCheck,
-  FileText,
-  Download
+  ShieldCheck
 } from 'lucide-react';
 
 const KreditPage = () => {
   const { t } = useLanguageStore();
-  const { addToast } = useUiStore();
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  const handleDownloadManual = () => {
-    setIsGenerating(true);
-    try {
-      const link = document.createElement('a');
-      link.href = '/Buku_Panduan_Lengkap_Platform_EPIC_Rubric.pdf';
-      link.download = 'Buku_Panduan_Lengkap_Platform_EPIC_Rubric.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      addToast('Buku Panduan Lengkap (9 Halaman + Screenshot Asli) berhasil diunduh!', 'success');
-    } catch (err) {
-      generateUserManualPdf();
-      addToast('Buku Panduan Pengguna berhasil diunduh!', 'success');
-    } finally {
-      setTimeout(() => setIsGenerating(false), 500);
-    }
-  };
 
   const lecturers = [
     {
       id: 'kardiyem',
       name: 'Dr. Kardiyem, S.Pd., M.Pd.',
+      profileUrl: 'https://data.unnes.ac.id/en/dashboard/profil-dosen-detail?nip=198712282015042001',
       jabatan: 'Lektor Kepala',
       prodi: 'Pendidikan Akuntansi (S1)',
       fakultas: 'Fakultas Ekonomika dan Bisnis',
@@ -66,6 +42,7 @@ const KreditPage = () => {
     {
       id: 'tuti',
       name: 'Dwi Puji Astuti, S.Pd., M.Pd.',
+      profileUrl: 'https://data.unnes.ac.id/id/dashboard/profil-dosen-detail?nip=199301032019032027',
       jabatan: 'Lektor',
       prodi: 'Pendidikan Akuntansi (S1)',
       fakultas: 'Fakultas Ekonomika dan Bisnis',
@@ -104,18 +81,6 @@ const KreditPage = () => {
                 Inovasi Asesmen Vokasi Akuntansi Berstandar Akademik Institusional
               </p>
             </div>
-            <div>
-              <Button
-                variant="epic"
-                size="md"
-                onClick={handleDownloadManual}
-                isLoading={isGenerating}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-              >
-                <FileText size={16} />
-                <span>Unduh Buku Panduan Resmi (.pdf)</span>
-              </Button>
-            </div>
           </div>
 
           <p className={styles.narrativeBody}>
@@ -143,7 +108,18 @@ const KreditPage = () => {
 
                 {/* Right Side: Meta Info & Stats */}
                 <div className={styles.infoWrapper}>
-                  <h3 className={styles.lecturerName}>{doc.name}</h3>
+                  <h3 className={styles.lecturerName}>
+                    <a
+                      href={doc.profileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.lecturerLink}
+                      title={`Buka Profil Dosen Resmi: ${doc.name}`}
+                    >
+                      <span>{doc.name}</span>
+                      <ExternalLink size={16} className={styles.lecturerLinkIcon} />
+                    </a>
+                  </h3>
 
                   <div className={styles.metaList}>
                     <div className={styles.metaItem}>
@@ -205,7 +181,7 @@ const KreditPage = () => {
         {/* Developer Attribution Footer */}
         <div className={styles.developerFooter}>
           <p className={styles.developerText}>
-            Turut membantu dalam pengembangan platform 'EPIC e-Rubric' oleh{' '}
+            Turut membantu dalam pengembangan <strong>EPIC e-Rubric</strong>:{' '}
             <a
               href="https://instagram.com/brianwibowoo"
               target="_blank"

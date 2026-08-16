@@ -5,16 +5,22 @@ import { useAuthStore } from '@/stores/authStore';
 import { ROLE_LABELS } from '@/utils/constants';
 import EditProfileModal from '@/components/auth/EditProfileModal';
 import HelpButton from '../ui/HelpButton';
+import Button from '../ui/Button';
+import Modal from '../ui/Modal';
+import { useLanguageStore } from '@/stores/languageStore';
 import styles from './Header.module.css';
 import { Menu, Bell, User, Lock, LogOut, ChevronDown } from 'lucide-react';
 
 const Header = ({ title = 'EPIC Platform', actions, showHelp = true, showBell = true }) => {
-  const { toggleSidebar } = useUiStore();
+  const { toggleSidebar, addToast } = useUiStore();
   const { profile, logout } = useAuthStore();
+  const { t } = useLanguageStore();
   const navigate = useNavigate();
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
 
   // Close dropdown on click outside
@@ -28,10 +34,21 @@ const Header = ({ title = 'EPIC Platform', actions, showHelp = true, showBell = 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
     setShowDropdown(false);
-    await logout();
-    navigate('/login');
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      setShowLogoutConfirm(false);
+      navigate('/login');
+      addToast(t('logoutToast', 'Anda telah berhasil keluar dari sesi.'), 'info');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -111,7 +128,7 @@ const Header = ({ title = 'EPIC Platform', actions, showHelp = true, showBell = 
                   <button
                     type="button"
                     className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}
-                    onClick={handleLogout}
+                    onClick={handleLogoutClick}
                   >
                     <LogOut size={16} />
                     <span>Keluar Sesi</span>
@@ -122,6 +139,61 @@ const Header = ({ title = 'EPIC Platform', actions, showHelp = true, showBell = 
           )}
         </div>
       </header>
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        isOpen={showLogoutConfirm}
+        onClose={() => !isLoggingOut && setShowLogoutConfirm(false)}
+        title={t('logoutConfirmTitle', 'Konfirmasi Keluar Sesi')}
+        size="sm"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '4px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '12px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ef4444',
+              flexShrink: 0
+            }}>
+              <LogOut size={22} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.975rem', color: 'var(--text-primary)' }}>
+                {t('logoutConfirmMessage', 'Apakah Anda yakin ingin keluar dari sesi akun ini?')}
+              </p>
+              <p style={{ margin: '6px 0 0 0', fontSize: '0.825rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                {t('logoutConfirmSub', 'Anda harus memasukkan kredensial login kembali untuk mengakses sistem.')}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => setShowLogoutConfirm(false)}
+              disabled={isLoggingOut}
+            >
+              {t('logoutCancel', 'Batal')}
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
+              onClick={handleConfirmLogout}
+              isLoading={isLoggingOut}
+              iconLeft={<LogOut size={16} />}
+            >
+              {t('logoutConfirmBtn', 'Ya, Keluar Sesi')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Edit Profile Modal */}
       <EditProfileModal
