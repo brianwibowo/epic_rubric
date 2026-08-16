@@ -670,71 +670,73 @@ const MKAnalyticsPage = () => {
           </span>
         </div>
 
-        <table className={styles.componentsTable}>
-          <thead>
-            <tr>
-              <th>NO</th>
-              <th>KODE</th>
-              <th>NAMA KOMPONEN PENILAIAN</th>
-              <th>RUBRIK PENILAIAN</th>
-              <th>BOBOT (%)</th>
-              <th>SKOR MENTAH (1-100)</th>
-              <th>NILAI TERBOBOT</th>
-              <th>STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {komponenScores.map((k, idx) => (
-              <tr key={k.id}>
-                <td>{idx + 1}</td>
-                <td>
-                  <Badge variant="primary" size="sm">
-                    {getKomponenCode(k.name)}
-                  </Badge>
+        <div className={styles.tableResponsiveWrapper}>
+          <table className={styles.componentsTable}>
+            <thead>
+              <tr>
+                <th>NO</th>
+                <th>KODE</th>
+                <th>NAMA KOMPONEN PENILAIAN</th>
+                <th>RUBRIK PENILAIAN</th>
+                <th>BOBOT (%)</th>
+                <th>SKOR MENTAH (1-100)</th>
+                <th>NILAI TERBOBOT</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {komponenScores.map((k, idx) => (
+                <tr key={k.id}>
+                  <td>{idx + 1}</td>
+                  <td>
+                    <Badge variant="primary" size="sm">
+                      {getKomponenCode(k.name)}
+                    </Badge>
+                  </td>
+                  <td style={{ fontWeight: 700 }}>{k.name}</td>
+                  <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    {k.rubricName}
+                  </td>
+                  <td style={{ fontFamily: 'var(--font-mono)' }}>{Math.round((k.bobot || 0) * 100)}%</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{k.rawScore}</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: '#2563eb' }}>
+                    {k.weighted.toFixed(1)}
+                  </td>
+                  <td>
+                    <Badge variant={k.status === 'PUBLISHED' ? 'success' : 'neutral'} size="sm">
+                      {k.status === 'PUBLISHED' ? 'Tervalidasi' : 'Draf'}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            {/* Explicit Total Calculation Conclusion Row */}
+            <tfoot>
+              <tr style={{ background: '#f8fafc', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
+                <td colSpan={4} style={{ textAlign: 'left', padding: '12px 14px' }}>
+                  <span style={{ fontSize: '13px', color: '#0f172a' }}>
+                    TOTAL AKUMULASI NILAI AKHIR TERBOBOT
+                  </span>
                 </td>
-                <td style={{ fontWeight: 700 }}>{k.name}</td>
-                <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  {k.rubricName}
+                <td style={{ fontFamily: 'var(--font-mono)' }}>100%</td>
+                <td style={{ fontFamily: 'var(--font-mono)' }}>-</td>
+                <td style={{ fontFamily: 'var(--font-mono)', fontSize: '14.5px', color: '#2563eb' }}>
+                  {finalScore}.0
                 </td>
-                <td style={{ fontFamily: 'var(--font-mono)' }}>{Math.round((k.bobot || 0) * 100)}%</td>
-                <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{k.rawScore}</td>
-                <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: '#2563eb' }}>
-                  {k.weighted.toFixed(1)}
-                </td>
-                <td>
-                  <Badge variant={k.status === 'PUBLISHED' ? 'success' : 'neutral'} size="sm">
-                    {k.status === 'PUBLISHED' ? 'Tervalidasi' : 'Draf'}
-                  </Badge>
+                <td style={{ whiteSpace: 'nowrap', minWidth: '150px' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                    <Badge variant="primary" size="sm" style={{ whiteSpace: 'nowrap' }}>
+                      GRADE {gradeInfo.grade}
+                    </Badge>
+                    <Badge variant={gradeInfo.isPassing ? 'success' : 'error'} size="sm" style={{ whiteSpace: 'nowrap' }}>
+                      {gradeInfo.isPassing ? 'Tuntas' : 'Remedial'}
+                    </Badge>
+                  </div>
                 </td>
               </tr>
-            ))}
-          </tbody>
-          {/* Explicit Total Calculation Conclusion Row */}
-          <tfoot>
-            <tr style={{ background: '#f8fafc', borderTop: '2px solid var(--border-color)', fontWeight: 800 }}>
-              <td colSpan={4} style={{ textAlign: 'left', padding: '12px 14px' }}>
-                <span style={{ fontSize: '13px', color: '#0f172a' }}>
-                  TOTAL AKUMULASI NILAI AKHIR TERBOBOT
-                </span>
-              </td>
-              <td style={{ fontFamily: 'var(--font-mono)' }}>100%</td>
-              <td style={{ fontFamily: 'var(--font-mono)' }}>-</td>
-              <td style={{ fontFamily: 'var(--font-mono)', fontSize: '14.5px', color: '#2563eb' }}>
-                {finalScore}.0
-              </td>
-              <td style={{ whiteSpace: 'nowrap', minWidth: '150px' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
-                  <Badge variant="primary" size="sm" style={{ whiteSpace: 'nowrap' }}>
-                    GRADE {gradeInfo.grade}
-                  </Badge>
-                  <Badge variant={gradeInfo.isPassing ? 'success' : 'error'} size="sm" style={{ whiteSpace: 'nowrap' }}>
-                    {gradeInfo.isPassing ? 'Tuntas' : 'Remedial'}
-                  </Badge>
-                </div>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+            </tfoot>
+          </table>
+        </div>
       </div>
 
       {/* 5. AI LEARNING DIAGNOSTICS & INTELLIGENCE (Strict Cause & Effect) */}

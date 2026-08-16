@@ -6,6 +6,7 @@ import { ROLES, ALL_ROLES, STAFF_ROLES } from '@/utils/constants';
 // Layout Shell
 import AppShell from '@/components/layout/AppShell';
 import MKLayout from '@/components/layout/MKLayout';
+import ScrollToTop from '@/components/layout/ScrollToTop';
 
 // Route Guards
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -42,6 +43,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />

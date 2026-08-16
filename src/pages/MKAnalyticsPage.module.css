@@ -350,10 +350,23 @@
   flex-direction: column;
   gap: 16px;
   box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.tableResponsiveWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-color, #e2e8f0);
+  box-sizing: border-box;
 }
 
 .componentsTable {
   width: 100%;
+  min-width: 650px;
   border-collapse: collapse;
   font-size: 13px;
   text-align: left;
@@ -365,6 +378,7 @@
   color: var(--text-secondary, #475569);
   font-weight: 700;
   border-bottom: 1px solid var(--border-color, #e2e8f0);
+  white-space: nowrap;
 }
 
 .componentsTable td {
@@ -491,5 +505,27 @@
 @media (max-width: 1024px) {
   .topGrid, .aiDiagnosticsGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 16px 12px 40px;
+    gap: 16px;
+  }
+
+  .tableCard {
+    padding: 16px 12px;
+    border-radius: var(--radius-lg, 12px);
+  }
+
+  .cardHeaderRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .cardTitle {
+    font-size: 14px;
   }
 }

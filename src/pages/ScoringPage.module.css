@@ -689,6 +689,7 @@
 
 .rekapTableCompact {
   width: 100%;
+  min-width: 520px;
   border-collapse: collapse;
   font-size: 12.5px;
 }

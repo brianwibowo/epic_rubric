@@ -12,7 +12,7 @@ import styles from './Header.module.css';
 import { Menu, Bell, User, Lock, LogOut, ChevronDown } from 'lucide-react';
 
 const Header = ({ title = 'EPIC Platform', actions, showHelp = true, showBell = true }) => {
-  const { toggleSidebar, addToast } = useUiStore();
+  const { toggleSidebar, addToast, clearToasts } = useUiStore();
   const { profile, logout } = useAuthStore();
   const { t } = useLanguageStore();
   const navigate = useNavigate();
@@ -43,9 +43,10 @@ const Header = ({ title = 'EPIC Platform', actions, showHelp = true, showBell = 
     try {
       setIsLoggingOut(true);
       await logout();
+      clearToasts();
       setShowLogoutConfirm(false);
       navigate('/login');
-      addToast(t('logoutToast', 'Anda telah berhasil keluar dari sesi.'), 'info');
+      addToast(t('logoutToast', 'Anda telah berhasil keluar dari sesi.'), 'info', 2500);
     } finally {
       setIsLoggingOut(false);
     }

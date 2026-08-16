@@ -38,7 +38,7 @@ import { useLanguageStore } from '@/stores/languageStore';
 
 const Sidebar = () => {
   const { profile, logout } = useAuthStore();
-  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, toggleSidebarCollapse, notificationCount, addToast } = useUiStore();
+  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, toggleSidebarCollapse, notificationCount, addToast, clearToasts } = useUiStore();
   const { t } = useLanguageStore();
   const { coursePluralLabel, courseLabel, learnerPluralLabel, isSchool, isUniversity, isAdmin } = useTerminology();
   const navigate = useNavigate();
@@ -61,10 +61,11 @@ const Sidebar = () => {
     try {
       setIsLoggingOut(true);
       await logout();
+      clearToasts();
       setShowLogoutConfirm(false);
       setSidebarOpen(false);
       navigate('/login');
-      addToast(t('logoutToast', 'Anda telah berhasil keluar dari sesi.'), 'info');
+      addToast(t('logoutToast', 'Anda telah berhasil keluar dari sesi.'), 'info', 2500);
     } finally {
       setIsLoggingOut(false);
     }

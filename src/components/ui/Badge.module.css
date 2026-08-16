@@ -2,12 +2,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 5px;
   font-family: var(--font-sans);
   font-weight: 700;
   border-radius: 9999px;
   line-height: 1;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.badge svg {
+  flex-shrink: 0;
 }
 
 /* --- Sizes --- */

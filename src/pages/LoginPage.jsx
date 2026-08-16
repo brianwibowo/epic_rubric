@@ -14,7 +14,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState('');
   const { login, isLoading, isAuthenticated, initializeAuth } = useAuthStore();
-  const { addToast } = useUiStore();
+  const { addToast, clearToasts } = useUiStore();
   const { t } = useLanguageStore();
   
   const navigate = useNavigate();
@@ -43,6 +43,7 @@ const LoginPage = () => {
 
     try {
       await login(email, password);
+      clearToasts();
       addToast('Masuk sesi berhasil! Selamat datang di EPIC Platform.', 'success');
     } catch (err) {
       setFormError(err.message || 'Gagal masuk sesi');
@@ -54,6 +55,7 @@ const LoginPage = () => {
     setFormError('');
     try {
       await login(role, 'password');
+      clearToasts();
       addToast(`Masuk sesi sebagai ${role.toUpperCase()} berhasil!`, 'success');
     } catch (err) {
       addToast('Quick login gagal', 'error');
@@ -103,20 +105,20 @@ const LoginPage = () => {
 
       {/* RIGHT HALF: Logo, Language Selector & Login Form */}
       <div className={styles.rightPanel}>
-        {/* Language Selector in top right corner */}
-        <div className={styles.topLangWrapper}>
-          <LanguageSelector />
-        </div>
-
         <div className={styles.formContainer}>
-          {/* Logo Section Header */}
+          {/* Logo Section Header with Language Dropdown on Top Right */}
           <div className={styles.logoHeaderRight}>
-            <img src="/logo.svg" alt="EPIC e-Rubric Logo" className={styles.brandLogo} />
-            <div>
-              <h1 className={styles.brandTitle}>
-                EPIC <span className={styles.brandSub}>e-Rubric</span>
-              </h1>
-              <span className={styles.brandBadge}>{t('appSub')}</span>
+            <div className={styles.logoTitleBlock}>
+              <img src="/logo.svg" alt="EPIC e-Rubric Logo" className={styles.brandLogo} />
+              <div>
+                <h1 className={styles.brandTitle}>
+                  EPIC <span className={styles.brandSub}>e-Rubric</span>
+                </h1>
+                <span className={styles.brandBadge}>{t('appSub')}</span>
+              </div>
+            </div>
+            <div className={styles.cardTopLang}>
+              <LanguageSelector variant="dropdown" />
             </div>
           </div>
 

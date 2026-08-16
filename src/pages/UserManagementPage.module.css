@@ -25,6 +25,9 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(10px);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .leftSection {
@@ -33,12 +36,17 @@
   gap: 16px;
   flex-wrap: wrap;
   flex-grow: 1;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .searchWrapper {
   position: relative;
   max-width: 300px;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .searchIcon {
@@ -48,10 +56,12 @@
   transform: translateY(-50%);
   color: var(--text-muted);
   pointer-events: none;
+  flex-shrink: 0;
 }
 
 .searchInput {
   width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px 10px 38px;
   background-color: var(--bg-surface, #ffffff);
   border: 1px solid var(--border-color, #cbd5e1);
@@ -70,35 +80,47 @@
 
 .tabs {
   display: flex;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  gap: 6px;
+  background: var(--bg-canvas, rgba(15, 23, 42, 0.03));
   padding: 4px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tabBtn {
-  padding: 8px 16px;
+  padding: 7px 14px;
   background: none;
   border: none;
   color: var(--text-secondary);
   font-family: var(--font-sans);
-  font-size: 0.85rem;
+  font-size: 0.825rem;
   font-weight: 600;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .tabBtn:hover {
   color: var(--text-primary);
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 .activeTab {
-  color: #fff;
+  color: #fff !important;
   background-color: var(--color-primary) !important;
-  box-shadow: var(--shadow-glow-blue);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 
 /* --- Table Styles --- */
@@ -277,18 +299,32 @@
 
 /* --- Responsive Breakpoints --- */
 @media (max-width: 768px) {
+  .content {
+    padding: 16px 14px 40px;
+    gap: 16px;
+  }
+
   .toolbar {
     flex-direction: column;
     align-items: stretch;
+    padding: 12px;
+    gap: 12px;
   }
+
   .leftSection {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
   }
+
   .searchWrapper {
     max-width: 100%;
+    width: 100%;
   }
+
   .tabs {
+    width: 100%;
     overflow-x: auto;
+    padding: 4px;
   }
 }

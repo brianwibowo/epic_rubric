@@ -121,8 +121,24 @@
 
 /* --- Responsive Breakpoint 768px --- */
 @media (max-width: 768px) {
+  .content {
+    padding: 16px 14px 40px;
+    gap: 16px;
+  }
+
+  .warningCard {
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+  }
+
   .tableHeader {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
+  }
+
+  .select {
+    width: 100%;
   }
 }

@@ -7,7 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/run_all_tests.cjs",
+    "test:workflow": "node tests/workflow_role_matrix.test.cjs",
+    "test:excel": "node tests/excel_data_engine.test.cjs",
+    "test:i18n": "node tests/i18n_parity.test.cjs",
+    "test:storage": "node tests/storage_resilience.test.cjs",
+    "test:responsive": "node tests/ui_ux_responsive.test.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.0",

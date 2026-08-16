@@ -24,6 +24,8 @@ export const useUiStore = create((set) => ({
     toasts: state.toasts.filter((t) => t.id !== id)
   })),
 
+  clearToasts: () => set({ toasts: [] }),
+
   // Notification badge count
   setNotificationCount: (count) => set({ notificationCount: count }),
   decrementNotificationCount: () => set((state) => ({

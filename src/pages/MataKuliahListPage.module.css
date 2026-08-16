@@ -267,12 +267,16 @@
   background: var(--bg-surface, #ffffff);
   border: 1px solid var(--border-color, #e2e8f0);
   border-radius: var(--radius-xl, 14px);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .table {
   width: 100%;
+  min-width: 600px;
   border-collapse: collapse;
   font-size: 13px;
   text-align: left;

@@ -83,8 +83,8 @@ export function hasPermission(role, permission, level = 'read') {
   
   if (perm === true) return true;
   if (typeof perm === 'string') {
-    // write implies read
-    if (perm.startsWith('write') && level === 'read') return true;
+    // write implies read, write_own allows write
+    if (perm.startsWith('write') && (level === 'read' || level === 'write')) return true;
     if (perm === level) return true;
     if (perm.startsWith('read') && level === 'read') return true;
   }

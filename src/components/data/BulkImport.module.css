@@ -141,12 +141,15 @@
   width: 100%;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   background-color: rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
 .previewTable {
   width: 100%;
+  min-width: 500px;
   border-collapse: collapse;
   text-align: left;
 }
