@@ -377,11 +377,13 @@ const MKAnalyticsPage = () => {
     <div className={styles.page}>
       {/* 1. HEADER & BREADCRUMB */}
       <div>
-        <div className={styles.headerNavRow}>
-          <button className={styles.backBtn} onClick={() => navigate(`/mk/${mkId}`)}>
-            <ArrowLeft size={14} /> Kembali ke Ringkasan {mk.name}
-          </button>
-        </div>
+        {!isMhs && (
+          <div className={styles.headerNavRow}>
+            <button className={styles.backBtn} onClick={() => navigate(`/mk/${mkId}`)}>
+              <ArrowLeft size={14} /> Kembali ke Ringkasan {mk.name}
+            </button>
+          </div>
+        )}
 
         <div className={styles.header}>
           <div>

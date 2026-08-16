@@ -26,6 +26,7 @@ const CommentsPage = () => {
   const { addNotification } = useNotificationStore();
   const { addToast } = useUiStore();
   const { courseLabel, learnerLabel, educatorLabel } = useTerminology();
+  const isLearner = profile?.role === 'mahasiswa' || profile?.role === 'siswa';
 
   const mk = mkList.find(m => m.id === mkId);
   const allStudents = getAllStudents ? (getAllStudents(mkId) || []) : [];
@@ -367,11 +368,13 @@ const CommentsPage = () => {
     <div className={styles.page}>
       {/* 1. HEADER & BREADCRUMB */}
       <div>
-        <div className={styles.headerNavRow}>
-          <button className={styles.backBtn} onClick={() => navigate(`/mk/${mkId}`)}>
-            <ArrowLeft size={14} /> Kembali ke Ringkasan {mk.name}
-          </button>
-        </div>
+        {!isLearner && (
+          <div className={styles.headerNavRow}>
+            <button className={styles.backBtn} onClick={() => navigate(`/mk/${mkId}`)}>
+              <ArrowLeft size={14} /> Kembali ke Ringkasan {mk.name}
+            </button>
+          </div>
+        )}
 
         <div className={styles.header}>
           <div>
