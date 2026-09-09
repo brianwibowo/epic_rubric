@@ -60,21 +60,24 @@ class ErrorBoundary extends React.Component {
               Sistem mendeteksi kendala saat memuat komponen ini. Anda dapat mencoba memuat ulang atau kembali ke beranda.
             </p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <pre style={{
-                textAlign: 'left',
-                background: 'var(--bg-canvas, #f8fafc)',
-                border: '1px solid var(--border-color, #e2e8f0)',
-                padding: '12px',
-                borderRadius: '8px',
-                fontSize: '11px',
-                color: '#dc2626',
-                overflowX: 'auto',
-                marginBottom: '20px',
-                maxHeight: '150px'
-              }}>
-                {this.state.error.toString()}
-              </pre>
+            {this.state.error && (
+              <details style={{ textAlign: 'left', marginBottom: '20px' }}>
+                <summary style={{ fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '8px' }}>
+                  Detail Kendala Teknis
+                </summary>
+                <pre style={{
+                  background: 'var(--bg-canvas, #f8fafc)',
+                  border: '1px solid var(--border-color, #e2e8f0)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  color: '#dc2626',
+                  overflowX: 'auto',
+                  maxHeight: '150px'
+                }}>
+                  {this.state.error.toString()}
+                </pre>
+              </details>
             )}
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>

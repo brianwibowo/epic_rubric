@@ -8,7 +8,7 @@ import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import BulkImport from '@/components/data/BulkImport';
 import { useStudents } from '@/hooks/useStudents';
-import { User, ClipboardList, PenTool, ArrowLeft, RefreshCw, GraduationCap, Plus } from 'lucide-react';
+import { User, ClipboardList, PenTool, ArrowLeft, RefreshCw, GraduationCap, Plus, Upload } from 'lucide-react';
 import styles from './StudentListPage.module.css';
 
 const MOCK_ASSESSMENTS_KEY = 'epic_mock_assessments';

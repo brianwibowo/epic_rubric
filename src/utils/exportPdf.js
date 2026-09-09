@@ -297,8 +297,8 @@ export function exportStructuredReportPdf({
 
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(15, 23, 42);
-    doc.text('Dosen Pengampu Mata Kuliah,', pageWidth - 65, currentY);
-    doc.text(dosenName, pageWidth - 65, currentY + 12);
+    doc.text(isSchoolPdf ? 'Guru Pengampu Mata Pelajaran,' : 'Dosen Pengampu Mata Kuliah,', pageWidth - 65, currentY);
+    doc.text(educatorName, pageWidth - 65, currentY + 12);
 
     // Save File
     const cleanStudent = studentName.replace(/[^a-zA-Z0-9]/g, '_');

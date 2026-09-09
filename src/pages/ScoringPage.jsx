@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
+import { useTerminology } from '@/hooks/useTerminology';
 import { useMKStore } from '@/stores/mkStore';
 import { useRubricStore } from '@/stores/rubricStore';
 import { useUiStore } from '@/stores/uiStore';
@@ -36,7 +37,7 @@ const ScoringPage = () => {
   const navigate = useNavigate();
   const { profile } = useAuthStore();
   const { courseLabel, learnerLabel, educatorLabel, isSchool } = useTerminology();
-  const { mkList, updateMK, updateRombel, getAllStudents, getAllScoringData } = useMKStore();
+  const { mkList, updateMK, updateRombel } = useMKStore();
   const { rubrics } = useRubricStore();
   const { addToast } = useUiStore();
   const { addNotification } = useNotificationStore();
@@ -98,7 +99,7 @@ const ScoringPage = () => {
   const [activeKomponenId, setActiveKomponenId] = useState(initialKompId);
 
   const isRekapTab = activeKomponenId === 'REKAP';
-  const activeKomponen = komponenList.find(k => k.id === activeKomponenId) || komponenList[0];
+  const activeKomponen = komponenList.find(k => k.id === activeKomponenId) || komponenList[0] || { id: 'k1', name: 'Komponen Penilaian', bobot: 1 };
 
   // Find rubric dimensions from rubricStore, fallback to defaults
   const assignedRubric = rubrics.find(r => r.id === activeKomponen?.rubricId);
@@ -161,38 +162,43 @@ const ScoringPage = () => {
   const [status, setStatus] = useState('DRAFT');
   const [isDirty, setIsDirty] = useState(false);
   const [autoSaveState, setAutoSaveState] = useState('idle'); // 'idle' | 'saving' | 'saved'
-  const [showPublishConfirmModal, setShowPublishConfirmModal] = useState(false);
-  const [showFormulaModal, setShowFormulaModal] = useState(false);
   const debounceTimerRef = useRef(null);
 
-  // Synchronize state when student or active komponen changes
+  // Formula & Publish Confirmation Modals
+  const [showFormulaModal, setShowFormulaModal] = useState(false);
+  const [showPublishConfirmModal, setShowPublishConfirmModal] = useState(false);
+
+  // Load initial score and feedback when switching student or component
   useEffect(() => {
     if (!isRekapTab) {
-      const saved = scoringData?.[currentStudent?.id]?.[activeKomponen?.id] || {};
+      const stuId = currentStudent?.id || currentStudent?.student_id;
+      const kompId = activeKomponen?.id;
+      const saved = (stuId && kompId) ? (scoringData?.[stuId]?.[kompId] || {}) : {};
       setScores(saved.scores || {});
       setFeedback(saved.feedbacks || {});
       setStatus(saved.status || 'DRAFT');
       setIsDirty(false);
-      setAutoSaveState('idle');
     }
   }, [currentStudentIdx, activeKomponenId, scoringData, isRekapTab]);
 
   // Handle Auto-Save with 1.5s Debounce
   const executeAutoSave = (scoresToSave, feedbackToSave) => {
-    if (!currentStudent?.id || !activeKomponen?.id || isRekapTab) return;
+    const stuId = currentStudent?.id || currentStudent?.student_id;
+    const kompId = activeKomponen?.id;
+    if (!stuId || !kompId || isRekapTab) return;
 
     setAutoSaveState('saving');
 
     setTimeout(() => {
       const raw = calculateRawScore(scoresToSave, dimensions);
       const existingScoringData = targetRombel?.scoringData || mk?.scoringData || {};
-      const studentScoringData = existingScoringData[currentStudent.id] || {};
+      const studentScoringData = existingScoringData[stuId] || {};
 
       const updatedScoringData = {
         ...existingScoringData,
-        [currentStudent.id]: {
+        [stuId]: {
           ...studentScoringData,
-          [activeKomponen.id]: {
+          [kompId]: {
             scores: { ...scoresToSave },
             feedbacks: { ...feedbackToSave },
             rawScore: raw,
@@ -354,8 +360,11 @@ const ScoringPage = () => {
       return;
     }
 
+    const stuId = currentStudent?.id || currentStudent?.student_id;
+    if (!stuId) return;
+
     const existingScoringData = targetRombel?.scoringData || mk?.scoringData || {};
-    const stuScoring = existingScoringData[currentStudent.id] || {};
+    const stuScoring = existingScoringData[stuId] || {};
 
     const updatedStuScoring = {};
     komponenList.forEach(k => {
@@ -369,7 +378,7 @@ const ScoringPage = () => {
 
     const updatedScoringData = {
       ...existingScoringData,
-      [currentStudent.id]: updatedStuScoring
+      [stuId]: updatedStuScoring
     };
 
     if (targetRombel) {
@@ -381,9 +390,9 @@ const ScoringPage = () => {
     addNotification({
       type: 'SCORE_PUBLISHED',
       title: `Nilai Akhir Dipublikasikan`,
-      message: `Dosen telah mempublikasikan Nilai Akhir (${studentRekap.finalScore} - Grade ${studentRekap.grade}) untuk ${currentStudent.name}.`,
+      message: `${educatorLabel || 'Pendidik'} telah mempublikasikan Nilai Akhir (${studentRekap.finalScore} - Grade ${studentRekap.grade}) untuk ${currentStudent.name}.`,
       mkId: mkId,
-      mkName: mk?.name || 'Mata Kuliah'
+      mkName: mk?.name || courseLabel || 'Mata Kuliah'
     });
 
     addToast(`Nilai Akhir ${currentStudent.name} (${studentRekap.finalScore} - Grade ${studentRekap.grade}) berhasil dipublikasikan!`, 'success');
@@ -444,7 +453,7 @@ const ScoringPage = () => {
       {/* Top Bar Header */}
       <div className={styles.topBar}>
         <button className={styles.backBtn} onClick={() => navigate(backUrl)}>
-          <ArrowLeft size={16} /> Kembali ke Daftar Mahasiswa
+          <ArrowLeft size={16} /> Kembali ke Daftar {learnerLabel || 'Mahasiswa'}
         </button>
 
         <div className={styles.topBarCenter}>
@@ -452,8 +461,8 @@ const ScoringPage = () => {
             <Badge variant="warning" size="sm">📊 REKAPITULASI NILAI AKHIR</Badge>
           ) : (
             <>
-              <Badge variant="primary" size="sm">{getKomponenFormatted(activeKomponen.name)}</Badge>
-              <span className={styles.topBarBobot}>Bobot: {((activeKomponen.bobot || 0) * 100).toFixed(0)}%</span>
+              <Badge variant="primary" size="sm">{getKomponenFormatted(activeKomponen?.name || 'Komponen')}</Badge>
+              <span className={styles.topBarBobot}>Bobot: {((activeKomponen?.bobot || 0) * 100).toFixed(0)}%</span>
             </>
           )}
 
@@ -498,7 +507,7 @@ const ScoringPage = () => {
       <div className={styles.mainLayout}>
         {/* Student Navigation Sidebar */}
         <div className={styles.studentNav}>
-          <h4 className={styles.studentNavTitle}>Mahasiswa</h4>
+          <h4 className={styles.studentNavTitle}>{learnerLabel || 'Mahasiswa'}</h4>
           <div className={styles.studentList}>
             {studentNav.map((s, i) => {
               const isActive = i === currentStudentIdx;
@@ -508,7 +517,7 @@ const ScoringPage = () => {
                   className={`${styles.studentItem} ${isActive ? styles.activeStu : ''}`}
                   onClick={() => switchToStudent(i)}
                 >
-                  <div className={styles.studentItemAvatar}>{s.name.charAt(0)}</div>
+                  <div className={styles.studentItemAvatar}>{(s.name || '?').charAt(0)}</div>
                   <div className={styles.studentItemContent}>
                     <span className={styles.studentItemName}>{s.name}</span>
 
@@ -742,7 +751,7 @@ const ScoringPage = () => {
                 </div>
                 {rawScore !== null && (
                   <div className={styles.scorePreview}>
-                    <span className={styles.scorePreviewLabel}>Skor Mentah ({activeKomponen.name})</span>
+                    <span className={styles.scorePreviewLabel}>Skor Mentah ({activeKomponen?.name || 'Komponen'})</span>
                     <span className={styles.scorePreviewValue}>{rawScore}</span>
                   </div>
                 )}
@@ -817,7 +826,7 @@ const ScoringPage = () => {
               {/* Bottom Navigation Bar */}
               <div className={styles.bottomNavRow}>
                 <Button variant="outline" size="sm" onClick={goToPrevStudent} disabled={currentStudentIdx === 0}>
-                  <ChevronLeft size={14} /> Mahasiswa Sebelumnya
+                  <ChevronLeft size={14} /> {learnerLabel || 'Mahasiswa'} Sebelumnya
                 </Button>
 
                 <Button
@@ -826,7 +835,7 @@ const ScoringPage = () => {
                   onClick={goToNextStudent}
                   disabled={currentStudentIdx === studentNav.length - 1}
                 >
-                  Lanjut ke Mahasiswa Berikutnya <ChevronRight size={15} />
+                  Lanjut ke {learnerLabel || 'Mahasiswa'} Berikutnya <ChevronRight size={15} />
                 </Button>
               </div>
             </>
