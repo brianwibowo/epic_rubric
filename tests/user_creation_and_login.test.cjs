@@ -167,6 +167,70 @@ test('Password validation rejects password shorter than 6 characters', () => {
   }, /Password minimal 6 karakter/);
 });
 
+// --- TESTS FOR THE 5 SPECIFIC USER REQUESTED ACCOUNTS ---
+const requestedAccounts = [
+  {
+    name: 'Ratna Indriani, S. Pd',
+    email: 'ratnaindriani1628@gmail.com',
+    role: 'guru',
+    nip: '0801061',
+    unit: 'Manajemen Perkantoran',
+    password: '12345678'
+  },
+  {
+    name: 'Dyah Mutiara Indriasari, S. E.',
+    email: 'mutiaradyah1.25@gmail.com',
+    role: 'guru',
+    nip: '0207027',
+    unit: 'Akuntansi',
+    password: '12345678'
+  },
+  {
+    name: 'Dwi Hastuti, S. E.',
+    email: 'dwihasti17@gmail.com',
+    role: 'guru',
+    nip: '0207012',
+    unit: 'Akuntansi',
+    password: '12345678'
+  },
+  {
+    name: 'Arif Dwie Arysanti, S. Pd.',
+    email: 'arifsanti14@gmail.com',
+    role: 'guru',
+    nip: '0207014',
+    unit: 'Manajemen Perkantoran',
+    password: '12345678'
+  },
+  {
+    name: 'Ika Prasetya Yuniati, S. Pd',
+    email: 'xca.prasetya@gmail.com',
+    role: 'guru',
+    nip: '0602044',
+    unit: 'Akuntansi',
+    password: '12345678'
+  }
+];
+
+for (const acc of requestedAccounts) {
+  test(`Immediate Login Test: ${acc.name} (${acc.email}) with password 12345678`, () => {
+    simulateCreateUser({
+      full_name: acc.name,
+      email: acc.email,
+      password: acc.password,
+      role: acc.role,
+      nip: acc.nip,
+      unit_info: acc.unit
+    });
+
+    const res = simulateLogin(acc.email, '12345678');
+    assert.strictEqual(res.success, true);
+    assert.strictEqual(res.profile.role, 'guru');
+    assert.strictEqual(res.profile.full_name, acc.name);
+    assert.strictEqual(res.profile.nip, acc.nip);
+    assert.strictEqual(res.profile.isSchool, true);
+  });
+}
+
 console.log('\n================================================================');
 console.log(`TOTAL TESTS: ${totalTests}`);
 console.log(`PASSED:      ${passedTests} ✅`);

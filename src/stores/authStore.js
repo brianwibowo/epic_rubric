@@ -50,6 +50,59 @@ const MOCK_PROFILES = {
   }
 };
 
+const PRESET_TEACHER_ACCOUNTS = [
+  {
+    id: '2d18f169-0c7f-499f-a274-0e4a4bc4dae1',
+    full_name: 'Ratna Indriani, S. Pd',
+    role: ROLES.GURU,
+    email: 'ratnaindriani1628@gmail.com',
+    password: '12345678',
+    nip: '0801061',
+    unit_info: 'Manajemen Perkantoran',
+    jurusan: 'Manajemen Perkantoran'
+  },
+  {
+    id: 'guru-dyah-uuid',
+    full_name: 'Dyah Mutiara Indriasari, S. E.',
+    role: ROLES.GURU,
+    email: 'mutiaradyah1.25@gmail.com',
+    password: '12345678',
+    nip: '0207027',
+    unit_info: 'Akuntansi',
+    jurusan: 'Akuntansi'
+  },
+  {
+    id: 'guru-dwihastuti-uuid',
+    full_name: 'Dwi Hastuti, S. E.',
+    role: ROLES.GURU,
+    email: 'dwihasti17@gmail.com',
+    password: '12345678',
+    nip: '0207012',
+    unit_info: 'Akuntansi',
+    jurusan: 'Akuntansi'
+  },
+  {
+    id: 'guru-arif-uuid',
+    full_name: 'Arif Dwie Arysanti, S. Pd.',
+    role: ROLES.GURU,
+    email: 'arifsanti14@gmail.com',
+    password: '12345678',
+    nip: '0207014',
+    unit_info: 'Manajemen Perkantoran',
+    jurusan: 'Manajemen Perkantoran'
+  },
+  {
+    id: 'guru-ika-uuid',
+    full_name: 'Ika Prasetya Yuniati, S. Pd',
+    role: ROLES.GURU,
+    email: 'xca.prasetya@gmail.com',
+    password: '12345678',
+    nip: '0602044',
+    unit_info: 'Akuntansi',
+    jurusan: 'Akuntansi'
+  }
+];
+
 const isSupabaseConfigured = () => {
   const url = import.meta.env.VITE_SUPABASE_URL;
   return url && !url.includes('placeholder-project') && !url.includes('your-project');
@@ -63,6 +116,24 @@ export const useAuthStore = create((set, get) => ({
   isMock: true,
 
   initializeAuth: async () => {
+    // Seed preset SMK teacher accounts to localStorage if not yet added
+    try {
+      const raw = localStorage.getItem('epic_mock_users_v2');
+      let users = raw ? JSON.parse(raw) : [];
+      let updated = false;
+      for (const preset of PRESET_TEACHER_ACCOUNTS) {
+        if (!users.some(u => (u.email && u.email.toLowerCase().trim() === preset.email.toLowerCase().trim()))) {
+          users.push(preset);
+          updated = true;
+        }
+      }
+      if (updated || !raw) {
+        localStorage.setItem('epic_mock_users_v2', JSON.stringify(users));
+      }
+    } catch (e) {
+      // Non-blocking
+    }
+
     const savedProfile = localStorage.getItem('epic_profile');
     const isMockStr = localStorage.getItem('epic_is_mock');
     
@@ -187,9 +258,9 @@ export const useAuthStore = create((set, get) => ({
       registeredUsers = [];
     }
 
-    const matchedUser = registeredUsers.find(
-      u => (u.email || '').toLowerCase().trim() === cleanEmail
-    );
+    const matchedUser = 
+      registeredUsers.find(u => (u.email || '').toLowerCase().trim() === cleanEmail) ||
+      PRESET_TEACHER_ACCOUNTS.find(u => (u.email || '').toLowerCase().trim() === cleanEmail);
 
     if (matchedUser) {
       // If password provided in registeredUser, verify it

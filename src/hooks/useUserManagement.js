@@ -83,6 +83,56 @@ const INITIAL_MOCK_USERS = [
     nisn: '0082345678',
     unit_info: 'Kelas XII AKL 1',
     avatar_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=60'
+  },
+  {
+    id: '2d18f169-0c7f-499f-a274-0e4a4bc4dae1',
+    full_name: 'Ratna Indriani, S. Pd',
+    role: ROLES.GURU,
+    email: 'ratnaindriani1628@gmail.com',
+    password: '12345678',
+    nip: '0801061',
+    unit_info: 'Manajemen Perkantoran',
+    avatar_url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=100&auto=format&fit=crop&q=60'
+  },
+  {
+    id: 'guru-dyah-uuid',
+    full_name: 'Dyah Mutiara Indriasari, S. E.',
+    role: ROLES.GURU,
+    email: 'mutiaradyah1.25@gmail.com',
+    password: '12345678',
+    nip: '0207027',
+    unit_info: 'Akuntansi',
+    avatar_url: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&auto=format&fit=crop&q=60'
+  },
+  {
+    id: 'guru-dwihastuti-uuid',
+    full_name: 'Dwi Hastuti, S. E.',
+    role: ROLES.GURU,
+    email: 'dwihasti17@gmail.com',
+    password: '12345678',
+    nip: '0207012',
+    unit_info: 'Akuntansi',
+    avatar_url: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?w=100&auto=format&fit=crop&q=60'
+  },
+  {
+    id: 'guru-arif-uuid',
+    full_name: 'Arif Dwie Arysanti, S. Pd.',
+    role: ROLES.GURU,
+    email: 'arifsanti14@gmail.com',
+    password: '12345678',
+    nip: '0207014',
+    unit_info: 'Manajemen Perkantoran',
+    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60'
+  },
+  {
+    id: 'guru-ika-uuid',
+    full_name: 'Ika Prasetya Yuniati, S. Pd',
+    role: ROLES.GURU,
+    email: 'xca.prasetya@gmail.com',
+    password: '12345678',
+    nip: '0602044',
+    unit_info: 'Akuntansi',
+    avatar_url: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=100&auto=format&fit=crop&q=60'
   }
 ];
 
@@ -102,10 +152,18 @@ export function useUserManagement() {
         } catch (e) {
           localUsers = [];
         }
-      } else {
-        localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(INITIAL_MOCK_USERS));
-        localUsers = INITIAL_MOCK_USERS;
       }
+
+      // Ensure all INITIAL_MOCK_USERS (including the 5 SMK Guru accounts) exist in local storage
+      for (const initUser of INITIAL_MOCK_USERS) {
+        const exists = localUsers.some(
+          u => (u.email && u.email.toLowerCase().trim() === initUser.email.toLowerCase().trim()) || u.id === initUser.id
+        );
+        if (!exists) {
+          localUsers.push(initUser);
+        }
+      }
+      localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(localUsers));
 
       // If connected to Supabase, query profiles and gracefully merge
       if (isSupabaseConfigured()) {
