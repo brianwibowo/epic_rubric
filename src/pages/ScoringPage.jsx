@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuthStore } from '@/stores/authStore';
 import { useMKStore } from '@/stores/mkStore';
 import { useRubricStore } from '@/stores/rubricStore';
 import { useUiStore } from '@/stores/uiStore';
@@ -9,7 +10,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import HelpButton from '@/components/ui/HelpButton';
 import Modal from '@/components/ui/Modal';
-import { getDimensionColor, LIKERT_SCALE } from '@/utils/constants';
+import { getDimensionColor, LIKERT_SCALE, ROLES } from '@/utils/constants';
 import { calculateRawScore } from '@/utils/scoringEngine';
 import { getKomponenCode, getKomponenFullName, getKomponenFormatted } from '@/utils/komponenHelper';
 import { getGradeInfo, GRADE_SCALE } from '@/utils/gradeHelper';
@@ -40,6 +41,12 @@ const ScoringPage = () => {
   const { addToast } = useUiStore();
   const { addNotification } = useNotificationStore();
 
+  // Background refresh to catch latest MK and rubrics
+  useEffect(() => {
+    useMKStore.getState().syncFromSupabase();
+    useRubricStore.getState().syncFromSupabase();
+  }, [mkId]);
+
   const mk = mkList.find(m => m.id === mkId);
   const rawRombels = mk?.rombel || [];
   const rombelList = useMemo(() => {
@@ -53,12 +60,28 @@ const ScoringPage = () => {
     return rawRombels;
   }, [rawRombels, isSchool, profile]);
 
-  const targetRombel = rombelIdParam 
-    ? (rombelList.find(r => r.id === rombelIdParam) || rombelList[0])
-    : (rombelList.find(r => (r.students || []).some(s => s.id === targetStudentId || s.student_id === targetStudentId)) || rombelList[0]);
+  const targetRombel = useMemo(() => {
+    if (rombelIdParam) {
+      return rawRombels.find(r => r.id === rombelIdParam) || rombelList.find(r => r.id === rombelIdParam) || rombelList[0] || rawRombels[0];
+    }
+    if (targetStudentId) {
+      return rawRombels.find(r => (r.students || []).some(s => s.id === targetStudentId || s.student_id === targetStudentId)) || rombelList[0] || rawRombels[0];
+    }
+    return rombelList[0] || rawRombels[0] || null;
+  }, [rombelIdParam, targetStudentId, rawRombels, rombelList]);
 
-  const students = targetRombel?.students?.length > 0 ? targetRombel.students : (rombelList.flatMap(r => r.students || []));
-  const scoringData = targetRombel?.scoringData || (rombelList.reduce((acc, r) => ({ ...acc, ...(r.scoringData || {}) }), {}));
+  const students = useMemo(() => {
+    if (targetRombel?.students && targetRombel.students.length > 0) {
+      return targetRombel.students;
+    }
+    const allRombelStudents = rawRombels.flatMap(r => r.students || []);
+    if (allRombelStudents.length > 0) {
+      return allRombelStudents;
+    }
+    return [];
+  }, [targetRombel, rawRombels]);
+
+  const scoringData = targetRombel?.scoringData || (rawRombels.reduce((acc, r) => ({ ...acc, ...(r.scoringData || {}) }), {}));
 
   const komponenList = mk?.komponen?.length > 0
     ? mk.komponen
@@ -81,51 +104,56 @@ const ScoringPage = () => {
   const assignedRubric = rubrics.find(r => r.id === activeKomponen?.rubricId);
   const dimensions = assignedRubric?.dimensions?.length > 0 ? assignedRubric.dimensions : DEFAULT_DIMENSIONS;
 
-  // Build student nav list with progress calculation (Total = Komponen List length)
+  // Build student nav list with progress calculation
   const studentNav = useMemo(() => {
     const totalKomponen = komponenList.length || 6;
-    const baseList = students.length > 0
-      ? students.map(s => {
-        const stuId = s.id || s.student_id;
-        const stuScoring = scoringData?.[stuId] || {};
-        let scoredKomponenCount = 0;
-        let isPublished = false;
+    if (!students || students.length === 0) {
+      return [];
+    }
 
-        komponenList.forEach(k => {
-          if (stuScoring[k.id]?.scores && Object.keys(stuScoring[k.id].scores).length > 0) {
-            scoredKomponenCount++;
-          }
-          if (stuScoring[k.id]?.status === 'PUBLISHED') {
-            isPublished = true;
-          }
-        });
+    return students.map(s => {
+      const stuId = s.id || s.student_id;
+      const stuScoring = scoringData?.[stuId] || {};
+      let scoredKomponenCount = 0;
+      let isPublished = false;
 
-        const percent = Math.round((scoredKomponenCount / totalKomponen) * 100);
+      komponenList.forEach(k => {
+        if (stuScoring[k.id]?.scores && Object.keys(stuScoring[k.id].scores).length > 0) {
+          scoredKomponenCount++;
+        }
+        if (stuScoring[k.id]?.status === 'PUBLISHED') {
+          isPublished = true;
+        }
+      });
 
-        return {
-          id: stuId,
-          name: s.full_name || s.name || 'Mahasiswa',
-          nim: s.nim || '',
-          completedCount: scoredKomponenCount,
-          totalKomp: totalKomponen,
-          percent,
-          isPublished
-        };
-      })
-      : [
-        { id: 's1', name: 'Feri Irawan', nim: '2024081001', completedCount: 6, totalKomp: 6, percent: 100, isPublished: true },
-        { id: 's2', name: 'Rina Permata Sari', nim: '2024081002', completedCount: 6, totalKomp: 6, percent: 100, isPublished: true },
-        { id: 's3', name: 'Andi Prasetyo', nim: '2024081003', completedCount: 4, totalKomp: 6, percent: 67, isPublished: false },
-      ];
-    return baseList;
-  }, [students, scoringData, komponenList]);
+      const percent = Math.round((scoredKomponenCount / totalKomponen) * 100);
 
-  const initialIdx = targetStudentId
-    ? Math.max(0, studentNav.findIndex(s => s.id === targetStudentId))
-    : 0;
+      return {
+        id: stuId,
+        student_id: s.student_id || s.id,
+        name: s.full_name || s.name || (isSchool ? 'Siswa' : 'Mahasiswa'),
+        nim: s.nim || s.nisn || '',
+        completedCount: scoredKomponenCount,
+        totalKomp: totalKomponen,
+        percent,
+        isPublished
+      };
+    });
+  }, [students, scoringData, komponenList, isSchool]);
 
-  const [currentStudentIdx, setCurrentStudentIdx] = useState(initialIdx);
-  const currentStudent = studentNav[currentStudentIdx];
+  const [currentStudentIdx, setCurrentStudentIdx] = useState(0);
+
+  // Sync index with targetStudentId when available
+  useEffect(() => {
+    if (targetStudentId && studentNav.length > 0) {
+      const foundIdx = studentNav.findIndex(s => s.id === targetStudentId || s.student_id === targetStudentId);
+      if (foundIdx >= 0) {
+        setCurrentStudentIdx(foundIdx);
+      }
+    }
+  }, [targetStudentId, studentNav]);
+
+  const currentStudent = studentNav[currentStudentIdx] || null;
 
   // Scoring states
   const [scores, setScores] = useState({});
@@ -371,17 +399,41 @@ const ScoringPage = () => {
 
   const backUrl = `/mk/${mkId}/students${targetRombel ? `?rombelId=${targetRombel.id}` : ''}`;
 
+  if (!mk) {
+    return (
+      <div className={styles.page}>
+        <Card variant="glass" padding="lg" style={{ textAlign: 'center', marginTop: '40px' }}>
+          <h2>{courseLabel} Tidak Ditemukan</h2>
+          <p style={{ margin: '12px 0 20px', color: 'var(--text-secondary)' }}>
+            Data {courseLabel.toLowerCase()} sedang disinkronkan atau tidak ditemukan.
+          </p>
+          <Button variant="primary" onClick={() => navigate(isSchool ? '/kelas' : '/mk')}>
+            Kembali ke {isSchool ? 'Daftar Kelas' : 'Daftar Mata Kuliah'}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   if (!currentStudent) {
     return (
       <div className={styles.page}>
         <Card variant="glass" padding="lg" style={{ textAlign: 'center', marginTop: '40px' }}>
-          <h2>Mahasiswa Tidak Ditemukan</h2>
+          <h2>{isSchool ? 'Peserta Didik Belum Dipilih' : 'Mahasiswa Belum Dipilih'}</h2>
           <p style={{ margin: '12px 0 20px', color: 'var(--text-secondary)' }}>
-            Mahasiswa tidak ditemukan atau telah keluar dari mata kuliah ini.
+            {students.length === 0 
+              ? `Belum ada ${learnerLabel.toLowerCase()} yang terdaftar di ${targetRombel ? `rombel "${targetRombel.name}"` : courseLabel.toLowerCase()} ini.` 
+              : `${learnerLabel} tidak ditemukan atau belum dipilih.`
+            }
           </p>
-          <Button variant="primary" onClick={() => navigate(backUrl)}>
-            Kembali ke Daftar Mahasiswa
-          </Button>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Button variant="primary" onClick={() => navigate(backUrl)}>
+              Kembali ke Daftar {learnerLabel}
+            </Button>
+            <Button variant="outline" onClick={() => navigate(isSchool ? '/kelas' : '/mk')}>
+              Buka {isSchool ? 'Daftar Kelas' : 'Daftar Mata Kuliah'}
+            </Button>
+          </div>
         </Card>
       </div>
     );

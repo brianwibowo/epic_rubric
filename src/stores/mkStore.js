@@ -342,7 +342,64 @@ export const useMKStore = create((set, get) => ({
         }));
 
         const localList = get().mkList;
-        const merged = [...remoteMKs];
+        const merged = remoteMKs.map(rc => {
+          const matchingLocal = localList.find(l => l.id === rc.id || l.kode_mk === rc.kode_mk);
+          if (!matchingLocal) return rc;
+
+          // Merge rombels intelligently so local students/scoring are never wiped
+          const remoteRombels = Array.isArray(rc.rombel) ? rc.rombel : [];
+          const localRombels = Array.isArray(matchingLocal.rombel) ? matchingLocal.rombel : [];
+
+          const mergedRombels = [...remoteRombels];
+          localRombels.forEach(lr => {
+            const rIdx = mergedRombels.findIndex(mr => mr.id === lr.id || (mr.name && lr.name && mr.name.toLowerCase() === lr.name.toLowerCase()));
+            if (rIdx >= 0) {
+              const remoteR = mergedRombels[rIdx];
+              // Merge students: combine remote and local students deduplicated by student id or nim
+              const combinedStudents = [...(remoteR.students || [])];
+              (lr.students || []).forEach(ls => {
+                const sId = ls.id || ls.student_id;
+                const sNim = ls.nim || ls.nisn;
+                const exists = combinedStudents.some(cs => 
+                  (sId && (cs.id === sId || cs.student_id === sId)) ||
+                  (sNim && (cs.nim === sNim || cs.nisn === sNim))
+                );
+                if (!exists) {
+                  combinedStudents.push(ls);
+                }
+              });
+
+              // Merge scoringData
+              const combinedScoring = {
+                ...(remoteR.scoringData || {}),
+                ...(lr.scoringData || {})
+              };
+
+              mergedRombels[rIdx] = {
+                ...remoteR,
+                ...lr,
+                students: combinedStudents,
+                scoringData: combinedScoring
+              };
+            } else {
+              mergedRombels.push(lr);
+            }
+          });
+
+          // Sync back to Supabase if local had more rombel data
+          if (!rc.id.startsWith('mk-') && mergedRombels.length > 0) {
+            supabase.from('mata_kuliah').update({ rombel_data: mergedRombels }).eq('id', rc.id).catch(() => {});
+          }
+
+          return {
+            ...matchingLocal,
+            ...rc,
+            komponen: (matchingLocal.komponen && matchingLocal.komponen.length > 0) ? matchingLocal.komponen : rc.komponen,
+            rombel: mergedRombels.length > 0 ? mergedRombels : rc.rombel
+          };
+        });
+
+        // Add any local items that don't exist remotely yet
         localList.forEach(localItem => {
           if (!merged.some(r => r.id === localItem.id || r.kode_mk === localItem.kode_mk)) {
             merged.push(localItem);
@@ -542,6 +599,14 @@ export const useMKStore = create((set, get) => ({
 
     set({ mkList: updated });
     saveMKsToStorage(updated);
+
+    // Sync update to Supabase
+    if (!mkId.startsWith('mk-')) {
+      const targetMK = updated.find(m => m.id === mkId);
+      if (targetMK) {
+        supabase.from('mata_kuliah').update({ rombel_data: targetMK.rombel }).eq('id', mkId).catch(() => {});
+      }
+    }
   },
 
   deleteRombel: (mkId, rombelId) => {

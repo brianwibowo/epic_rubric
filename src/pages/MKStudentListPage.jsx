@@ -48,6 +48,11 @@ const MKStudentListPage = () => {
   const mk = mkList.find(m => m.id === mkId);
   const rawRombels = mk?.rombel || [];
 
+  // Background refresh to catch latest MK and rombel data
+  useEffect(() => {
+    useMKStore.getState().syncFromSupabase();
+  }, [mkId]);
+
   // Filter rombels by role context to avoid collision
   const rombelList = useMemo(() => {
     if (isSchool) {
@@ -63,9 +68,12 @@ const MKStudentListPage = () => {
   const rombelIdParam = searchParams.get('rombelId');
 
   // Determine active rombel
-  const selectedRombel = rombelIdParam && rombelIdParam !== 'ALL'
-    ? (rombelList.find(r => r.id === rombelIdParam) || rombelList[0] || null)
-    : (rombelList.length === 1 && !rombelIdParam ? rombelList[0] : null);
+  const selectedRombel = useMemo(() => {
+    if (rombelIdParam && rombelIdParam !== 'ALL') {
+      return rawRombels.find(r => r.id === rombelIdParam) || rombelList.find(r => r.id === rombelIdParam) || rombelList[0] || null;
+    }
+    return (rombelList.length === 1 && !rombelIdParam ? rombelList[0] : null);
+  }, [rombelIdParam, rawRombels, rombelList]);
 
   const students = useMemo(() => {
     if (selectedRombel) {

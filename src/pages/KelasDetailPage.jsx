@@ -10,20 +10,21 @@ import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
+import Input from '@/components/ui/Input';
 import HelpButton from '@/components/ui/HelpButton';
 import styles from './KelasDetailPage.module.css';
 import {
   ArrowLeft, School, BookOpen, Users, Calendar, UserCheck,
   PlusCircle, ArrowRight, Layers, Award, ClipboardList, Trash2,
-  ExternalLink, CheckCircle2, Sparkles
+  ExternalLink, CheckCircle2, Sparkles, UserPlus
 } from 'lucide-react';
 
 const KelasDetailPage = () => {
   const { kelasId } = useParams();
   const navigate = useNavigate();
   const { profile } = useAuthStore();
-  const { getKelasById, addMapelToKelas, removeMapelFromKelas } = useKelasStore();
-  const { mkList, addRombel } = useMKStore();
+  const { getKelasById, addMapelToKelas, removeMapelFromKelas, addStudentToKelas, removeStudentFromKelas } = useKelasStore();
+  const { mkList, addRombel, updateRombel } = useMKStore();
   const { addToast } = useUiStore();
   const { learnerLabel, learnerIdLabel, courseLabel, isSchool } = useTerminology();
 
@@ -33,6 +34,11 @@ const KelasDetailPage = () => {
   const [activeTab, setActiveTab] = useState('mapel'); // 'mapel' | 'siswa'
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedExistingMkId, setSelectedExistingMkId] = useState('');
+
+  // Add Student modal state
+  const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentNisn, setNewStudentNisn] = useState('');
 
   // Background refresh to catch mapels created simultaneously by others
   useEffect(() => {
@@ -112,6 +118,60 @@ const KelasDetailPage = () => {
     if (window.confirm(`Lepaskan mata pelajaran "${mapelName}" dari kelas ${kelas.name}?`)) {
       removeMapelFromKelas(kelas.id, mapelId);
       addToast(`Mata pelajaran "${mapelName}" dilepaskan dari kelas ${kelas.name}.`, 'info');
+    }
+  };
+
+  const handleAddStudentToKelas = (e) => {
+    if (e) e.preventDefault();
+    if (!newStudentName.trim() || !newStudentNisn.trim()) {
+      addToast('Nama siswa dan NISN wajib diisi!', 'warning');
+      return;
+    }
+
+    const newStudent = {
+      id: `sk-${Date.now()}`,
+      student_id: `stu-${Date.now()}-uuid`,
+      nisn: newStudentNisn.trim(),
+      nim: newStudentNisn.trim(),
+      full_name: newStudentName.trim(),
+      name: newStudentName.trim(),
+      enrolled_at: new Date().toISOString().split('T')[0]
+    };
+
+    addStudentToKelas(kelas.id, newStudent);
+
+    // Also sync this student to all mapels linked to this class
+    (kelas.mapel_ids || []).forEach((mkId) => {
+      const targetMK = mkList.find((m) => m.id === mkId);
+      if (targetMK) {
+        const targetRombel = (targetMK.rombel || []).find((r) => r.name.toLowerCase() === kelas.name.toLowerCase());
+        if (targetRombel) {
+          const updatedStudents = [...(targetRombel.students || []), newStudent];
+          updateRombel(mkId, targetRombel.id, { students: updatedStudents });
+        }
+      }
+    });
+
+    addToast(`Siswa "${newStudent.full_name}" berhasil ditambahkan ke kelas ${kelas.name}!`, 'success', 3500);
+    setNewStudentName('');
+    setNewStudentNisn('');
+    setIsAddStudentModalOpen(false);
+  };
+
+  const handleRemoveStudentFromKelas = (studentId, studentName) => {
+    if (window.confirm(`Hapus ${studentName} dari kelas ${kelas.name}?`)) {
+      removeStudentFromKelas(kelas.id, studentId);
+      (kelas.mapel_ids || []).forEach((mkId) => {
+        const targetMK = mkList.find((m) => m.id === mkId);
+        if (targetMK) {
+          const targetRombel = (targetMK.rombel || []).find((r) => r.name.toLowerCase() === kelas.name.toLowerCase());
+          if (targetRombel) {
+            const updatedStudents = (targetRombel.students || []).filter(s => s.id !== studentId && s.student_id !== studentId);
+            updateRombel(mkId, targetRombel.id, { students: updatedStudents });
+          }
+        }
+      });
+      addToast(`Siswa ${studentName} telah dihapus dari kelas.`, 'info');
     }
   };
 
@@ -318,55 +378,134 @@ const KelasDetailPage = () => {
 
       {/* Tab 2: Roster Siswa */}
       {activeTab === 'siswa' && (
-        <div className={styles.tableWrapper}>
-          {kelas.students && kelas.students.length > 0 ? (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th style={{ width: '60px' }}>No</th>
-                  <th>Nama Siswa</th>
-                  <th>NISN</th>
-                  <th>Status</th>
-                  <th>Terdaftar Sejak</th>
-                </tr>
-              </thead>
-              <tbody>
-                {kelas.students.map((student, idx) => (
-                  <tr key={student.id || student.student_id}>
-                    <td>{idx + 1}</td>
-                    <td>
-                      <div className={styles.studentCell}>
-                        <div className={styles.studentAvatar}>
-                          {(student.full_name || student.name || 'S').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className={styles.studentName}>{student.full_name || student.name}</div>
-                          <div className={styles.studentId}>{student.nisn || student.nim || '-'}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <code>{student.nisn || student.nim || '-'}</code>
-                    </td>
-                    <td>
-                      <Badge variant="success" size="sm">Aktif</Badge>
-                    </td>
-                    <td>{student.enrolled_at || '14 Jul 2025'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className={styles.emptyBlock}>
-              <Users size={40} className={styles.emptyBlockIcon} />
-              <h3 className={styles.emptyBlockTitle}>Belum Ada Siswa</h3>
-              <p className={styles.emptyBlockDesc}>
-                Belum ada siswa yang terdaftar di kelas {kelas.name}.
-              </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {isStaff && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <span style={{ fontSize: '13.5px', color: 'var(--text-secondary)' }}>
+                Total <strong>{kelas.students?.length || 0}</strong> siswa terdaftar di kelas ini
+              </span>
+              <Button variant="primary" size="sm" onClick={() => setIsAddStudentModalOpen(true)}>
+                <UserPlus size={15} /> Tambah Siswa
+              </Button>
             </div>
           )}
+
+          <div className={styles.tableWrapper}>
+            {kelas.students && kelas.students.length > 0 ? (
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={{ width: '60px' }}>No</th>
+                    <th>Nama Siswa</th>
+                    <th>NISN</th>
+                    <th>Status</th>
+                    <th>Terdaftar Sejak</th>
+                    {isStaff && <th style={{ width: '70px', textAlign: 'center' }}>Aksi</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {kelas.students.map((student, idx) => (
+                    <tr key={student.id || student.student_id}>
+                      <td>{idx + 1}</td>
+                      <td>
+                        <div className={styles.studentCell}>
+                          <div className={styles.studentAvatar}>
+                            {(student.full_name || student.name || 'S').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className={styles.studentName}>{student.full_name || student.name}</div>
+                            <div className={styles.studentId}>{student.nisn || student.nim || '-'}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <code>{student.nisn || student.nim || '-'}</code>
+                      </td>
+                      <td>
+                        <Badge variant="success" size="sm">Aktif</Badge>
+                      </td>
+                      <td>{student.enrolled_at || '14 Jul 2025'}</td>
+                      {isStaff && (
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            type="button"
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              borderRadius: '4px',
+                              display: 'inline-flex',
+                              alignItems: 'center'
+                            }}
+                            title="Hapus siswa dari kelas"
+                            onClick={() => handleRemoveStudentFromKelas(student.id || student.student_id, student.full_name || student.name)}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className={styles.emptyBlock}>
+                <Users size={40} className={styles.emptyBlockIcon} />
+                <h3 className={styles.emptyBlockTitle}>Belum Ada Siswa</h3>
+                <p className={styles.emptyBlockDesc}>
+                  Belum ada siswa yang terdaftar di kelas {kelas.name}.
+                </p>
+                {isStaff && (
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                    <Button variant="primary" size="sm" onClick={() => setIsAddStudentModalOpen(true)}>
+                      <UserPlus size={15} /> Tambah Siswa Pertama
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
+
+      {/* MODAL TAMBAH SISWA KE KELAS */}
+      <Modal
+        isOpen={isAddStudentModalOpen}
+        onClose={() => setIsAddStudentModalOpen(false)}
+        title={`Tambah Siswa ke ${kelas.name}`}
+        size="sm"
+      >
+        <form onSubmit={handleAddStudentToKelas} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
+            Tambahkan peserta didik baru ke rombel kelas ini. Siswa akan otomatis terhubung ke seluruh mata pelajaran kelas {kelas.name}.
+          </p>
+          <Input
+            label="Nama Lengkap Siswa"
+            placeholder="e.g. Ahmad Fauzan"
+            value={newStudentName}
+            onChange={(e) => setNewStudentName(e.target.value)}
+            required
+            autoFocus
+          />
+          <Input
+            label="NISN / Nomor Induk Siswa"
+            placeholder="e.g. 0081234567"
+            value={newStudentNisn}
+            onChange={(e) => setNewStudentNisn(e.target.value)}
+            required
+          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+            <Button variant="outline" type="button" onClick={() => setIsAddStudentModalOpen(false)}>
+              Batal
+            </Button>
+            <Button variant="primary" type="submit">
+              <UserPlus size={15} /> Simpan Siswa
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* MODAL TAMBAH / HUBUNGKAN MATA PELAJARAN */}
       <Modal
