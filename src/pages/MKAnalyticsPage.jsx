@@ -103,7 +103,7 @@ const MKAnalyticsPage = () => {
       const rombelObj = rombelList.find(r => r.id === loggedInStudent.rombelId);
       return {
         ...loggedInStudent,
-        full_name: loggedInStudent.full_name || loggedInStudent.name || 'Mahasiswa',
+        full_name: loggedInStudent.full_name || loggedInStudent.name || learnerLabel,
         nim: loggedInStudent.nim || loggedInStudent.nisn || '-',
         rombelName: rombelObj?.name || loggedInStudent.kelas || 'Kelas Reguler'
       };
@@ -112,14 +112,14 @@ const MKAnalyticsPage = () => {
       const rombelObj = rombelList.find(r => r.id === selectedRombelId);
       return {
         full_name: selectedRombelId === 'ALL' 
-          ? 'Seluruh Mahasiswa (Agregat Angkatan)' 
+          ? (isSchool ? 'Seluruh Siswa (Agregat Rombel)' : 'Seluruh Mahasiswa (Agregat Angkatan)')
           : `Agregat Rombel: ${rombelObj?.name || selectedRombelId}`,
-        nim: `${filteredStudents.length} Mahasiswa Terdaftar`,
+        nim: `${filteredStudents.length} ${learnerLabel} Terdaftar`,
         rombelName: selectedRombelId === 'ALL' ? 'Semua Rombel' : rombelObj?.name
       };
     }
-    return (filteredStudents.find(s => s.id === selectedStudentId || s.student_id === selectedStudentId)) || filteredStudents[0] || { full_name: 'Mahasiswa', nim: '-' };
-  }, [isMhs, loggedInStudent, isAgregat, selectedRombelId, selectedStudentId, filteredStudents, rombelList]);
+    return (filteredStudents.find(s => s.id === selectedStudentId || s.student_id === selectedStudentId)) || filteredStudents[0] || { full_name: learnerLabel, nim: '-' };
+  }, [isMhs, loggedInStudent, isAgregat, selectedRombelId, selectedStudentId, filteredStudents, rombelList, learnerLabel, isSchool]);
 
   // Scoring data list for the selected scope
   const targetScoringList = useMemo(() => {
@@ -435,7 +435,7 @@ const MKAnalyticsPage = () => {
 
             <div className={styles.targetPill}>
               <span style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 700 }}>
-                <CheckCircle2 size={14} /> Hak Akses Mahasiswa Terverifikasi
+                <CheckCircle2 size={14} /> Hak Akses {learnerLabel} Terverifikasi
               </span>
             </div>
           </div>
@@ -469,7 +469,7 @@ const MKAnalyticsPage = () => {
                 value={selectedStudentId}
                 onChange={(e) => setSelectedStudentId(e.target.value)}
               >
-                <option value="ALL">👥 Agregat Rombel Terpilih ({filteredStudents.length} Mahasiswa)</option>
+                <option value="ALL">👥 Agregat Rombel Terpilih ({filteredStudents.length} {learnerLabel})</option>
                 {filteredStudents.map(s => {
                   const stuId = s.id || s.student_id;
                   return (
@@ -614,7 +614,7 @@ const MKAnalyticsPage = () => {
           {!isMhs ? (
             <div className={styles.gradeDistributionSection}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className={styles.sectionHeading}>Sebaran Grade Rombel ({allStudents.length} Mahasiswa):</span>
+                <span className={styles.sectionHeading}>Sebaran Grade Rombel ({allStudents.length} {learnerLabel}):</span>
                 <span style={{ fontSize: '12px', color: '#059669', fontWeight: 700 }}>
                   Tingkat Kelulusan: {cohortGradeDist.passingPct}%
                 </span>
