@@ -87,6 +87,12 @@ DROP POLICY IF EXISTS "Allow anon all notifications" ON public.notifications;
 CREATE POLICY "Allow anon all notifications" ON public.notifications FOR ALL USING (true) WITH CHECK (true);
 
 -- Profiles
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS nim TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS nidn TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS unit_info TEXT;
+
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow anon all profiles" ON public.profiles;
 CREATE POLICY "Allow anon all profiles" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
+

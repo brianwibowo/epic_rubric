@@ -178,32 +178,123 @@ export const useAuthStore = create((set, get) => ({
       return { success: true };
     }
 
-    // Real Supabase Login
+    // 2. Check registered accounts created by Administrator (epic_mock_users_v2)
+    let registeredUsers = [];
+    try {
+      const raw = localStorage.getItem('epic_mock_users_v2');
+      if (raw) registeredUsers = JSON.parse(raw);
+    } catch (e) {
+      registeredUsers = [];
+    }
+
+    const matchedUser = registeredUsers.find(
+      u => (u.email || '').toLowerCase().trim() === cleanEmail
+    );
+
+    if (matchedUser) {
+      // If password provided in registeredUser, verify it
+      if (matchedUser.password && password && matchedUser.password !== password) {
+        set({ isLoading: false });
+        return { success: false, error: 'Kata sandi salah. Silakan periksa kembali kata sandi Anda.' };
+      }
+
+      const prof = {
+        id: matchedUser.id,
+        full_name: matchedUser.full_name,
+        role: matchedUser.role,
+        email: matchedUser.email,
+        nip: matchedUser.nip || null,
+        nidn: matchedUser.nidn || null,
+        nim: matchedUser.nim || null,
+        nisn: matchedUser.nisn || null,
+        unit_info: matchedUser.unit_info || null,
+        jurusan: matchedUser.unit_info || (matchedUser.role === ROLES.GURU ? 'Akuntansi & Keuangan Lembaga (AKL)' : null),
+        prodi: matchedUser.unit_info || (matchedUser.role === ROLES.DOSEN ? 'Pendidikan Akuntansi' : null),
+        kelas: matchedUser.unit_info || (matchedUser.role === ROLES.SISWA ? 'XII AKL 1' : matchedUser.role === ROLES.MAHASISWA ? 'PE 2025 A' : null),
+        avatar_url: matchedUser.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(matchedUser.full_name)}`
+      };
+
+      localStorage.setItem('epic_profile', JSON.stringify(prof));
+      localStorage.setItem('epic_is_mock', 'true');
+      set({
+        user: { email: prof.email, id: prof.id },
+        profile: prof,
+        isAuthenticated: true,
+        isMock: true,
+        isLoading: false
+      });
+      return { success: true };
+    }
+
+    // 3. Real Supabase Login
     if (isSupabaseConfigured()) {
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+        if (!error && data?.user) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .maybeSingle();
 
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+          const finalProfile = profileData || {
+            id: data.user.id,
+            full_name: data.user.user_metadata?.full_name || 'Pengguna',
+            role: data.user.user_metadata?.role || ROLES.GURU,
+            email: data.user.email,
+            nip: data.user.user_metadata?.nip || null,
+            nisn: data.user.user_metadata?.nisn || null,
+            unit_info: data.user.user_metadata?.unit_info || null,
+            jurusan: data.user.user_metadata?.unit_info || (data.user.user_metadata?.role === ROLES.GURU ? 'Akuntansi & Keuangan Lembaga (AKL)' : null)
+          };
 
-        if (profileError) throw profileError;
+          localStorage.setItem('epic_profile', JSON.stringify(finalProfile));
+          localStorage.setItem('epic_is_mock', 'false');
 
-        localStorage.setItem('epic_profile', JSON.stringify(profileData));
-        localStorage.setItem('epic_is_mock', 'false');
+          set({
+            user: data.user,
+            profile: finalProfile,
+            isAuthenticated: true,
+            isMock: false,
+            isLoading: false
+          });
 
-        set({
-          user: data.user,
-          profile: profileData,
-          isAuthenticated: true,
-          isMock: false,
-          isLoading: false
-        });
+          return { success: true };
+        } else if (error) {
+          // If error is Email not confirmed, check if profile exists in profiles table
+          if (error.message?.includes('Email not confirmed')) {
+            const { data: pData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('nip', cleanEmail)
+              .maybeSingle();
 
-        return { success: true };
+            if (pData) {
+              const prof = {
+                id: pData.id,
+                full_name: pData.full_name,
+                role: pData.role,
+                email: cleanEmail,
+                nip: pData.nip,
+                nisn: pData.nisn,
+                unit_info: pData.unit_info,
+                jurusan: pData.unit_info || 'Akuntansi & Keuangan Lembaga (AKL)'
+              };
+              localStorage.setItem('epic_profile', JSON.stringify(prof));
+              localStorage.setItem('epic_is_mock', 'false');
+              set({
+                user: { email: cleanEmail, id: prof.id },
+                profile: prof,
+                isAuthenticated: true,
+                isMock: false,
+                isLoading: false
+              });
+              return { success: true };
+            }
+          }
+          set({ isLoading: false });
+          return { success: false, error: error.message };
+        }
       } catch (error) {
         set({ isLoading: false });
         return { success: false, error: error.message };
@@ -212,7 +303,7 @@ export const useAuthStore = create((set, get) => ({
 
     // Fallback if password or email not matched
     set({ isLoading: false });
-    return { success: false, error: 'Email atau kata sandi tidak valid.' };
+    return { success: false, error: 'Email atau kata sandi tidak valid. Pastikan akun sudah didaftarkan.' };
   },
 
   logout: async () => {

@@ -24,7 +24,10 @@ import {
   Check,
   GraduationCap,
   School,
-  ShieldCheck
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  Key
 } from 'lucide-react';
 import styles from './UserManagementPage.module.css';
 
@@ -46,10 +49,12 @@ const UserManagementPage = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
-    role: ROLES.DOSEN,
+    password: '',
+    role: ROLES.GURU,
     nim: '',
     nisn: '',
     nidn: '',
@@ -90,10 +95,12 @@ const UserManagementPage = () => {
   // Open modal for add
   const handleOpenAddModal = () => {
     setSelectedUser(null);
+    setShowPassword(false);
     setFormData({
       full_name: '',
       email: '',
-      role: ROLES.DOSEN,
+      password: '',
+      role: ROLES.GURU,
       nim: '',
       nisn: '',
       nidn: '',
@@ -107,9 +114,11 @@ const UserManagementPage = () => {
   // Open modal for edit
   const handleOpenEditModal = (user) => {
     setSelectedUser(user);
+    setShowPassword(false);
     setFormData({
       full_name: user.full_name || '',
       email: user.email || '',
+      password: '',
       role: user.role || ROLES.DOSEN,
       nim: user.nim || '',
       nisn: user.nisn || '',
@@ -159,6 +168,17 @@ const UserManagementPage = () => {
       errors.email = 'Email wajib diisi';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = 'Format email tidak valid';
+    }
+
+    // Password validation
+    if (!selectedUser) {
+      if (!formData.password) {
+        errors.password = 'Password wajib diisi untuk login akun baru';
+      } else if (formData.password.length < 6) {
+        errors.password = 'Password minimal 6 karakter';
+      }
+    } else if (formData.password && formData.password.length < 6) {
+      errors.password = 'Password baru minimal 6 karakter';
     }
 
     if (formData.role === ROLES.MAHASISWA) {
@@ -438,9 +458,50 @@ const UserManagementPage = () => {
               type="email"
               value={formData.email}
               onChange={handleInputChange}
-              placeholder="Contoh: user@epic.id"
+              placeholder="Contoh: guru.smk@epic.id"
               error={formErrors.email}
             />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>
+              Kata Sandi (Password) {!selectedUser && <span className={styles.required}>*</span>}
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Input
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder={selectedUser ? 'Kosongkan jika tidak ingin mengubah password' : 'Min. 6 karakter (misal: password123)'}
+                error={formErrors.password}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '12px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--color-text-muted, #64748b)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '4px'
+                }}
+                title={showPassword ? 'Sembunyikan password' : 'Lihat password'}
+                aria-label={showPassword ? 'Sembunyikan password' : 'Lihat password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted, #64748b)', marginTop: '4px', display: 'block' }}>
+              {!selectedUser 
+                ? '🔑 Kredensial ini akan langsung aktif dan bisa digunakan untuk login sesuai peran yang dipilih.' 
+                : 'Biarkan kosong bila tidak ingin mengganti kata sandi akun ini.'}
+            </span>
           </div>
 
           <div className={styles.formGroup}>
