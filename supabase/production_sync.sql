@@ -92,7 +92,78 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS nim TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS nidn TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS unit_info TEXT;
 
+-- Lepaskan foreign key constraint profiles_id_fkey agar aman insert profil
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;
+
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow anon all profiles" ON public.profiles;
 CREATE POLICY "Allow anon all profiles" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
+
+-- ============================================================
+-- 5. Sinkronisasi Akun 5 Guru SMK ke auth.users & public.profiles
+-- ============================================================
+INSERT INTO auth.users (
+  id, instance_id, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, aud, role, created_at, updated_at
+) VALUES 
+(
+  '02070270-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000000',
+  'mutiaradyah1.25@gmail.com',
+  extensions.crypt('12345678', extensions.gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"full_name":"Dyah Mutiara Indriasari, S. E.","role":"guru","nip":"0207027","unit_info":"Akuntansi"}'::jsonb,
+  'authenticated', 'authenticated', now(), now()
+),
+(
+  '02070120-0000-0000-0000-000000000002',
+  '00000000-0000-0000-0000-000000000000',
+  'dwihasti17@gmail.com',
+  extensions.crypt('12345678', extensions.gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"full_name":"Dwi Hastuti, S. E.","role":"guru","nip":"0207012","unit_info":"Akuntansi"}'::jsonb,
+  'authenticated', 'authenticated', now(), now()
+),
+(
+  '02070140-0000-0000-0000-000000000003',
+  '00000000-0000-0000-0000-000000000000',
+  'arifsanti14@gmail.com',
+  extensions.crypt('12345678', extensions.gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"full_name":"Arif Dwie Arysanti, S. Pd.","role":"guru","nip":"0207014","unit_info":"Manajemen Perkantoran"}'::jsonb,
+  'authenticated', 'authenticated', now(), now()
+),
+(
+  '06020440-0000-0000-0000-000000000004',
+  '00000000-0000-0000-0000-000000000000',
+  'xca.prasetya@gmail.com',
+  extensions.crypt('12345678', extensions.gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"full_name":"Ika Prasetya Yuniati, S. Pd","role":"guru","nip":"0602044","unit_info":"Akuntansi"}'::jsonb,
+  'authenticated', 'authenticated', now(), now()
+)
+ON CONFLICT (id) DO UPDATE 
+SET 
+  encrypted_password = EXCLUDED.encrypted_password,
+  email_confirmed_at = now();
+
+-- Masukkan/sinkronkan kelima akun ke public.profiles
+INSERT INTO public.profiles (id, full_name, email, role, nip, unit_info)
+VALUES 
+  ('2d18f169-0c7f-499f-a274-0e4a4bc4dae1', 'Ratna Indriani, S. Pd', 'ratnaindriani1628@gmail.com', 'guru', '0801061', 'Manajemen Perkantoran'),
+  ('02070270-0000-0000-0000-000000000001', 'Dyah Mutiara Indriasari, S. E.', 'mutiaradyah1.25@gmail.com', 'guru', '0207027', 'Akuntansi'),
+  ('02070120-0000-0000-0000-000000000002', 'Dwi Hastuti, S. E.', 'dwihasti17@gmail.com', 'guru', '0207012', 'Akuntansi'),
+  ('02070140-0000-0000-0000-000000000003', 'Arif Dwie Arysanti, S. Pd.', 'arifsanti14@gmail.com', 'guru', '0207014', 'Manajemen Perkantoran'),
+  ('06020440-0000-0000-0000-000000000004', 'Ika Prasetya Yuniati, S. Pd', 'xca.prasetya@gmail.com', 'guru', '0602044', 'Akuntansi')
+ON CONFLICT (id) DO UPDATE 
+SET 
+  full_name = EXCLUDED.full_name,
+  email = EXCLUDED.email,
+  role = EXCLUDED.role,
+  nip = EXCLUDED.nip,
+  unit_info = EXCLUDED.unit_info;
+
 
