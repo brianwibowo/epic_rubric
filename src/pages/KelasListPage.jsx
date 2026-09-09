@@ -61,6 +61,11 @@ const KelasListPage = () => {
     navigate(`/kelas/${created.id}`);
   };
 
+  // Background refresh to catch newly created classes by others
+  useEffect(() => {
+    useKelasStore.getState().syncFromSupabase();
+  }, []);
+
   // Debounce search query by 250ms
   useEffect(() => {
     const handler = setTimeout(() => {

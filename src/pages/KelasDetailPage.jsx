@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useKelasStore } from '@/stores/kelasStore';
 import { useMKStore } from '@/stores/mkStore';
@@ -33,6 +33,12 @@ const KelasDetailPage = () => {
   const [activeTab, setActiveTab] = useState('mapel'); // 'mapel' | 'siswa'
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedExistingMkId, setSelectedExistingMkId] = useState('');
+
+  // Background refresh to catch mapels created simultaneously by others
+  useEffect(() => {
+    useKelasStore.getState().syncFromSupabase();
+    useMKStore.getState().syncFromSupabase();
+  }, [kelasId]);
 
   const kelas = getKelasById(kelasId);
 

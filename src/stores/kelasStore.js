@@ -171,9 +171,21 @@ export const useKelasStore = create((set, get) => ({
 
         // Merge remote classes with seed data
         const localList = get().kelasList;
-        const merged = [...remoteClasses];
+        const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        // Map remote classes with any local seed student data if empty
+        const merged = remoteClasses.map(rc => {
+          const matchingLocal = localList.find(l => l.id === rc.id || norm(l.name) === norm(rc.name));
+          return {
+            ...rc,
+            students: (rc.students && rc.students.length > 0) ? rc.students : (matchingLocal?.students || []),
+            mapel_ids: Array.from(new Set([...(rc.mapel_ids || []), ...(matchingLocal?.mapel_ids || [])]))
+          };
+        });
+
+        // Add any local classes that don't exist remotely yet
         localList.forEach(localItem => {
-          if (!merged.some(m => m.id === localItem.id || m.name === localItem.name)) {
+          if (!merged.some(m => m.id === localItem.id || norm(m.name) === norm(localItem.name))) {
             merged.push(localItem);
           }
         });
@@ -328,9 +340,28 @@ export const useKelasStore = create((set, get) => ({
     set({ kelasList: updated });
     saveKelasToStorage(updated);
 
-    if (!kelasId.startsWith('kelas-')) {
-      supabase.from('classes').update({ mapel_ids: newMapelIds }).eq('id', kelasId).catch(() => {});
-    }
+    // Sync to Supabase - merge with remote mapel_ids to avoid race conditions
+    const targetKelas = kelasList.find(k => k.id === kelasId);
+    const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const query = !kelasId.startsWith('kelas-')
+      ? supabase.from('classes').select('id, mapel_ids').eq('id', kelasId)
+      : supabase.from('classes').select('id, mapel_ids, name');
+
+    query.then(({ data }) => {
+      let targetRow = null;
+      if (Array.isArray(data)) {
+        targetRow = data.find(d => d.id === kelasId || norm(d.name) === norm(targetKelas?.name));
+      } else {
+        targetRow = data;
+      }
+
+      if (targetRow) {
+        const remoteIds = Array.isArray(targetRow.mapel_ids) ? targetRow.mapel_ids : [];
+        const mergedSet = Array.from(new Set([...remoteIds, ...newMapelIds, mkId]));
+        supabase.from('classes').update({ mapel_ids: mergedSet }).eq('id', targetRow.id).catch(() => {});
+      }
+    }).catch(() => {});
   },
 
   // Unlink a Mapel from a Kelas
@@ -347,8 +378,26 @@ export const useKelasStore = create((set, get) => ({
     set({ kelasList: updated });
     saveKelasToStorage(updated);
 
-    if (!kelasId.startsWith('kelas-')) {
-      supabase.from('classes').update({ mapel_ids: newMapelIds }).eq('id', kelasId).catch(() => {});
-    }
+    const targetKelas = kelasList.find(k => k.id === kelasId);
+    const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const query = !kelasId.startsWith('kelas-')
+      ? supabase.from('classes').select('id, mapel_ids').eq('id', kelasId)
+      : supabase.from('classes').select('id, mapel_ids, name');
+
+    query.then(({ data }) => {
+      let targetRow = null;
+      if (Array.isArray(data)) {
+        targetRow = data.find(d => d.id === kelasId || norm(d.name) === norm(targetKelas?.name));
+      } else {
+        targetRow = data;
+      }
+
+      if (targetRow) {
+        const remoteIds = Array.isArray(targetRow.mapel_ids) ? targetRow.mapel_ids : [];
+        const filtered = remoteIds.filter(id => id !== mkId);
+        supabase.from('classes').update({ mapel_ids: filtered }).eq('id', targetRow.id).catch(() => {});
+      }
+    }).catch(() => {});
   }
 }));
