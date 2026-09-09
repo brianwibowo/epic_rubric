@@ -3,30 +3,36 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useKelasStore } from '@/stores/kelasStore';
 import { useMKStore } from '@/stores/mkStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useUiStore } from '@/stores/uiStore';
 import { useTerminology } from '@/hooks/useTerminology';
 import { STAFF_ROLES, LEARNER_ROLES } from '@/utils/constants';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import HelpButton from '@/components/ui/HelpButton';
 import styles from './KelasDetailPage.module.css';
 import {
   ArrowLeft, School, BookOpen, Users, Calendar, UserCheck,
-  PlusCircle, ArrowRight, Layers, Award, ClipboardList
+  PlusCircle, ArrowRight, Layers, Award, ClipboardList, Trash2,
+  ExternalLink, CheckCircle2, Sparkles
 } from 'lucide-react';
 
 const KelasDetailPage = () => {
   const { kelasId } = useParams();
   const navigate = useNavigate();
   const { profile } = useAuthStore();
-  const { getKelasById } = useKelasStore();
-  const { mkList } = useMKStore();
+  const { getKelasById, addMapelToKelas, removeMapelFromKelas } = useKelasStore();
+  const { mkList, addRombel } = useMKStore();
+  const { addToast } = useUiStore();
   const { learnerLabel, learnerIdLabel, courseLabel, isSchool } = useTerminology();
 
   const isStaff = STAFF_ROLES.includes(profile?.role);
   const isLearner = LEARNER_ROLES.includes(profile?.role);
 
   const [activeTab, setActiveTab] = useState('mapel'); // 'mapel' | 'siswa'
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedExistingMkId, setSelectedExistingMkId] = useState('');
 
   const kelas = getKelasById(kelasId);
 
@@ -56,13 +62,50 @@ const KelasDetailPage = () => {
     ? linkedMapels 
     : mkList.filter(m => (m.rombel || []).some(r => r.name.toLowerCase().includes(kelas.name.toLowerCase())));
 
-  const displayMapels = linkedMapels.length > 0 ? linkedMapels : (fallbackMapels.length > 0 ? fallbackMapels : mkList.slice(0, 2));
+  const displayMapels = linkedMapels.length > 0 ? linkedMapels : fallbackMapels;
+
+  // Unlinked mapels available to be attached to this class
+  const unlinkedMapels = mkList.filter(m => !(kelas.mapel_ids || []).includes(m.id));
 
   const handleOpenMapel = (mapelId) => {
     if (isLearner) {
       navigate(`/mk/${mapelId}/analytics?kelasId=${kelas.id}`);
     } else {
       navigate(`/mk/${mapelId}?kelasId=${kelas.id}`);
+    }
+  };
+
+  const handleLinkExistingMapel = () => {
+    if (!selectedExistingMkId) {
+      addToast('Pilih mata pelajaran terlebih dahulu!', 'warning');
+      return;
+    }
+
+    addMapelToKelas(kelas.id, selectedExistingMkId);
+
+    // If target MK doesn't have a rombel for this class, add it so students are enrolled
+    const targetMK = mkList.find(m => m.id === selectedExistingMkId);
+    const hasRombel = (targetMK?.rombel || []).some(r => r.name.toLowerCase() === kelas.name.toLowerCase());
+    if (!hasRombel) {
+      addRombel(selectedExistingMkId, {
+        name: kelas.name,
+        is_school: true,
+        tahun_ajaran: kelas.tahun_ajaran,
+        guru_pengampu: kelas.wali_kelas || profile?.full_name,
+        students: kelas.students || []
+      });
+    }
+
+    addToast(`Mata pelajaran "${targetMK?.name || 'Pilihan'}" berhasil dihubungkan ke kelas ${kelas.name}!`, 'success', 3500);
+    setIsAddModalOpen(false);
+    setSelectedExistingMkId('');
+  };
+
+  const handleUnlinkMapel = (e, mapelId, mapelName) => {
+    e.stopPropagation();
+    if (window.confirm(`Lepaskan mata pelajaran "${mapelName}" dari kelas ${kelas.name}?`)) {
+      removeMapelFromKelas(kelas.id, mapelId);
+      addToast(`Mata pelajaran "${mapelName}" dilepaskan dari kelas ${kelas.name}.`, 'info');
     }
   };
 
@@ -91,7 +134,12 @@ const KelasDetailPage = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {isStaff && (
+            <Button variant="primary" size="sm" onClick={() => setIsAddModalOpen(true)}>
+              <PlusCircle size={15} /> Tambah Mapel
+            </Button>
+          )}
           <HelpButton size={22} />
         </div>
       </div>
@@ -162,64 +210,100 @@ const KelasDetailPage = () => {
       {activeTab === 'mapel' && (
         <>
           {displayMapels.length > 0 ? (
-            <div className={styles.mapelGrid}>
-              {displayMapels.map((mapel) => {
-                const kompCount = (mapel.komponen || []).length;
-                return (
-                  <div
-                    key={mapel.id}
-                    className={styles.mapelCard}
-                    onClick={() => handleOpenMapel(mapel.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && handleOpenMapel(mapel.id)}
-                  >
-                    <div className={styles.mapelCardAccent} />
-                    <div>
-                      <div className={styles.mapelTop}>
-                        <div className={styles.mapelIconCircle}>
-                          <BookOpen size={20} />
+            <>
+              {isStaff && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '13.5px', color: 'var(--text-secondary)' }}>
+                    Total <strong>{displayMapels.length}</strong> mata pelajaran terhubung dengan kelas ini
+                  </span>
+                  <Button variant="outline" size="sm" onClick={() => setIsAddModalOpen(true)}>
+                    <PlusCircle size={15} /> Tambah Mapel Lain
+                  </Button>
+                </div>
+              )}
+              <div className={styles.mapelGrid}>
+                {displayMapels.map((mapel) => {
+                  const kompCount = (mapel.komponen || []).length;
+                  return (
+                    <div
+                      key={mapel.id}
+                      className={styles.mapelCard}
+                      onClick={() => handleOpenMapel(mapel.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && handleOpenMapel(mapel.id)}
+                    >
+                      <div className={styles.mapelCardAccent} />
+                      <div>
+                        <div className={styles.mapelTop}>
+                          <div className={styles.mapelIconCircle}>
+                            <BookOpen size={20} />
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Badge variant="success" size="sm">Aktif</Badge>
+                            {isStaff && (
+                              <button
+                                type="button"
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--text-muted)',
+                                  cursor: 'pointer',
+                                  padding: '4px',
+                                  borderRadius: '4px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  transition: 'color 0.15s ease'
+                                }}
+                                title="Lepaskan mata pelajaran dari kelas ini"
+                                onClick={(e) => handleUnlinkMapel(e, mapel.id, mapel.name)}
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <Badge variant="success" size="sm">Aktif</Badge>
+
+                        <h3 className={styles.mapelName}>{mapel.name}</h3>
+                        <div className={styles.mapelCode}>
+                          <Layers size={13} />
+                          <span>{mapel.kode_mk || 'MAPEL-01'}</span>
+                          {mapel.sks ? <span>• {mapel.sks} Jam/SKS</span> : null}
+                        </div>
+
+                        <div className={styles.mapelMeta}>
+                          <span className={styles.mapelMetaChip}>
+                            <ClipboardList size={12} style={{ display: 'inline', marginRight: 4 }} />
+                            {kompCount} Komponen Penilaian
+                          </span>
+                          <span className={styles.mapelMetaChip}>
+                            Guru: {mapel.dosen_name || mapel.guru_name || 'Dwi Puji Astuti, M.Pd.'}
+                          </span>
+                        </div>
                       </div>
 
-                      <h3 className={styles.mapelName}>{mapel.name}</h3>
-                      <div className={styles.mapelCode}>
-                        <Layers size={13} />
-                        <span>{mapel.kode_mk || 'MAPEL-01'}</span>
-                        {mapel.sks ? <span>• {mapel.sks} Jam/SKS</span> : null}
-                      </div>
-
-                      <div className={styles.mapelMeta}>
-                        <span className={styles.mapelMetaChip}>
-                          <ClipboardList size={12} style={{ display: 'inline', marginRight: 4 }} />
-                          {kompCount} Komponen Penilaian
-                        </span>
-                        <span className={styles.mapelMetaChip}>
-                          Guru: {mapel.dosen_name || mapel.guru_name || 'Dwi Puji Astuti, M.Pd.'}
-                        </span>
+                      <div className={styles.mapelFooter}>
+                        <span className={styles.mapelAction}>Buka Penilaian Mapel</span>
+                        <ArrowRight size={16} className={styles.mapelArrow} />
                       </div>
                     </div>
-
-                    <div className={styles.mapelFooter}>
-                      <span className={styles.mapelAction}>Buka Penilaian Mapel</span>
-                      <ArrowRight size={16} className={styles.mapelArrow} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </>
           ) : (
             <div className={styles.emptyBlock}>
               <BookOpen size={40} className={styles.emptyBlockIcon} />
               <h3 className={styles.emptyBlockTitle}>Belum Ada Mata Pelajaran</h3>
               <p className={styles.emptyBlockDesc}>
-                Belum ada mata pelajaran yang dihubungkan ke kelas ini.
+                Belum ada mata pelajaran yang dihubungkan ke kelas <strong>{kelas.name}</strong>.
               </p>
               {isStaff && (
-                <Button variant="primary" onClick={() => navigate('/mk/create')}>
-                  <PlusCircle size={16} /> Buat Mata Pelajaran Baru
-                </Button>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <Button variant="primary" onClick={() => setIsAddModalOpen(true)}>
+                    <PlusCircle size={16} /> Tambah / Buat Mata Pelajaran
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -277,6 +361,110 @@ const KelasDetailPage = () => {
           )}
         </div>
       )}
+
+      {/* MODAL TAMBAH / HUBUNGKAN MATA PELAJARAN */}
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setSelectedExistingMkId('');
+        }}
+        title={`Tambah Mata Pelajaran ke ${kelas.name}`}
+        size="md"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          {/* Card 1: Buat Mapel Baru */}
+          <div style={{
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid var(--border-color)',
+            background: 'var(--bg-card)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles size={18} style={{ color: 'var(--color-primary)' }} />
+              <strong style={{ fontSize: '15px' }}>Opsi 1: Buat Mata Pelajaran Baru</strong>
+            </div>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              Rancang mata pelajaran baru lengkap dengan konfigurasi rubrik & komponen penilaian. Peserta didik kelas <strong>{kelas.name}</strong> akan otomatis terdaftar di rombel mapel tersebut.
+            </p>
+            <div style={{ marginTop: '4px' }}>
+              <Button 
+                variant="primary" 
+                size="sm" 
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  navigate(`/mk/create?kelasId=${kelas.id}`);
+                }}
+              >
+                <PlusCircle size={15} /> Buka Form Buat Mapel Baru
+              </Button>
+            </div>
+          </div>
+
+          {/* Card 2: Hubungkan Mapel Yang Sudah Ada */}
+          <div style={{
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid var(--border-color)',
+            background: 'var(--bg-card)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Layers size={18} style={{ color: '#059669' }} />
+              <strong style={{ fontSize: '15px' }}>Opsi 2: Hubungkan dari Mapel yang Tersedia</strong>
+            </div>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              Pilih dari katalog mata pelajaran yang sudah terdaftar di sistem untuk diajarkan di rombel kelas ini:
+            </p>
+
+            {unlinkedMapels.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <select
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-input, var(--bg-app))',
+                    color: 'var(--text-primary)',
+                    fontSize: '13.5px',
+                    outline: 'none'
+                  }}
+                  value={selectedExistingMkId}
+                  onChange={(e) => setSelectedExistingMkId(e.target.value)}
+                >
+                  <option value="">-- Pilih Mata Pelajaran --</option>
+                  {unlinkedMapels.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.kode_mk}) • {m.komponen?.length || 0} Komponen
+                    </option>
+                  ))}
+                </select>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!selectedExistingMkId}
+                    onClick={handleLinkExistingMapel}
+                  >
+                    <CheckCircle2 size={15} /> Hubungkan ke Kelas Ini
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontStyle: 'italic', padding: '6px 0' }}>
+                Semua mata pelajaran di sistem sudah terhubung ke kelas ini.
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

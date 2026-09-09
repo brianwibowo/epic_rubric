@@ -1,20 +1,23 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import styles from './CreateMKPage.module.css';
 import { useAuthStore } from '@/stores/authStore';
 import { useMKStore } from '@/stores/mkStore';
+import { useKelasStore } from '@/stores/kelasStore';
 import { useRubricStore } from '@/stores/rubricStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useTerminology } from '@/hooks/useTerminology';
 import Modal from '@/components/ui/Modal';
 import HelpButton from '@/components/ui/HelpButton';
 import { capitalizeWords, capitalizeFirstLetter } from '@/utils/formatters';
-import { ArrowLeft, BookOpen, PlusCircle, Sparkles, X, Check, Eye, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, PlusCircle, Sparkles, X, Check, Eye, CheckCircle2, School } from 'lucide-react';
 
 const SEMESTER_OPTIONS = [
+  'Tahun Ajaran 2025/2026',
+  'Tahun Ajaran 2026/2027',
   'Ganjil 2026/2027',
   'Genap 2026/2027',
   'Ganjil 2025/2026',
@@ -32,26 +35,43 @@ const DEFAULT_KOMPONEN_CONFIG = [
 
 const CreateMKPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const kelasIdParam = searchParams.get('kelasId');
   const { profile } = useAuthStore();
-  const { createMK } = useMKStore();
+  const { createMK, addRombel } = useMKStore();
+  const { kelasList, getKelasById, addMapelToKelas } = useKelasStore();
   const { rubrics } = useRubricStore();
   const { addToast } = useUiStore();
   const { courseLabel, courseCodeLabel, rombelLabel, isSchool } = useTerminology();
+
+  const [targetKelasId, setTargetKelasId] = useState(kelasIdParam || '');
+  const selectedKelas = getKelasById(targetKelasId);
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     kode_mk: '',
-    semester: SEMESTER_OPTIONS[0],
+    semester: selectedKelas?.tahun_ajaran ? `Tahun Ajaran ${selectedKelas.tahun_ajaran}` : SEMESTER_OPTIONS[0],
     kode_semester: '',
     sks: 2,
-    kelas: '',
+    kelas: selectedKelas?.name || '',
     description: '',
   });
   const [komponenList, setKomponenList] = useState(DEFAULT_KOMPONEN_CONFIG);
   const [newKomponen, setNewKomponen] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewRubric, setPreviewRubric] = useState(null);
+
+  // Sync class name if targetKelasId changes
+  useEffect(() => {
+    if (selectedKelas) {
+      setFormData(prev => ({
+        ...prev,
+        kelas: selectedKelas.name,
+        semester: selectedKelas.tahun_ajaran ? `Tahun Ajaran ${selectedKelas.tahun_ajaran}` : prev.semester
+      }));
+    }
+  }, [targetKelasId, selectedKelas]);
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -80,7 +100,7 @@ const CreateMKPage = () => {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    await new Promise(r => setTimeout(r, 600));
+    await new Promise(r => setTimeout(r, 400));
 
     const enabledKomponen = komponenList
       .filter(k => k.enabled)
@@ -99,15 +119,37 @@ const CreateMKPage = () => {
     const newMK = createMK(
       {
         ...formData,
+        kelas: selectedKelas?.name || formData.kelas,
+        tahun_ajaran: selectedKelas?.tahun_ajaran || formData.semester,
         dosen_id: profile?.id,
-        dosen_name: profile?.full_name
+        dosen_name: profile?.full_name,
+        guru_id: profile?.id,
+        guru_name: profile?.full_name
       },
       enabledKomponen
     );
 
-    setIsSubmitting(false);
-    addToast(`${courseLabel} "${newMK.name}" berhasil dibuat!`, 'success');
-    navigate(`/mk/${newMK.id}`);
+    if (targetKelasId) {
+      addMapelToKelas(targetKelasId, newMK.id);
+
+      if (selectedKelas) {
+        addRombel(newMK.id, {
+          name: selectedKelas.name,
+          is_school: true,
+          tahun_ajaran: selectedKelas.tahun_ajaran || formData.semester,
+          guru_pengampu: profile?.full_name,
+          students: selectedKelas.students || []
+        });
+      }
+
+      setIsSubmitting(false);
+      addToast(`Mata pelajaran "${newMK.name}" berhasil dibuat dan dihubungkan ke kelas ${selectedKelas?.name || ''}!`, 'success', 3500);
+      navigate(`/kelas/${targetKelasId}`);
+    } else {
+      setIsSubmitting(false);
+      addToast(`${courseLabel} "${newMK.name}" berhasil dibuat!`, 'success');
+      navigate(`/mk/${newMK.id}`);
+    }
   };
 
   const isStep1Valid = formData.name.trim() && formData.kode_mk.trim() && formData.semester && Number(formData.sks) > 0;
@@ -115,8 +157,11 @@ const CreateMKPage = () => {
 
   return (
     <div className={styles.page}>
-      <button className={styles.backBtn} onClick={() => navigate(isSchool ? '/kelas' : '/mk')}>
-        <ArrowLeft size={16} /> Kembali ke {isSchool ? 'Daftar Kelas' : 'Daftar MK'}
+      <button 
+        className={styles.backBtn} 
+        onClick={() => navigate(targetKelasId ? `/kelas/${targetKelasId}` : (isSchool ? '/kelas' : '/mk'))}
+      >
+        <ArrowLeft size={16} /> Kembali ke {targetKelasId && selectedKelas ? `Kelas ${selectedKelas.name}` : (isSchool ? 'Daftar Kelas' : 'Daftar MK')}
       </button>
 
       <div className={styles.headerSection}>
@@ -147,6 +192,35 @@ const CreateMKPage = () => {
       {step === 1 && (
         <Card variant="glass" padding="lg" className={styles.formCard}>
           <div className={styles.formGrid}>
+            {isSchool && (
+              <div className={styles.selectWrap} style={{ gridColumn: '1 / -1' }}>
+                <label className={styles.selectLabel}>
+                  <School size={15} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px', color: 'var(--color-primary)' }} />
+                  Hubungkan ke Rombongan Belajar (Kelas) <span style={{ color: 'var(--color-primary)' }}>*</span>
+                </label>
+                <select 
+                  className={styles.select}
+                  value={targetKelasId}
+                  onChange={(e) => setTargetKelasId(e.target.value)}
+                >
+                  <option value="">-- Pilih Kelas Terdaftar --</option>
+                  {kelasList.map(k => (
+                    <option key={k.id} value={k.id}>
+                      {k.name} • {k.jurusan} ({k.students?.length || 0} Siswa)
+                    </option>
+                  ))}
+                </select>
+                {selectedKelas ? (
+                  <p style={{ margin: '6px 0 0', fontSize: '12.5px', color: 'var(--color-success)', fontWeight: 600 }}>
+                    ✓ Mata pelajaran ini akan langsung muncul di kelas <strong>{selectedKelas.name}</strong> dan {selectedKelas.students?.length || 0} siswa otomatis didaftarkan.
+                  </p>
+                ) : (
+                  <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    Pilih kelas tempat mata pelajaran ini akan diajarkan.
+                  </p>
+                )}
+              </div>
+            )}
             <Input
               label={`Nama ${courseLabel}`}
               placeholder={isSchool ? "e.g. Praktikum Akuntansi Lembaga" : "e.g. Praktikum Akuntansi Dasar"}
@@ -162,7 +236,7 @@ const CreateMKPage = () => {
               required
             />
             <div className={styles.selectWrap}>
-              <label className={styles.selectLabel}>Semester</label>
+              <label className={styles.selectLabel}>{isSchool ? 'Tahun Ajaran' : 'Semester'}</label>
               <select 
                 className={styles.select}
                 value={formData.semester}
@@ -178,19 +252,21 @@ const CreateMKPage = () => {
               onChange={(e) => updateField('kode_semester', e.target.value.toUpperCase())}
             />
             <Input
-              label="SKS / Beban Jam"
+              label={isSchool ? "Beban Jam Belajar (JP)" : "SKS / Beban SKS"}
               type="number"
               placeholder="2"
               value={formData.sks}
               onChange={(e) => updateField('sks', Math.max(1, Math.min(6, Number(e.target.value) || 1)))}
               required
             />
-            <Input
-              label={<>Nama {rombelLabel} Awal <span className={styles.optional}>(opsional)</span></>}
-              placeholder={isSchool ? "e.g. XII AKL 1" : "e.g. PE 2025 A"}
-              value={formData.kelas}
-              onChange={(e) => updateField('kelas', capitalizeWords(e.target.value))}
-            />
+            {!isSchool && (
+              <Input
+                label={<>Nama {rombelLabel} Awal <span className={styles.optional}>(opsional)</span></>}
+                placeholder="e.g. PE 2025 A"
+                value={formData.kelas}
+                onChange={(e) => updateField('kelas', capitalizeWords(e.target.value))}
+              />
+            )}
             <div className={styles.textareaWrap}>
               <label className={styles.selectLabel}>Deskripsi <span className={styles.optional}>(opsional)</span></label>
               <textarea

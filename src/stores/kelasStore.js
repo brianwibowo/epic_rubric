@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { supabase } from '@/config/supabase';
 
 /**
  * Kelas Store (SMK Context)
@@ -137,6 +138,55 @@ const saveKelasToStorage = (kelasList) => {
 
 export const useKelasStore = create((set, get) => ({
   kelasList: loadSavedKelas(),
+  isSyncing: false,
+
+  // Synchronize classes from Supabase
+  syncFromSupabase: async () => {
+    try {
+      set({ isSyncing: true });
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Supabase sync classes info:', error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const remoteClasses = data.map(c => ({
+          id: c.id,
+          name: c.name,
+          jurusan: c.jurusan || 'Akuntansi & Keuangan Lembaga',
+          tahun_ajaran: c.tahun_ajaran || c.academic_year || '2025/2026',
+          wali_kelas: c.wali_kelas || '',
+          status: c.status || 'ACTIVE',
+          mapel_ids: c.mapel_ids || [],
+          students: (c.students_data && c.students_data.length > 0) 
+            ? c.students_data 
+            : (get().getKelasById(c.id)?.students || []),
+          created_at: c.created_at
+        }));
+
+        // Merge remote classes with seed data
+        const localList = get().kelasList;
+        const merged = [...remoteClasses];
+        localList.forEach(localItem => {
+          if (!merged.some(m => m.id === localItem.id || m.name === localItem.name)) {
+            merged.push(localItem);
+          }
+        });
+
+        set({ kelasList: merged, isSyncing: false });
+        saveKelasToStorage(merged);
+      }
+    } catch (e) {
+      console.warn('syncFromSupabase exception:', e);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
 
   // Create a new Kelas
   createKelas: (kelasData) => {
@@ -155,6 +205,38 @@ export const useKelasStore = create((set, get) => ({
     const updated = [newKelas, ...kelasList];
     set({ kelasList: updated });
     saveKelasToStorage(updated);
+
+    // Sync to Supabase in background
+    supabase
+      .from('classes')
+      .insert({
+        name: newKelas.name,
+        academic_year: newKelas.tahun_ajaran,
+        tahun_ajaran: newKelas.tahun_ajaran,
+        jurusan: newKelas.jurusan,
+        wali_kelas: newKelas.wali_kelas,
+        status: 'ACTIVE',
+        students_data: newKelas.students,
+        mapel_ids: newKelas.mapel_ids
+      })
+      .select()
+      .then(({ data, error }) => {
+        if (!error && data && data[0]) {
+          const remoteId = data[0].id;
+          const currentList = get().kelasList;
+          const mapped = currentList.map(k => k.id === newKelas.id ? { ...k, id: remoteId } : k);
+          set({ kelasList: mapped });
+          saveKelasToStorage(mapped);
+        } else if (error) {
+          // Fallback if specific columns not yet added
+          supabase.from('classes').insert({
+            name: newKelas.name,
+            academic_year: newKelas.tahun_ajaran
+          }).catch(() => {});
+        }
+      })
+      .catch((err) => console.warn('Supabase background insert error:', err));
+
     return newKelas;
   },
 
@@ -164,14 +246,35 @@ export const useKelasStore = create((set, get) => ({
     const updated = kelasList.map(k => k.id === id ? { ...k, ...partialData } : k);
     set({ kelasList: updated });
     saveKelasToStorage(updated);
+
+    // Sync update to Supabase
+    if (!id.startsWith('kelas-')) {
+      supabase.from('classes').update({
+        name: partialData.name,
+        academic_year: partialData.tahun_ajaran,
+        tahun_ajaran: partialData.tahun_ajaran,
+        jurusan: partialData.jurusan,
+        wali_kelas: partialData.wali_kelas,
+        mapel_ids: partialData.mapel_ids,
+        students_data: partialData.students
+      }).eq('id', id).catch(() => {});
+    }
   },
 
   // Delete a Kelas
   deleteKelas: (id) => {
     const { kelasList } = get();
+    const target = kelasList.find(k => k.id === id);
     const updated = kelasList.filter(k => k.id !== id);
     set({ kelasList: updated });
     saveKelasToStorage(updated);
+
+    // Sync delete to Supabase
+    if (target && !id.startsWith('kelas-')) {
+      supabase.from('classes').delete().eq('id', id).catch(() => {});
+    } else if (target) {
+      supabase.from('classes').delete().eq('name', target.name).catch(() => {});
+    }
   },
 
   // Get single Kelas by ID
@@ -210,27 +313,42 @@ export const useKelasStore = create((set, get) => ({
   // Link a Mapel (MK) to a Kelas
   addMapelToKelas: (kelasId, mkId) => {
     const { kelasList } = get();
+    let newMapelIds = [];
     const updated = kelasList.map(k => {
       if (k.id === kelasId) {
-        if (k.mapel_ids.includes(mkId)) return k;
-        return { ...k, mapel_ids: [...k.mapel_ids, mkId] };
+        if (k.mapel_ids.includes(mkId)) {
+          newMapelIds = k.mapel_ids;
+          return k;
+        }
+        newMapelIds = [...k.mapel_ids, mkId];
+        return { ...k, mapel_ids: newMapelIds };
       }
       return k;
     });
     set({ kelasList: updated });
     saveKelasToStorage(updated);
+
+    if (!kelasId.startsWith('kelas-')) {
+      supabase.from('classes').update({ mapel_ids: newMapelIds }).eq('id', kelasId).catch(() => {});
+    }
   },
 
   // Unlink a Mapel from a Kelas
   removeMapelFromKelas: (kelasId, mkId) => {
     const { kelasList } = get();
+    let newMapelIds = [];
     const updated = kelasList.map(k => {
       if (k.id === kelasId) {
-        return { ...k, mapel_ids: k.mapel_ids.filter(id => id !== mkId) };
+        newMapelIds = k.mapel_ids.filter(id => id !== mkId);
+        return { ...k, mapel_ids: newMapelIds };
       }
       return k;
     });
     set({ kelasList: updated });
     saveKelasToStorage(updated);
+
+    if (!kelasId.startsWith('kelas-')) {
+      supabase.from('classes').update({ mapel_ids: newMapelIds }).eq('id', kelasId).catch(() => {});
+    }
   }
 }));

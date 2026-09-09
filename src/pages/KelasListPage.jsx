@@ -6,19 +6,23 @@ import { useTerminology } from '@/hooks/useTerminology';
 import { STAFF_ROLES, LEARNER_ROLES } from '@/utils/constants';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import Modal from '@/components/ui/Modal';
+import Input from '@/components/ui/Input';
 import HelpButton from '@/components/ui/HelpButton';
 import Pagination from '@/components/ui/Pagination';
 import styles from './KelasListPage.module.css';
+import { useUiStore } from '@/stores/uiStore';
 import {
   School, PlusCircle, Users, Calendar, ArrowRight, Search,
-  LayoutGrid, List, BookOpen, UserCheck, ChevronRight, X
+  LayoutGrid, List, BookOpen, UserCheck, ChevronRight, X, Sparkles
 } from 'lucide-react';
 
 const KelasListPage = () => {
   const navigate = useNavigate();
   const { profile } = useAuthStore();
-  const { kelasList } = useKelasStore();
+  const { kelasList, createKelas } = useKelasStore();
   const { kelasLabel, learnerLabel } = useTerminology();
+  const { addToast } = useUiStore();
   const isStaff = STAFF_ROLES.includes(profile?.role);
   const isLearner = LEARNER_ROLES.includes(profile?.role);
 
@@ -26,9 +30,36 @@ const KelasListPage = () => {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
+  // Create Kelas Modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newKelasName, setNewKelasName] = useState('');
+  const [newJurusan, setNewJurusan] = useState('Akuntansi & Keuangan Lembaga');
+  const [newTahunAjaran, setNewTahunAjaran] = useState('2025/2026');
+  const [newWaliKelas, setNewWaliKelas] = useState(profile?.full_name || 'Siti Rahmawati, S.Pd.');
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
+
+  const handleCreateKelas = (e) => {
+    if (e) e.preventDefault();
+    if (!newKelasName.trim()) {
+      addToast('Nama kelas wajib diisi!', 'warning');
+      return;
+    }
+
+    const created = createKelas({
+      name: newKelasName.trim(),
+      jurusan: newJurusan.trim() || 'Akuntansi & Keuangan Lembaga',
+      tahun_ajaran: newTahunAjaran.trim() || '2025/2026',
+      wali_kelas: newWaliKelas.trim() || (profile?.full_name || 'Siti Rahmawati, S.Pd.')
+    });
+
+    addToast(`Kelas "${created.name}" berhasil dibuat! Silakan tambahkan mata pelajaran.`, 'success', 3500);
+    setIsCreateModalOpen(false);
+    setNewKelasName('');
+    navigate(`/kelas/${created.id}`);
+  };
 
   // Debounce search query by 250ms
   useEffect(() => {
@@ -81,7 +112,7 @@ const KelasListPage = () => {
         </div>
 
         {isStaff && (
-          <Button variant="primary" onClick={() => {/* TODO: create kelas modal */}}>
+          <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
             <PlusCircle size={18} /> Buat Kelas Baru
           </Button>
         )}
@@ -261,6 +292,63 @@ const KelasListPage = () => {
           )}
         </div>
       )}
+
+      {/* MODAL BUAT KELAS BARU */}
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Buat Rombongan Belajar (Kelas) Baru"
+        size="md"
+      >
+        <form onSubmit={handleCreateKelas} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <p style={{ margin: 0, fontSize: '13.5px', color: 'var(--text-secondary)' }}>
+            Tambahkan kelas baru untuk SMK Anda. Setelah dibuat, Anda dapat langsung menambahkan mata pelajaran dan peserta didik.
+          </p>
+
+          <Input
+            label="Nama Kelas"
+            placeholder="e.g. X AKL 3, XI AKL 3, XII AKL 3"
+            value={newKelasName}
+            onChange={(e) => setNewKelasName(e.target.value)}
+            required
+            autoFocus
+          />
+
+          <Input
+            label="Kompetensi Keahlian / Jurusan"
+            placeholder="e.g. Akuntansi & Keuangan Lembaga"
+            value={newJurusan}
+            onChange={(e) => setNewJurusan(e.target.value)}
+            required
+          />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <Input
+              label="Tahun Ajaran"
+              placeholder="e.g. 2025/2026"
+              value={newTahunAjaran}
+              onChange={(e) => setNewTahunAjaran(e.target.value)}
+              required
+            />
+            <Input
+              label="Wali Kelas"
+              placeholder="e.g. Siti Rahmawati, S.Pd."
+              value={newWaliKelas}
+              onChange={(e) => setNewWaliKelas(e.target.value)}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+            <Button variant="outline" type="button" onClick={() => setIsCreateModalOpen(false)}>
+              Batal
+            </Button>
+            <Button variant="primary" type="submit">
+              <PlusCircle size={16} /> Buat & Buka Kelas
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

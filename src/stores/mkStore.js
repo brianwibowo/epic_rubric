@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { supabase } from '@/config/supabase';
 import { DEFAULT_KOMPONEN } from '@/utils/constants';
 
 const INITIAL_MKS = [
@@ -299,6 +300,64 @@ const saveMKsToStorage = (mks) => {
 
 export const useMKStore = create((set, get) => ({
   mkList: loadSavedMKs(),
+  isSyncing: false,
+
+  // Synchronize courses from Supabase
+  syncFromSupabase: async () => {
+    try {
+      set({ isSyncing: true });
+      const { data, error } = await supabase
+        .from('mata_kuliah')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Supabase sync mata_kuliah info:', error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const remoteMKs = data.map(m => ({
+          id: m.id,
+          name: m.name,
+          kode_mk: m.kode_mk,
+          semester: m.semester,
+          tahun_ajaran: m.tahun_ajaran || m.semester,
+          sks: m.sks || 2,
+          status: m.status || 'ACTIVE',
+          join_code: m.join_code,
+          description: m.description || '',
+          dosen_id: m.dosen_id || 'mock-dosen-uuid',
+          dosen_name: m.dosen_name || 'Dosen Pengampu',
+          guru_id: m.guru_id || 'mock-guru-uuid',
+          guru_name: m.guru_name || 'Guru Pengampu',
+          created_at: m.created_at,
+          komponen: DEFAULT_KOMPONEN,
+          rombel: (m.rombel_data && m.rombel_data.length > 0) ? m.rombel_data : [{
+            id: `rombel-${m.id}`,
+            name: 'Kelas 1',
+            students: [],
+            scoringData: {}
+          }]
+        }));
+
+        const localList = get().mkList;
+        const merged = [...remoteMKs];
+        localList.forEach(localItem => {
+          if (!merged.some(r => r.id === localItem.id || r.kode_mk === localItem.kode_mk)) {
+            merged.push(localItem);
+          }
+        });
+
+        set({ mkList: merged, isSyncing: false });
+        saveMKsToStorage(merged);
+      }
+    } catch (e) {
+      console.warn('syncFromSupabase MK exception:', e);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
 
   // Create MK
   createMK: (mkData, customKomponen = null) => {
@@ -343,6 +402,42 @@ export const useMKStore = create((set, get) => ({
     const updated = [newMK, ...mkList];
     set({ mkList: updated });
     saveMKsToStorage(updated);
+
+    // Sync to Supabase in background
+    supabase
+      .from('mata_kuliah')
+      .insert({
+        name: newMK.name,
+        kode_mk: newMK.kode_mk,
+        semester: newMK.semester,
+        tahun_ajaran: newMK.tahun_ajaran || newMK.semester,
+        sks: newMK.sks,
+        status: 'ACTIVE',
+        join_code: newMK.join_code,
+        description: newMK.description,
+        dosen_name: newMK.dosen_name,
+        guru_name: newMK.guru_name,
+        rombel_data: newMK.rombel
+      })
+      .select()
+      .then(({ data, error }) => {
+        if (!error && data && data[0]) {
+          const remoteId = data[0].id;
+          const currentList = get().mkList;
+          const mapped = currentList.map(m => m.id === newMK.id ? { ...m, id: remoteId } : m);
+          set({ mkList: mapped });
+          saveMKsToStorage(mapped);
+        } else if (error) {
+          // Minimal fallback
+          supabase.from('mata_kuliah').insert({
+            name: newMK.name,
+            kode_mk: newMK.kode_mk,
+            semester: newMK.semester
+          }).catch(() => {});
+        }
+      })
+      .catch((err) => console.warn('Supabase background insert MK error:', err));
+
     return newMK;
   },
 
@@ -358,14 +453,34 @@ export const useMKStore = create((set, get) => ({
 
     set({ mkList: updated });
     saveMKsToStorage(updated);
+
+    // Sync update to Supabase
+    if (!id.startsWith('mk-')) {
+      supabase.from('mata_kuliah').update({
+        name: updates.name,
+        kode_mk: updates.kode_mk,
+        semester: updates.semester,
+        status: updates.status,
+        description: updates.description,
+        rombel_data: updates.rombel
+      }).eq('id', id).catch(() => {});
+    }
   },
 
   // Delete MK
   deleteMK: (id) => {
     const { mkList } = get();
+    const target = mkList.find(m => m.id === id);
     const updated = mkList.filter(mk => mk.id !== id);
     set({ mkList: updated });
     saveMKsToStorage(updated);
+
+    // Sync delete to Supabase
+    if (target && !id.startsWith('mk-')) {
+      supabase.from('mata_kuliah').delete().eq('id', id).catch(() => {});
+    } else if (target) {
+      supabase.from('mata_kuliah').delete().eq('kode_mk', target.kode_mk).catch(() => {});
+    }
   },
 
   // Reset to initial mock data
@@ -399,6 +514,13 @@ export const useMKStore = create((set, get) => ({
 
     set({ mkList: updated });
     saveMKsToStorage(updated);
+
+    if (!mkId.startsWith('mk-')) {
+      const targetMK = updated.find(m => m.id === mkId);
+      if (targetMK) {
+        supabase.from('mata_kuliah').update({ rombel_data: targetMK.rombel }).eq('id', mkId).catch(() => {});
+      }
+    }
     return newRombel;
   },
 

@@ -33,12 +33,16 @@ import MKAnalyticsPage from '@/pages/MKAnalyticsPage';
 import CommentsPage from '@/pages/CommentsPage';
 import CreateMKPage from '@/pages/CreateMKPage';
 import ScoringPage from '@/pages/ScoringPage';
+import { useKelasStore } from '@/stores/kelasStore';
+import { useMKStore } from '@/stores/mkStore';
 
 function App() {
   const { initializeAuth } = useAuthStore();
 
   useEffect(() => {
     initializeAuth();
+    useKelasStore.getState().syncFromSupabase();
+    useMKStore.getState().syncFromSupabase();
   }, [initializeAuth]);
 
   return (
