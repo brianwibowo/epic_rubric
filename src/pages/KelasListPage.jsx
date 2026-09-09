@@ -33,9 +33,27 @@ const KelasListPage = () => {
   // Create Kelas Modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newKelasName, setNewKelasName] = useState('');
-  const [newJurusan, setNewJurusan] = useState('Akuntansi & Keuangan Lembaga');
+  const [newJurusan, setNewJurusan] = useState(profile?.jurusan || profile?.unit_info || 'Akuntansi & Keuangan Lembaga');
   const [newTahunAjaran, setNewTahunAjaran] = useState('2025/2026');
-  const [newWaliKelas, setNewWaliKelas] = useState(profile?.full_name || 'Siti Rahmawati, S.Pd.');
+  const [newWaliKelas, setNewWaliKelas] = useState(profile?.full_name || '');
+
+  // Keep modal defaults in sync with current user profile
+  useEffect(() => {
+    if (profile?.full_name) {
+      setNewWaliKelas(profile.full_name);
+    }
+    if (profile?.jurusan || profile?.unit_info) {
+      setNewJurusan(profile.jurusan || profile.unit_info);
+    }
+  }, [profile]);
+
+  const handleOpenCreateModal = () => {
+    setNewKelasName('');
+    setNewJurusan(profile?.jurusan || profile?.unit_info || 'Akuntansi & Keuangan Lembaga');
+    setNewTahunAjaran('2025/2026');
+    setNewWaliKelas(profile?.full_name || '');
+    setIsCreateModalOpen(true);
+  };
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,9 +68,9 @@ const KelasListPage = () => {
 
     const created = createKelas({
       name: newKelasName.trim(),
-      jurusan: newJurusan.trim() || 'Akuntansi & Keuangan Lembaga',
+      jurusan: newJurusan.trim() || profile?.jurusan || profile?.unit_info || 'Akuntansi & Keuangan Lembaga',
       tahun_ajaran: newTahunAjaran.trim() || '2025/2026',
-      wali_kelas: newWaliKelas.trim() || (profile?.full_name || 'Siti Rahmawati, S.Pd.')
+      wali_kelas: newWaliKelas.trim() || (profile?.full_name || 'Pendidik SMK')
     });
 
     addToast(`Kelas "${created.name}" berhasil dibuat! Silakan tambahkan mata pelajaran.`, 'success', 3500);
@@ -117,7 +135,7 @@ const KelasListPage = () => {
         </div>
 
         {isStaff && (
-          <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+          <Button variant="primary" onClick={handleOpenCreateModal}>
             <PlusCircle size={18} /> Buat Kelas Baru
           </Button>
         )}
