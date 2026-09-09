@@ -17,7 +17,8 @@ const testSuites = [
   { name: '4. i18n Multi-Language (ID ↔ EN) Key Parity', path: 'tests/i18n_parity.test.cjs' },
   { name: '5. Storage Resilience, Recovery & Data Sanitization', path: 'tests/storage_resilience.test.cjs' },
   { name: '6. UI/UX Responsiveness, Viewport & Accessibility Audit', path: 'tests/ui_ux_responsive.test.cjs' },
-  { name: '7. User Creation, Password & Role-Based Login Suite', path: 'tests/user_creation_and_login.test.cjs' }
+  { name: '7. User Creation, Password & Role-Based Login Suite', path: 'tests/user_creation_and_login.test.cjs' },
+  { name: '8. Class & Course Ownership Scoping (Teacher Isolation)', path: 'tests/class_ownership_scoping.test.cjs' }
 ];
 
 let allPassed = true;

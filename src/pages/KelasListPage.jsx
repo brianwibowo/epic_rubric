@@ -1,9 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useKelasStore } from '@/stores/kelasStore';
+import { useMKStore } from '@/stores/mkStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useTerminology } from '@/hooks/useTerminology';
 import { STAFF_ROLES, LEARNER_ROLES } from '@/utils/constants';
+import { isClassOwnedOrTaughtBy, isLearnerEnrolledInClass } from '@/utils/classOwnership';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
@@ -14,17 +16,29 @@ import styles from './KelasListPage.module.css';
 import { useUiStore } from '@/stores/uiStore';
 import {
   School, PlusCircle, Users, Calendar, ArrowRight, Search,
-  LayoutGrid, List, BookOpen, UserCheck, ChevronRight, X, Sparkles
+  LayoutGrid, List, BookOpen, UserCheck, ChevronRight, X, Sparkles, CheckCircle2
 } from 'lucide-react';
 
 const KelasListPage = () => {
   const navigate = useNavigate();
   const { profile } = useAuthStore();
   const { kelasList, createKelas } = useKelasStore();
+  const { mkList } = useMKStore();
   const { kelasLabel, learnerLabel } = useTerminology();
   const { addToast } = useUiStore();
+  const isAdmin = profile?.role === 'admin';
   const isStaff = STAFF_ROLES.includes(profile?.role);
   const isLearner = LEARNER_ROLES.includes(profile?.role);
+
+  // Scope filter: 'my' (Kelas Binaan Saya) | 'all' (Semua Kelas SMK)
+  // Teachers and learners default to their own classes, Admins default to all
+  const [filterScope, setFilterScope] = useState(isAdmin ? 'all' : 'my');
+
+  useEffect(() => {
+    if (profile?.role === 'admin') {
+      setFilterScope('all');
+    }
+  }, [profile?.role]);
 
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [searchInput, setSearchInput] = useState('');
@@ -70,7 +84,9 @@ const KelasListPage = () => {
       name: newKelasName.trim(),
       jurusan: newJurusan.trim() || profile?.jurusan || profile?.unit_info || 'Akuntansi & Keuangan Lembaga',
       tahun_ajaran: newTahunAjaran.trim() || '2025/2026',
-      wali_kelas: newWaliKelas.trim() || (profile?.full_name || 'Pendidik SMK')
+      wali_kelas: newWaliKelas.trim() || (profile?.full_name || 'Pendidik SMK'),
+      created_by: profile?.id || '',
+      created_by_name: profile?.full_name || ''
     });
 
     addToast(`Kelas "${created.name}" berhasil dibuat! Silakan tambahkan mata pelajaran.`, 'success', 3500);
@@ -82,6 +98,7 @@ const KelasListPage = () => {
   // Background refresh to catch newly created classes by others
   useEffect(() => {
     useKelasStore.getState().syncFromSupabase();
+    useMKStore.getState().syncFromSupabase();
   }, []);
 
   // Debounce search query by 250ms
@@ -93,18 +110,34 @@ const KelasListPage = () => {
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  // Filter
+  // Compute classes owned/taught by this user vs all classes
+  const myClasses = useMemo(() => {
+    if (isLearner) {
+      return kelasList.filter(k => isLearnerEnrolledInClass(k, profile));
+    }
+    return kelasList.filter(k => isClassOwnedOrTaughtBy(k, profile, mkList));
+  }, [kelasList, profile, mkList, isLearner]);
+
+  // Base list determined by active scope tab
+  const scopedList = useMemo(() => {
+    if (filterScope === 'my') {
+      return myClasses;
+    }
+    return kelasList;
+  }, [filterScope, myClasses, kelasList]);
+
+  // Filter with search query
   const filtered = useMemo(() => {
     const query = debouncedSearchQuery.trim().toLowerCase();
-    if (!query) return kelasList;
+    if (!query) return scopedList;
 
-    return kelasList.filter(k =>
+    return scopedList.filter(k =>
       (k.name || '').toLowerCase().includes(query) ||
       (k.jurusan || '').toLowerCase().includes(query) ||
       (k.wali_kelas || '').toLowerCase().includes(query) ||
       (k.tahun_ajaran || '').toLowerCase().includes(query)
     );
-  }, [kelasList, debouncedSearchQuery]);
+  }, [scopedList, debouncedSearchQuery]);
 
   // Pagination calculation
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
@@ -138,6 +171,37 @@ const KelasListPage = () => {
           <Button variant="primary" onClick={handleOpenCreateModal}>
             <PlusCircle size={18} /> Buat Kelas Baru
           </Button>
+        )}
+      </div>
+
+      {/* SCOPE NAVIGATION TABS */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div className={styles.scopeNav}>
+          <button
+            type="button"
+            className={`${styles.scopeTab} ${filterScope === 'my' ? styles.scopeTabActive : ''}`}
+            onClick={() => { setFilterScope('my'); setCurrentPage(1); }}
+          >
+            <UserCheck size={16} />
+            <span>{isLearner ? 'Kelas Saya' : 'Kelas Binaan Saya'}</span>
+            <span className={styles.scopeCountBadge}>{myClasses.length}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.scopeTab} ${filterScope === 'all' ? styles.scopeTabActive : ''}`}
+            onClick={() => { setFilterScope('all'); setCurrentPage(1); }}
+          >
+            <School size={16} />
+            <span>Semua Kelas SMK</span>
+            <span className={styles.scopeCountBadge}>{kelasList.length}</span>
+          </button>
+        </div>
+
+        {filterScope === 'my' && isStaff && (
+          <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+            Menampilkan rombel tempat Anda bertugas sebagai <strong>Wali Kelas</strong> atau <strong>Pendidik Pengampu</strong>.
+          </span>
         )}
       </div>
 
@@ -179,52 +243,62 @@ const KelasListPage = () => {
         <>
           {viewMode === 'grid' ? (
             <div className={styles.grid}>
-              {paginated.map((kelas) => (
-                <div
-                  key={kelas.id}
-                  className={styles.kelasCard}
-                  onClick={() => handleOpenKelas(kelas.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && handleOpenKelas(kelas.id)}
-                >
-                  <div className={styles.cardAccentBar} />
-                  <div className={styles.cardBody}>
-                    <div className={styles.cardTop}>
-                      <div className={styles.iconCircle}>
-                        <School size={22} />
+              {paginated.map((kelas) => {
+                const isMine = isClassOwnedOrTaughtBy(kelas, profile, mkList);
+                return (
+                  <div
+                    key={kelas.id}
+                    className={styles.kelasCard}
+                    onClick={() => handleOpenKelas(kelas.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && handleOpenKelas(kelas.id)}
+                  >
+                    <div className={styles.cardAccentBar} />
+                    <div className={styles.cardBody}>
+                      <div className={styles.cardTop}>
+                        <div className={styles.iconCircle}>
+                          <School size={22} />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {isMine && (
+                            <Badge variant="success" size="sm" glow>
+                              Binaan Anda
+                            </Badge>
+                          )}
+                          <Badge variant="primary" size="sm">{kelas.tahun_ajaran}</Badge>
+                        </div>
                       </div>
-                      <Badge variant="primary" size="sm" glow>{kelas.tahun_ajaran}</Badge>
+
+                      <h3 className={styles.kelasName}>{kelas.name}</h3>
+                      <p className={styles.jurusan}>{kelas.jurusan}</p>
+
+                      <div className={styles.metaGrid}>
+                        <div className={styles.metaItem}>
+                          <Users size={13} />
+                          <span>{kelas.students?.length || 0} Siswa</span>
+                        </div>
+                        <div className={styles.metaItem}>
+                          <BookOpen size={13} />
+                          <span>{kelas.mapel_ids?.length || 0} Mapel</span>
+                        </div>
+                        <div className={styles.metaItem}>
+                          <UserCheck size={13} />
+                          <span>{kelas.wali_kelas ? kelas.wali_kelas.split(',')[0] : '-'}</span>
+                        </div>
+                        <div className={styles.metaItem}>
+                          <Calendar size={13} />
+                          <span>{kelas.tahun_ajaran}</span>
+                        </div>
+                      </div>
                     </div>
-
-                    <h3 className={styles.kelasName}>{kelas.name}</h3>
-                    <p className={styles.jurusan}>{kelas.jurusan}</p>
-
-                    <div className={styles.metaGrid}>
-                      <div className={styles.metaItem}>
-                        <Users size={13} />
-                        <span>{kelas.students?.length || 0} Siswa</span>
-                      </div>
-                      <div className={styles.metaItem}>
-                        <BookOpen size={13} />
-                        <span>{kelas.mapel_ids?.length || 0} Mapel</span>
-                      </div>
-                      <div className={styles.metaItem}>
-                        <UserCheck size={13} />
-                        <span>{kelas.wali_kelas ? kelas.wali_kelas.split(',')[0] : '-'}</span>
-                      </div>
-                      <div className={styles.metaItem}>
-                        <Calendar size={13} />
-                        <span>{kelas.tahun_ajaran}</span>
-                      </div>
+                    <div className={styles.cardFooter}>
+                      <span className={styles.actionLink}>Buka {kelasLabel}</span>
+                      <ArrowRight size={16} className={styles.arrow} />
                     </div>
                   </div>
-                  <div className={styles.cardFooter}>
-                    <span className={styles.actionLink}>Buka {kelasLabel}</span>
-                    <ArrowRight size={16} className={styles.arrow} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             /* Table Mode (List View) */
@@ -242,36 +316,42 @@ const KelasListPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginated.map((kelas) => (
-                    <tr key={kelas.id} onClick={() => handleOpenKelas(kelas.id)}>
-                      <td style={{ fontWeight: 800 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <School size={16} style={{ color: '#2563eb' }} />
-                          <span>{kelas.name}</span>
-                        </div>
-                      </td>
-                      <td style={{ color: 'var(--text-secondary)' }}>{kelas.jurusan}</td>
-                      <td>
-                        <Badge variant="primary" size="sm">
-                          {kelas.tahun_ajaran}
-                        </Badge>
-                      </td>
-                      <td style={{ fontWeight: 600 }}>{kelas.wali_kelas || '-'}</td>
-                      <td style={{ fontWeight: 700 }}>
-                        {kelas.students?.length || 0} Siswa
-                      </td>
-                      <td>
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                          {kelas.mapel_ids?.length || 0} Mapel
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleOpenKelas(kelas.id); }}>
-                          Buka <ChevronRight size={14} />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                  {paginated.map((kelas) => {
+                    const isMine = isClassOwnedOrTaughtBy(kelas, profile, mkList);
+                    return (
+                      <tr key={kelas.id} onClick={() => handleOpenKelas(kelas.id)}>
+                        <td style={{ fontWeight: 800 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <School size={16} style={{ color: '#2563eb', flexShrink: 0 }} />
+                            <span>{kelas.name}</span>
+                            {isMine && (
+                              <Badge variant="success" size="sm">Binaan Anda</Badge>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{kelas.jurusan}</td>
+                        <td>
+                          <Badge variant="primary" size="sm">
+                            {kelas.tahun_ajaran}
+                          </Badge>
+                        </td>
+                        <td style={{ fontWeight: 600 }}>{kelas.wali_kelas || '-'}</td>
+                        <td style={{ fontWeight: 700 }}>
+                          {kelas.students?.length || 0} Siswa
+                        </td>
+                        <td>
+                          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                            {kelas.mapel_ids?.length || 0} Mapel
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleOpenKelas(kelas.id); }}>
+                            Buka <ChevronRight size={14} />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -293,26 +373,46 @@ const KelasListPage = () => {
         </>
       ) : (
         <div className={styles.emptyState}>
-          <School size={40} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+          <School size={42} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
           <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>
             {debouncedSearchQuery 
               ? `Tidak ditemukan kelas dengan kata kunci "${debouncedSearchQuery}"` 
+              : filterScope === 'my'
+              ? 'Belum Ada Kelas Binaan'
               : 'Belum Ada Kelas'
             }
           </h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', margin: 0 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', margin: 0, maxWidth: '520px', lineHeight: 1.5 }}>
             {debouncedSearchQuery
               ? 'Coba gunakan kata kunci pencarian yang lain.'
+              : filterScope === 'my'
+              ? isStaff
+                ? 'Anda belum memiliki rombongan belajar binaan. Klik "Buat Kelas Baru" untuk menambahkan rombel Anda, atau lihat tab "Semua Kelas SMK" untuk meninjau seluruh rombel di sekolah.'
+                : 'Anda belum terdaftar dalam kelas rombongan belajar manapun.'
               : isStaff
-              ? 'Buat kelas pertama Anda untuk mulai mengelola rombongan belajar.'
-              : 'Anda belum terdaftar di kelas manapun.'
+              ? 'Belum ada data kelas di sistem. Buat kelas pertama untuk mulai mengelola rombongan belajar.'
+              : 'Belum ada rombongan belajar yang terdaftar di sekolah.'
             }
           </p>
-          {debouncedSearchQuery && (
-            <Button variant="outline" size="sm" onClick={() => setSearchInput('')} style={{ marginTop: '8px' }}>
-              <X size={14} /> Reset Pencarian
-            </Button>
-          )}
+          <div style={{ display: 'flex', gap: '10px', marginTop: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {debouncedSearchQuery && (
+              <Button variant="outline" size="sm" onClick={() => setSearchInput('')}>
+                <X size={14} /> Reset Pencarian
+              </Button>
+            )}
+            {filterScope === 'my' && !debouncedSearchQuery && (
+              <>
+                {isStaff && (
+                  <Button variant="primary" size="sm" onClick={handleOpenCreateModal}>
+                    <PlusCircle size={15} /> Buat Kelas Baru
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={() => setFilterScope('all')}>
+                  <School size={15} /> Buka Semua Kelas SMK ({kelasList.length})
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       )}
 

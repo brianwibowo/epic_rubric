@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useMKStore } from '@/stores/mkStore';
@@ -7,6 +7,7 @@ import { useRubricStore } from '@/stores/rubricStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useTerminology } from '@/hooks/useTerminology';
 import { ROLES, STAFF_ROLES, ROLE_LABELS } from '@/utils/constants';
+import { isCourseTaughtBy } from '@/utils/classOwnership';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -31,6 +32,25 @@ const DashboardPage = () => {
   const role = profile?.role;
   const isAdmin = role === ROLES.ADMIN;
   const isStaff = STAFF_ROLES.includes(role);
+
+  // Courses scoped to current educator/student
+  const teacherMKs = useMemo(() => {
+    if (isAdmin) return mkList;
+    if (isStaff) {
+      return mkList.filter(mk => isCourseTaughtBy(mk, profile));
+    }
+    const myEnrolled = mkList.filter(mk =>
+      (mk.rombel || []).some(r =>
+        (r.students || []).some(s =>
+          s.student_id === profile?.id ||
+          s.nim === profile?.nim ||
+          s.nisn === profile?.nisn ||
+          (profile?.full_name && (s.full_name || '').toLowerCase().includes(profile.full_name.toLowerCase()))
+        )
+      )
+    );
+    return myEnrolled.length > 0 ? myEnrolled : mkList;
+  }, [mkList, profile, isAdmin, isStaff]);
 
   // Admin monitoring active tab
   const [adminTab, setAdminTab] = useState('smk'); // 'smk' | 'vokasi' | 'users' | 'audit'
@@ -481,42 +501,62 @@ const DashboardPage = () => {
           </div>
 
           <div className={styles.mkList}>
-            {mkList.map((mk) => {
-              const rombels = (mk.rombel || []).filter(r => isSchool ? (r.is_school || r.name.includes('AKL')) : (!r.is_school && !r.name.includes('AKL')));
-              const studentCount = rombels.reduce((acc, r) => acc + (r.students?.length || 0), 0);
+            {teacherMKs.length > 0 ? (
+              teacherMKs.map((mk) => {
+                const rombels = (mk.rombel || []).filter(r => isSchool ? (r.is_school || r.name.includes('AKL')) : (!r.is_school && !r.name.includes('AKL')));
+                const studentCount = rombels.reduce((acc, r) => acc + (r.students?.length || 0), 0);
 
-              return (
-                <div 
-                  key={mk.id} 
-                  className={styles.mkItem} 
-                  onClick={() => navigate(role === ROLES.SISWA || role === ROLES.MAHASISWA ? `/mk/${mk.id}/analytics` : `/mk/${mk.id}`)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className={styles.mkItemIcon}>
-                    <BookOpen size={18} />
-                  </div>
-                  <div className={styles.mkItemInfo}>
-                    <h4 className={styles.mkItemName}>{mk.name}</h4>
-                    <span className={styles.mkItemMeta}>
-                      {mk.kode_mk}{mk.sks ? ` (${mk.sks} ${isSchool ? 'Jam' : 'SKS'})` : ''} • {isSchool ? (mk.tahun_ajaran || '2025/2026') : mk.semester}
-                    </span>
-                  </div>
-                  <div className={styles.mkItemRight}>
-                    {isStaff ? (
-                      <span className={styles.progressText}>
-                        {studentCount} {learnerLabel}
+                return (
+                  <div 
+                    key={mk.id} 
+                    className={styles.mkItem} 
+                    onClick={() => navigate(role === ROLES.SISWA || role === ROLES.MAHASISWA ? `/mk/${mk.id}/analytics` : `/mk/${mk.id}`)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className={styles.mkItemIcon}>
+                      <BookOpen size={18} />
+                    </div>
+                    <div className={styles.mkItemInfo}>
+                      <h4 className={styles.mkItemName}>{mk.name}</h4>
+                      <span className={styles.mkItemMeta}>
+                        {mk.kode_mk}{mk.sks ? ` (${mk.sks} ${isSchool ? 'Jam' : 'SKS'})` : ''} • {isSchool ? (mk.tahun_ajaran || '2025/2026') : mk.semester}
                       </span>
-                    ) : (
-                      <div className={styles.nilaiChip}>
-                        <Award size={14} />
-                        <span>93</span>
-                      </div>
-                    )}
+                    </div>
+                    <div className={styles.mkItemRight}>
+                      {isStaff ? (
+                        <span className={styles.progressText}>
+                          {studentCount} {learnerLabel}
+                        </span>
+                      ) : (
+                        <div className={styles.nilaiChip}>
+                          <Award size={14} />
+                          <span>93</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                );
+              })
+            ) : (
+              <div style={{ padding: '24px 16px', textAlign: 'center', background: 'var(--bg-canvas, #f8fafc)', borderRadius: '12px', border: '1px dashed var(--border-color, #cbd5e1)' }}>
+                <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                  {isStaff 
+                    ? 'Anda belum memiliki mata pelajaran yang diampu langsung.' 
+                    : 'Anda belum terdaftar dalam rombongan belajar aktif.'}
+                </p>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {isStaff && (
+                    <Button variant="primary" size="sm" onClick={() => navigate(isSchool ? '/kelas' : '/mk/create')}>
+                      <PlusCircle size={14} /> {isSchool ? 'Kelola Rombel & Mapel' : `Buat ${courseLabel}`}
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => navigate(isSchool ? '/kelas' : '/mk')}>
+                    Lihat Semua {coursePluralLabel}
+                  </Button>
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
         </div>
 

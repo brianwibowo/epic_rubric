@@ -166,6 +166,8 @@ export const useKelasStore = create((set, get) => ({
           students: (c.students_data && c.students_data.length > 0) 
             ? c.students_data 
             : (get().getKelasById(c.id)?.students || []),
+          created_by: c.created_by || '',
+          created_by_name: c.created_by_name || '',
           created_at: c.created_at
         }));
 
@@ -178,6 +180,8 @@ export const useKelasStore = create((set, get) => ({
           const matchingLocal = localList.find(l => l.id === rc.id || norm(l.name) === norm(rc.name));
           return {
             ...rc,
+            created_by: rc.created_by || matchingLocal?.created_by || '',
+            created_by_name: rc.created_by_name || matchingLocal?.created_by_name || '',
             students: (rc.students && rc.students.length > 0) ? rc.students : (matchingLocal?.students || []),
             mapel_ids: Array.from(new Set([...(rc.mapel_ids || []), ...(matchingLocal?.mapel_ids || [])]))
           };
@@ -209,6 +213,8 @@ export const useKelasStore = create((set, get) => ({
       jurusan: kelasData.jurusan || '',
       tahun_ajaran: kelasData.tahun_ajaran || '',
       wali_kelas: kelasData.wali_kelas || '',
+      created_by: kelasData.created_by || '',
+      created_by_name: kelasData.created_by_name || '',
       status: 'ACTIVE',
       mapel_ids: kelasData.mapel_ids || [],
       students: kelasData.students || [],
@@ -227,6 +233,8 @@ export const useKelasStore = create((set, get) => ({
         tahun_ajaran: newKelas.tahun_ajaran,
         jurusan: newKelas.jurusan,
         wali_kelas: newKelas.wali_kelas,
+        created_by: newKelas.created_by,
+        created_by_name: newKelas.created_by_name,
         status: 'ACTIVE',
         students_data: newKelas.students,
         mapel_ids: newKelas.mapel_ids
